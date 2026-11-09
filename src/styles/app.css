@@ -57,7 +57,7 @@ h1[tabindex="-1"]:focus:not(:focus-visible) { outline: none; }
   color: var(--ink); text-decoration: none; padding: var(--s-3) 0; white-space: nowrap;
 }
 
-.nav { grid-area: nav; }
+.nav { grid-area: nav; position: relative; }
 .nav ul { display: flex; flex-wrap: wrap; gap: 0 var(--s-6); margin: 0; padding: 0; list-style: none; }
 .nav a, .nav .nav-off {
   display: inline-flex; align-items: center; gap: var(--s-2);
@@ -71,6 +71,17 @@ h1[tabindex="-1"]:focus:not(:focus-visible) { outline: none; }
 .nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--signal); }
 .nav a[aria-current="page"]::before { content: ""; width: 6px; height: 6px; background: var(--signal); flex: none; }
 .nav .nav-off { cursor: default; }
+/* Not-built tag: long text everywhere, the short "Soon" only on compact (see the compact block). */
+.nav .tag-short { display: none; }
+/* The nav row may scroll sideways (Loud medium, compact): no scrollbar, a fade says there is more. */
+.nav ul { scrollbar-width: none; }
+.nav ul::-webkit-scrollbar { display: none; }
+.nav::after {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: var(--s-8);
+  background: linear-gradient(to right, transparent, var(--bg) 85%);
+  pointer-events: none; opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.nav[data-more]::after { opacity: 1; }
 /* Loud: ink block, on-ink text */
 :root[data-theme="loud"] .nav a { padding: 0 var(--s-3); min-height: var(--control-h); border-bottom: 0; color: var(--ink); }
 :root[data-theme="loud"] .nav a:hover { background: var(--panel); }
@@ -157,12 +168,21 @@ html[data-live="on"] .mic-indicator .dot { display: inline-block; }
   .theme-switch label { padding: 0 var(--s-2); }
   /* Nav: one row that scrolls sideways inside itself, so it never stacks or widens the page. */
   .nav { min-width: 0; }
-  .nav ul { flex-wrap: nowrap; gap: 0 var(--s-4); overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--ink) transparent;
+  .nav ul { flex-wrap: nowrap; gap: 0 var(--s-4); overflow-x: auto;
     scroll-padding-inline: calc(var(--focus-w) + var(--focus-offset));
     padding: calc(var(--focus-w) + var(--focus-offset)); margin: calc(-1 * (var(--focus-w) + var(--focus-offset))); }
-  /* The scrollbar stays visible (thin) so it is clear that more items sit to the right. */
+  /* The fade (data-more, set by the script in index.html) says more items sit to the right. */
   .nav li { flex: none; }
-  .nav a, .nav .nav-off { min-height: var(--control-h); white-space: nowrap; }
+  .nav a, .nav .nav-off { min-height: var(--control-h); white-space: nowrap; font-size: 13px; line-height: 16px; }
+  /* "Not built yet" becomes "Soon" for sighted users; screen readers still get the full text. */
+  .nav .nav-off { position: relative; }
+  .nav .nav-off .tag-short { display: inline; }
+  .nav .nav-off .tag-long {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+  .nav .nav-off .tag-notbuilt { font-size: 12px; }
+  :root[data-theme="loud"] .nav .nav-off .tag-notbuilt { font-size: 12px; }
   :root[data-theme="loud"] .nav ul { gap: 0 var(--s-1); }
   :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { padding: 0 var(--s-2); min-height: 44px; }
   /* Loud header budget at 375 (88 to 112): the brand stays on one line and the switch labels get smaller. */

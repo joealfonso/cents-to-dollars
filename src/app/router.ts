@@ -160,6 +160,11 @@ export function createRouter(routes: Record<RouteName, Route>) {
   return {
     start() {
       window.addEventListener('hashchange', () => void go(true));
+      // On compact screens the nav row scrolls sideways. The browser leaves a half-visible link where it is on
+      // focus, which clips its ring; scroll-padding-inline on the list makes this leave room for the ring.
+      document.querySelector('.nav ul')?.addEventListener('focusin', (e) => {
+        if (e.target instanceof HTMLElement) e.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
       void go(false); // first load: no focus move, the page starts at the top
     },
     /** The route on screen now. */

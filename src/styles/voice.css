@@ -15,6 +15,12 @@
   :root[data-theme="loud"] .va-header h1 { font-size: 28px; line-height: 32px; }
 }
 
+/* Paper compact: the 11px mono labels go to 12px. Loud is already 14px. */
+@media (max-width: 599px) {
+  :root[data-theme="editorial"] [data-route="voice"] .strip,
+  :root[data-theme="editorial"] .va-a4-label { font-size: 12px; }
+}
+
 /* ---------------------------------------------------------------- layout */
 .va-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-panel); }
 @media (min-width: 960px) {
@@ -207,7 +213,8 @@
 /* ---------------------------------------------------------------- Readings, Details, Setup */
 .va-kv-note { flex-basis: 100%; font: var(--t-body-s); color: var(--muted); }
 .va-details { border-top: var(--border-w) solid var(--ink); }
-.va-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--control-h); cursor: pointer; }
+/* The label is the touch target: at least 44 x 44 even though the box itself is 20px (WCAG 2.5.8). */
+.va-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: max(44px, var(--control-h)); min-width: 44px; cursor: pointer; }
 .va-switch input { width: 20px; height: 20px; margin: 0; accent-color: var(--ink); cursor: pointer; }
 
 @media (forced-colors: active) {

@@ -114,7 +114,7 @@
 
 /* Phones: tighter rhythm, so less scrolling between sections. */
 @media (max-width: 599px) {
-  .about-grid { gap: var(--s-4); }
+  .about-grid { row-gap: var(--s-4); } /* row-gap only: column-gap stays 0 from the 959px rule */
   .about-list { gap: var(--s-5); }
   .about-item h3 { font-size: 22px; line-height: 28px; }
 }

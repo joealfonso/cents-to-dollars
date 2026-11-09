@@ -26,11 +26,27 @@
       <ul>
         <li><a href="#/" data-nav="overview">Overview</a></li>
         <li><a href="#/tools" data-nav="tools">Tools</a></li>
-        <li><span class="nav-off">Sessions <span class="tag-notbuilt">Not built yet</span></span></li>
+        <li><span class="nav-off">Sessions <span class="tag-notbuilt"><span class="tag-long">Not built yet</span><span class="tag-short" aria-hidden="true">Soon</span></span></span></li>
         <li><a href="#/methods" data-nav="methods">Methods</a></li>
         <li><a href="#/about" data-nav="about">About</a></li>
       </ul>
     </nav>
+    <script>
+      // Right-edge fade cue (app.css): data-more is set on .nav only while items sit off-screen to the right.
+      (function () {
+        var nav = document.querySelector('.nav'), ul = nav && nav.querySelector('ul');
+        if (!ul) return;
+        function update() {
+          var more = ul.scrollWidth > ul.clientWidth + 1 && ul.scrollLeft + ul.clientWidth < ul.scrollWidth - 1;
+          if (more) nav.setAttribute('data-more', ''); else nav.removeAttribute('data-more');
+        }
+        ul.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        if (window.ResizeObserver) { var ro = new ResizeObserver(update); ro.observe(ul); for (var i = 0; i < ul.children.length; i++) ro.observe(ul.children[i]); }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(update);
+        update();
+      })();
+    </script>
     <div class="mic-indicator" id="mic-indicator" role="status"><span class="dot dot-live" aria-hidden="true"></span><span class="mic-text"></span></div>
     <fieldset class="theme-switch" id="theme-switch">
       <legend>Theme</legend>

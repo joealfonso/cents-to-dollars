@@ -71,3 +71,8 @@
 :root:not([data-theme="loud"]) .ov-ref details.disclosure { --disclosure-rule: var(--rule); }
 :root:not([data-theme="loud"]) .ov-ref .strip { color: var(--muted); }
 :root:not([data-theme="loud"]) .ov-ref details.disclosure > summary:hover { background: var(--hover); }
+
+/* 44px tap target without moving the drawn underline (links.css) off the text:
+   an invisible hit area extends above and below the inline link. */
+.ov-setup-link { position: relative; display: inline-block; margin-block: 10px; }
+.ov-setup-link::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
