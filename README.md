@@ -17,7 +17,9 @@ M2 (planned, not built, branch `m2`): open an audio file and analyse the take, r
     UV_CACHE_DIR=.uv-cache uv pip install --python .venv/bin/python numpy scipy librosa praat-parselmouth mir_eval soundfile
     ./validate.sh          # all checks (needs datasets/vocadito, see MEASUREMENT.md section 0)
     ./validate.sh raw      # also her recordings in data/raw/
-    npm test               # unit tests for the continuity step (27 tests)
+    npm test               # unit tests (Node)
+    npm run test:browser:install   # once: Chromium for Playwright, into .playwright-browsers/
+    npm run test:browser   # browser tests (Playwright, own Vite server on port 5180)
     npx vite               # test page at http://127.0.0.1:5173
 
 ## Layout

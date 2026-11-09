@@ -18,3 +18,5 @@ results/tslive/
 .claude/.cc-writes/
 results/_archive/tslive/
 results/_archive/vocadito/
+.playwright-browsers/
+results/playwright/
