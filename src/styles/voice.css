@@ -18,7 +18,9 @@
   :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 32px; line-height: 36px; }
 }
 @media (max-width: 599px) {
-  .va-header { min-height: 44px; padding: 0; column-gap: var(--s-3); }
+  /* Vertical padding so the h1 clears the nav rule above and the status, when it wraps under the h1, clears the
+     hero's top rule below. */
+  .va-header { min-height: 44px; padding: var(--s-3) 0; gap: var(--s-2) var(--s-3); }
   .va-crumb { display: none; }
   :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 20px; line-height: 24px; }
   :root[data-theme="loud"] .va-header h1 { font-size: 28px; line-height: 32px; }
