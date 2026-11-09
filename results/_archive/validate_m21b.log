@@ -1,0 +1,120 @@
+{"tone_sine_48k": 60, "tone_sine_44k": 60, "tone_harm_48k": 60, "tone_noise20_48k": 60, "tone_high_48k": 9, "vib_sine_48k": 84, "vib_harm_48k": 8, "sf_48k": 6, "latency": 1, "fmt_pcm16_44k": 4, "fmt_pcm24_44k": 4, "fmt_pcm32_44k": 4, "fmt_float_44k": 4, "fmt_double_44k": 4, "fmt_stereo_44k": 4, "fmt_wavex3_44k": 4, "fmt_pcm16_48k": 4, "fmt_pcm24_48k": 4, "fmt_pcm32_48k": 4, "fmt_float_48k": 4, "fmt_double_48k": 4, "fmt_stereo_48k": 4, "fmt_wavex3_48k": 4, "vib_long_48k": 2, "vib_change_48k": 2, "steady_long_48k": 3, "rate_22k": 9, "rate_32k": 9, "rate_88k": 9, "rate_96k": 9}
+{"audioSeconds":740.5,"computeMs":16617.6,"realtimeFactor":44.6}
+{"audioSeconds":817.13,"computeMs":14284.5,"realtimeFactor":57.2}
+{"audioSeconds":740.5,"computeMs":15478.2,"realtimeFactor":47.8}
+{"audioSeconds":817.13,"computeMs":14171.1,"realtimeFactor":57.7}
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=88200 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=86.133 or frame_length=2941.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+/Users/josephalfonso/Documents/GitHub/MusicSite/py/reference.py:38: UserWarning: With fmin=60.000, sr=96000 and frame_length=2048, less than two periods of fmin fit into the frame, which can cause inaccurate pitch detection. Consider increasing to fmin=93.750 or frame_length=3201.
+  f0, vflag, _ = librosa.pyin(x, fmin=FMIN, fmax=FMAX, sr=sr, frame_length=2048, hop_length=HOP, center=True)
+{"audioSeconds":16,"computeMs":418.1,"realtimeFactor":38.3}
+{"audioSeconds":16,"computeMs":383.4,"realtimeFactor":41.7}
+{"audioSeconds":24,"computeMs":560.7,"realtimeFactor":42.8}
+....................................................................
+{"files":68,"f01":"pass","f02":"pass","f03":"pass","f03MaxAbsCents":0,"f03Outside":0,"f03ExactEqual":"33166/33166"}
+spectrum_check: 120 tones
+/Users/josephalfonso/Documents/GitHub/MusicSite/.venv/lib/python3.12/site-packages/mir_eval/melody.py:264: UserWarning: Non-uniform timescale passed to resample_melody_series.  Pitch will be linearly interpolated, which will result in undesirable behavior if silences are indicated by missing values.  Silences should be indicated by nonpositive frequency values.
+  warnings.warn(
+## Synthetic steady tones (pooled frames, |error| in cents)
+
+| Set | Method | Frames | Voicing recall | Median | P95 | Max | Gross >50c | Octave >600c |
+|---|---|---|---|---|---|---|---|---|
+| tone_sine_48k | whole take (YIN + continuity) | 9689 | 1.0000 | 0.027 | 0.228 | 0.39 | 0 | 0 |
+| tone_sine_48k | live (plain YIN) | 9689 | 1.0000 | 0.027 | 0.228 | 0.39 | 0 | 0 |
+| tone_sine_48k | pYIN (librosa) | 9660 | 1.0000 | 0.637 | 10.637 | 12.86 | 0 | 0 |
+| tone_sine_48k | Praat ac (Parselmouth) | 9660 | 1.0000 | 0.004 | 0.024 | 0.04 | 0 | 0 |
+| tone_sine_44k | whole take (YIN + continuity) | 8904 | 1.0000 | 0.039 | 0.369 | 0.50 | 0 | 0 |
+| tone_sine_44k | live (plain YIN) | 8904 | 1.0000 | 0.039 | 0.369 | 0.50 | 0 | 0 |
+| tone_sine_44k | pYIN (librosa) | 8880 | 1.0000 | 0.637 | 10.637 | 12.86 | 0 | 0 |
+| tone_sine_44k | Praat ac (Parselmouth) | 8880 | 1.0000 | 0.004 | 0.015 | 0.03 | 0 | 0 |
+| tone_harm_48k | whole take (YIN + continuity) | 9689 | 1.0000 | 0.130 | 0.987 | 1.75 | 0 | 0 |
+| tone_harm_48k | live (plain YIN) | 9689 | 1.0000 | 0.130 | 0.987 | 1.75 | 0 | 0 |
+| tone_harm_48k | pYIN (librosa) | 9660 | 1.0000 | 0.637 | 4.714 | 5.53 | 0 | 0 |
+| tone_harm_48k | Praat ac (Parselmouth) | 9660 | 1.0000 | 0.000 | 0.001 | 0.00 | 0 | 0 |
+| tone_noise20_48k | whole take (YIN + continuity) | 9689 | 1.0000 | 1.189 | 4.790 | 10.89 | 0 | 0 |
+| tone_noise20_48k | live (plain YIN) | 9689 | 1.0000 | 1.223 | 5.756 | 18.19 | 0 | 0 |
+| tone_noise20_48k | pYIN (librosa) | 9660 | 1.0000 | 0.637 | 10.652 | 30.64 | 0 | 0 |
+| tone_noise20_48k | Praat ac (Parselmouth) | 9660 | 1.0000 | 1.670 | 5.931 | 10.69 | 0 | 0 |
+| tone_high_48k | whole take (YIN + continuity) | 1449 | 1.0000 | 0.452 | 0.982 | 0.99 | 0 | 0 |
+| tone_high_48k | live (plain YIN) | 1449 | 1.0000 | 0.452 | 0.982 | 0.99 | 0 | 0 |
+| tone_high_48k | pYIN (librosa) | 1449 | 1.0000 | 0.637 | 0.637 | 0.64 | 0 | 0 |
+| tone_high_48k | Praat ac (Parselmouth) | 1449 | 1.0000 | 0.001 | 0.002 | 0.00 | 0 | 0 |
+
+## Synthetic vibrato
+
+| Set | Method | Cases | Detected | Rate err median (Hz) | Rate err max (Hz) | Extent err median | Extent err max | Mean signed extent err | Failing cases |
+|---|---|---|---|---|---|---|---|---|---|
+| vib_sine_48k | whole take (YIN + continuity) | 84 | 84 | 0.0002 | 0.0014 | 2.69% | 4.33% | -2.77% | 0 |
+| vib_sine_48k | live (plain YIN) | 84 | 84 | 0.0002 | 0.0014 | 2.69% | 4.33% | -2.77% | 0 |
+| vib_sine_48k | pYIN (librosa) | 84 | 84 | 0.0156 | 0.0640 | 7.58% | 19.40% | -5.94% | 20 |
+| vib_sine_48k | Praat ac (Parselmouth) | 84 | 84 | 0.0000 | 0.0001 | 3.50% | 5.44% | -3.59% | 0 |
+| vib_harm_48k | whole take (YIN + continuity) | 8 | 8 | 0.0002 | 0.0006 | 2.18% | 4.11% | -2.27% | 0 |
+| vib_harm_48k | live (plain YIN) | 8 | 8 | 0.0002 | 0.0006 | 2.18% | 4.11% | -2.27% | 0 |
+| vib_harm_48k | pYIN (librosa) | 8 | 8 | 0.0206 | 0.0407 | 6.49% | 9.26% | -2.80% | 0 |
+| vib_harm_48k | Praat ac (Parselmouth) | 8 | 8 | 0.0000 | 0.0001 | 3.37% | 5.36% | -3.47% | 0 |
+
+## Criterion 3: Praat agreement, within 10 c on >= 95% of jointly voiced frames (Vocadito stand-in)
+
+| Path | Within 10 c | Joint voiced frames | Verdict |
+|---|---|---|---|
+| whole take (YIN + continuity) | 96.46% | 88735 | pass |
+| live (plain YIN) | 94.36% | 88735 | fail |
+
+## M2.1 parity (F-01 to F-03) and vibrato spans (F-24 to F-26)
+
+| Criterion | Detail | Verdict |
+|---|---|---|
+| F-01 | 68 files, 0 sample mismatches | pass |
+| F-02 | 39702 frames, 0 start and 0 voiced mismatches | pass |
+| F-03 | 33166 voiced frames, 0 outside 0.001 c, max 0 c | pass |
+| F-24 | vib_long_48k: 20 spans scored, 0 failing | pass |
+| F-25 | vib_change_48k: 12 spans scored, 0 failing | pass |
+| F-26 | steady_long_48k: 36 spans scored, 22 failing | fail |
+dev (20 tracks)
+  ts      joint=42772 within10=0.9785 where_praat_right=0.9796 both_wrong_agree=55 octave up/down=81/8 of 44663
+  tsyin   joint=42772 within10=0.9639 where_praat_right=0.9647 both_wrong_agree=65 octave up/down=648/59 of 44663
+  praat   octave up/down=18/34 of 44898
+test (20 tracks)
+  ts      joint=42983 within10=0.9636 where_praat_right=0.9821 both_wrong_agree=857 octave up/down=17/883 of 43255
+  tsyin   joint=42983 within10=0.9357 where_praat_right=0.9642 both_wrong_agree=395 octave up/down=568/477 of 43255
+  praat   octave up/down=5/1903 of 45637
+all (40 tracks)
+  ts      joint=85755 within10=0.9710 where_praat_right=0.9808 both_wrong_agree=912 octave up/down=98/891 of 87918
+  tsyin   joint=85755 within10=0.9497 where_praat_right=0.9644 both_wrong_agree=460 octave up/down=1216/536 of 87918
+  praat   octave up/down=23/1937 of 90535
+test_excl34 (19 tracks)
+  ts      joint=40284 within10=0.9779 where_praat_right=0.9827 both_wrong_agree=80 octave up/down=17/92 of 40509
+  tsyin   joint=40284 within10=0.9601 where_praat_right=0.9647 both_wrong_agree=84 octave up/down=552/134 of 40509
+  praat   octave up/down=5/282 of 42527
+all_excl34 (39 tracks)
+  ts      joint=83056 within10=0.9782 where_praat_right=0.9811 both_wrong_agree=135 octave up/down=98/100 of 85172
+  tsyin   joint=83056 within10=0.9620 where_praat_right=0.9647 both_wrong_agree=149 octave up/down=1200/193 of 85172
+  praat   octave up/down=23/316 of 87425
