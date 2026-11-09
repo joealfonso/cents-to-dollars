@@ -298,7 +298,7 @@ function noteWithJump(len: number, jumpStart: number, jumpLen: number, jumpFrame
 test('short octave-up YIN error with a deep dip at the original pitch is corrected', () => {
   // Candidate 0 jumps to 400 Hz for 2 frames; candidate 1 at 200 Hz has a deep dip.
   const frames = noteWithJump(20, 9, 2, () => [[400, 0.1], [200, 0.01]]);
-  for (const lag of [Infinity, DEFAULT_CONTINUITY.lag]) {
+  for (const lag of [Infinity, 8]) {
     const out = decodeAll(frames, { lag });
     assert.equal(out.length, 20);
     for (const d of out) assert.equal(d.f0, 200, `lag ${lag}`);
@@ -313,7 +313,7 @@ test('a genuine sustained octave leap is kept (many frames)', () => {
   const frames: TF[] = [];
   for (let i = 0; i < 20; i++) frames.push(vf(i, [[200, 0.05], [400, 0.3]]));
   for (let i = 20; i < 50; i++) frames.push(vf(i, [[400, 0.05], [200, 0.5]]));
-  for (const lag of [Infinity, DEFAULT_CONTINUITY.lag]) {
+  for (const lag of [Infinity, 8]) {
     const out = decodeAll(frames, { lag });
     out.forEach((d, i) => assert.equal(d.f0, i < 20 ? 200 : 400, `lag ${lag} frame ${i}`));
     out.forEach((d) => assert.equal(d.choice, 0));
@@ -429,7 +429,7 @@ test('FrameAnalyzer + decodeAll on a synthetic harmonic tone: one output per fra
   const an = new FrameAnalyzer({ sampleRate: sr });
   const frames = an.run(x, false);
   assert.ok(frames.length > 10);
-  for (const lag of [Infinity, DEFAULT_CONTINUITY.lag]) {
+  for (const lag of [Infinity, 8]) {
     const out = decodeAll(frames, { lag });
     assert.equal(out.length, frames.length);
     let voiced = 0;

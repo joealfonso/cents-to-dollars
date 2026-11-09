@@ -22,9 +22,9 @@ Because none of her material exists yet, every definition below uses defaults th
 
 ## 1. Fundamental frequency, F0 (Hz)
 
-**Definition.** For each analysis frame, F0 = fs / tau, where fs is the input sample rate in Hz and tau is a fractional lag in samples at one of the dips of the YIN normalized difference (sections 1.2 and 1.5). Which dip is used is decided by the continuity step in section 1.5 (since M1.1). Unvoiced frames have no F0 (stored as 0).
+**Definition.** For each analysis frame, F0 = fs / tau, where fs is the input sample rate in Hz and tau is a fractional lag in samples at one of the dips of the YIN normalized difference (sections 1.2 and 1.5). Which dip is used is plain YIN's threshold pick in the live view and the continuity step's choice in whole-take (post-take) analysis (section 1.5). Unvoiced frames have no F0 (stored as 0).
 
-Code: `src/dsp/yin.ts`, continuity step in `src/dsp/continuity.ts`, frame scheduling in `src/dsp/analyzer.ts`, live path in `src/audio/tracker.worklet.ts`. The worklet and the offline Node runner call the same `FrameAnalyzer`.
+Code: `src/dsp/yin.ts`, continuity step in `src/dsp/continuity.ts`, frame scheduling in `src/dsp/analyzer.ts`, live path in `src/audio/tracker.worklet.ts` (plain YIN, no continuity step). The worklet and the offline Node runner call the same `FrameAnalyzer`.
 
 ### 1.1 Frame layout
 
@@ -61,28 +61,31 @@ An optional octave guard (`octaveRatio`, `octaveMinDip` in `yin.ts`) exists but 
 
 ### 1.4 Timestamp
 
-Each frame's time is the midpoint of the samples the plain YIN estimate used: t = (s + (W + tau_0) / 2) / fs, where s is the absolute index of the buffer's first sample and tau_0 is the threshold pick (candidate 0 in section 1.5). The timestamp does not move when the continuity step picks another candidate; the true midpoint of the chosen dip differs by |tau_i - tau_0| / 2 samples, about 1.2 ms for an octave correction at 220 Hz (48 kHz). Keeping t fixed makes the three tracker variants share one time axis. Unvoiced frames use t = (s + W / 2) / fs. Plain YIN values are known at sample s + N; in the live tracker the frame is posted when its choice is final, at sample s + N + L x H at the latest (`readyAt` in the worklet, L in section 1.5).
+Each frame's time is the midpoint of the samples the plain YIN estimate used: t = (s + (W + tau_0) / 2) / fs, where s is the absolute index of the buffer's first sample and tau_0 is the threshold pick (candidate 0 in section 1.5). The timestamp does not move when the continuity step picks another candidate; the true midpoint of the chosen dip differs by |tau_i - tau_0| / 2 samples, about 1.2 ms for an octave correction at 220 Hz (48 kHz). Keeping t fixed makes the plain and continuity variants share one time axis. Unvoiced frames use t = (s + W / 2) / fs. Plain YIN values are known at sample s + N, and the live worklet posts each frame then (`readyAt` in the worklet).
 
 ### 1.5 Continuity across frames (M1.1)
 
-Plain YIN picks each frame's dip on its own, and on real singing it sometimes picks the dip at half the true period (one octave high). M1.1 adds a choice among dips that looks at neighbouring frames. The idea follows pYIN (Mauch and Dixon 2014), which decodes YIN candidates with a hidden Markov model; **the costs below are this project's own, not pYIN's**.
+Code: `src/dsp/continuity.ts`.
 
-Candidates, per voiced frame (voicing is unchanged from section 1.3):
+Plain YIN picks each frame's dip on its own, and on real singing it sometimes picks the dip at half the true period (one octave high). M1.1 adds a choice among each frame's dips that looks at neighbouring frames. This is **a project method in the spirit of pYIN, not pYIN.** pYIN (Mauch and Dixon 2014) decodes YIN candidates over time with a hidden Markov model whose observation probabilities come from a distribution over YIN thresholds. This step takes only the idea of decoding candidates over time with Viterbi; the costs below are this project's own and are not derived from pYIN. pYIN itself is run separately as a reference (section 7).
+
+**Where it is used.** Offline only, on whole takes (post-take analysis; `node tools/run_ts.ts track <in> <out> cont`). The live view in the worklet uses plain YIN. A fixed-lag live variant exists in the code with tests, but it locked onto octave-down picks on Vocadito and was not shipped (VALIDATION.md section 4.5).
+
+**Candidates**, per voiced frame (voicing is unchanged from section 1.3):
 - candidate 0 is the threshold pick from section 1.2, with frequency f_0 and dip value d_0;
 - candidates 1..5 are the other local minima of d' in [tau_min, tau_max] with d' < 0.5, deepest first (at most 6 in total), each refined by the same parabolic interpolation.
 
-For a run of consecutive voiced frames, a path picks one candidate (f_i, d_i) per frame. Its cost is
+**Cost.** For a run of consecutive voiced frames, a path picks one candidate (f_i, d_i) per frame. Its cost is
 
   sum over frames of [ wD x d_i + wDown x max(0, log2(f_0 / f_i)) + wUp x max(0, log2(f_i / f_0)) ] + sum over consecutive frames of wJump x |log2(f_b / f_a)|,
 
-with wD = 1, wDown = 0.05, wUp = 0.1, wJump = 2 (units: d' and octaves). The cheapest path is found with the Viterbi algorithm. An unvoiced frame ends the run, so voicing decisions and candidate frequencies are exactly those of plain YIN; only the choice among candidates changes.
+with defaults wD = 1, wDown = 0.05, wUp = 0.1, wJump = 2 (units: d' and octaves; `DEFAULT_CONTINUITY` in the code). The cheapest path is found with the Viterbi algorithm (Forney 1973). An unvoiced frame ends the run, so voicing decisions and candidate frequencies are exactly those of plain YIN; only the choice among candidates changes.
 
-Decoding modes:
-- **Whole take** (post-take analysis, offline runner default): each voiced run is decoded as a whole.
-- **Live** (worklet): fixed-lag decoding with L = 8 frames. A frame's choice is final when 8 later frames are known (42.7 ms at 48 kHz, 46.4 ms at 44.1 kHz) or when its voiced run ends.
-- **Plain YIN** (the M1 tracker): candidate 0 always. Kept for comparison (`node tools/run_ts.ts track <in> <out> yin`).
+**Decoding.** Whole take: each voiced run is decoded as a whole (`decodeAll` with `lag: Infinity`, as `tools/run_ts.ts` calls it). The same code also has a fixed-lag mode (`lag` frames of lookahead before a choice is final). `DEFAULT_CONTINUITY.lag` is `Infinity`, so `decodeAll()` with no config gives the whole-take decoder. The fixed-lag mode (for example `lag: 8`) must be requested explicitly; no shipped path does so, and the worklet does not call the decoder.
 
-The four weights and L are engineering choices tuned on Vocadito tracks 1 to 20 only (VALIDATION.md section 4.4). They are not sourced.
+**Where the weights came from.** wDown, wUp and wJump were chosen on Vocadito tracks 1 to 20 only and then frozen. wD = 1 sets the unit (the sweep varied the other three). The 6-candidate limit and the d' < 0.5 limit were not tuned. Tracks 21 to 40 were already inspected during the M1 diagnosis, so they are not a clean held-out test; her recordings will be the first. Details and results: VALIDATION.md section 4.4.
+
+**Known weakness.** A confident low reading early in a note can carry across the note, because staying on it is cheaper than jumping. On Vocadito this raised octave-down errors against the annotation on tracks 21 to 40 even though octave-up errors nearly vanished (VALIDATION.md section 4.4).
 
 ## 2. Cents and note names
 
@@ -174,7 +177,7 @@ Code: `py/score.py`.
 - **Praat agreement** (real singing): for each Praat frame, take the tracker frame nearest in time, which must be within 3 ms. Over frames where both call voiced, report the share with |1200 log2(f_tracker / f_praat)| <= 10 cents.
 - **Annotated datasets**: mir_eval `melody.evaluate` (Raffel et al. 2014), which resamples to a 10 ms grid and reports Voicing Recall, Voicing False Alarm, Raw Pitch Accuracy (within 50 cents), Raw Chroma Accuracy (octave errors forgiven) and Overall Accuracy, as defined in Salamon et al. 2014. Values are the mean over tracks.
 - **Calibration offset**: median F0 over at least 50 voiced frames of a 5 s steady reference sine through her microphone chain, reported as 1200 log2(median / f_reference) cents.
-- **Algorithmic latency**: from the onset sample of a tone after silence to the moment the first estimate within 50 cents (and, separately, 10 cents) of the true pitch is final: the end of its analysis buffer, plus L x H for the live tracker.
+- **Algorithmic latency**: from the onset sample of a tone after silence to the moment the first estimate within 50 cents (and, separately, 10 cents) of the true pitch is final: the end of its analysis buffer (the live tracker is plain YIN, so there is no lookahead term).
 - **Loopback latency**: from the time a scheduled burst reaches the output device (from `AudioContext.getOutputTimestamp`) to the `requestAnimationFrame` timestamp of the first drawn frame within 50 cents of 440 Hz. Median and range over 10 bursts.
 
 ## 9. Sources
@@ -184,7 +187,7 @@ Status key: **checked** = opened in this session; **not checked** = cited from p
 | Source | Used for | Status |
 |---|---|---|
 | de Cheveigne, A. and Kawahara, H. (2002). YIN, a fundamental frequency estimator for speech and music. JASA 111(4), 1917-1930. | Section 1 | not checked |
-| Mauch, M. and Dixon, S. (2014). pYIN: A fundamental frequency estimator using probabilistic threshold distributions. Proc. IEEE ICASSP. | Sections 7 and 1.5 (idea of decoding YIN candidates over time; no parameters taken from it) | not checked |
+| Mauch, M. and Dixon, S. (2014). pYIN: A fundamental frequency estimator using probabilistic threshold distributions. Proc. IEEE ICASSP. | Section 7 (reference tracker) and section 1.5 (the idea of decoding YIN candidates over time; no parameters or costs taken from it) | not checked |
 | Forney, G. D. (1973). The Viterbi algorithm. Proceedings of the IEEE 61(3), 268-278. | Section 1.5, decoding | not checked |
 | Boersma, P. (1993). Accurate short-term analysis of the fundamental frequency and the harmonics-to-noise ratio of a sampled sound. Proc. Institute of Phonetic Sciences, Univ. of Amsterdam, 17, 97-110. | Section 7 | not checked |
 | Jadoul, Y., Thompson, B. and de Boer, B. (2018). Introducing Parselmouth: A Python interface to Praat. Journal of Phonetics 71, 1-15. | Section 7 | not checked |
@@ -200,7 +203,7 @@ Status key: **checked** = opened in this session; **not checked** = cited from p
 | Bittner, R. M. et al. (2021). vocadito: A dataset of solo vocals with f0, note, and lyric annotations. arXiv:2110.05580. | Dataset | checked (Zenodo record and license via the Zenodo API; README in the archive) |
 | VocalSet, Zenodo 1442513; MIR-1K, Zenodo 3532216 | Dataset availability | checked (license and access fields via the Zenodo API) |
 
-**Could not source:** the continuity weights wD, wDown, wUp, wJump, the candidate limits (6 candidates, d' < 0.5) and the live lag L = 8 in section 1.5 (tuned on data, VALIDATION.md 4.4); the specific band edges in section 5 (project convention); the 0.15 YIN threshold and -50 dBFS gate (engineering choices, validated empirically rather than sourced); the 0.3 autocorrelation and 3 to 9 Hz limits in the vibrato detector (engineering choices).
+**Could not source:** the continuity weights wD, wDown, wUp, wJump, the candidate limits (6 candidates, d' < 0.5) and the fixed-lag example L = 8 in section 1.5 (unshipped, not the default) (tuned on data, VALIDATION.md 4.4 and 4.5); the specific band edges in section 5 (project convention); the 0.15 YIN threshold and -50 dBFS gate (engineering choices, validated empirically rather than sourced); the 0.3 autocorrelation and 3 to 9 Hz limits in the vibrato detector (engineering choices).
 
 ## 10. Defaults pending her answers
 
@@ -209,5 +212,5 @@ Status key: **checked** = opened in this session; **not checked** = cited from p
 | A4 = 440 Hz | Reference pitch question (440 or 442) |
 | F0 range 60 to 2000 Hz; thresholds tested 130 to 1050 Hz | Voice type and working range |
 | -50 dBFS voicing gate | Her mic and interface gain |
-| Live lookahead L = 8 frames (about 43 ms extra delay) | Whether she prefers a faster or a steadier live readout |
+| Live path is plain YIN (no lookahead) | Whether she accepts occasional octave slips in the live readout (VALIDATION.md section 11) |
 | Band edges 2.5 to 3.5 kHz vs 0.05 to 2 kHz | Voice type (section 5 caveat) |

@@ -20,8 +20,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "results"
 MAN = json.loads((ROOT / "fixtures/synthetic/manifest.json").read_text())
-METHODS = {"ts": "browser tracker, whole take (YIN + continuity)", "tslive": "browser tracker, live (YIN + continuity, 8-frame lag)",
-           "tsyin": "plain YIN (M1 tracker)", "pyin": "pYIN (librosa)", "praat": "Praat ac (Parselmouth)"}
+METHODS = {"ts": "whole take (YIN + continuity)", "tsyin": "live (plain YIN)", "pyin": "pYIN (librosa)", "praat": "Praat ac (Parselmouth)"}
 EDGE_S = 0.07  # frames this close to either end (inside the 20 ms fades plus margin) are excluded
 OCTAVE_CENTS = 600.0  # an estimate more than half an octave from truth counts as an octave error
 GROSS_CENTS = 50.0
@@ -151,7 +150,6 @@ def score_spectrum() -> dict:
 def score_latency(m: str = "ts") -> dict:
     e = next(x for x in MAN["entries"] if x["set"] == "latency")
     fr = frames(m, e["id"])
-    lag = fr.get("lagFrames") or 0
     sr, onset = e["sr"], e["onset_sample"]
     hop, N = fr["hop"], 2048
     out = {}
@@ -159,10 +157,9 @@ def score_latency(m: str = "ts") -> dict:
         for i, f in enumerate(fr["f0"]):
             start = i * hop
             if f > 0 and abs(1200 * np.log2(f / e["f0"])) <= tol and start + N > onset:
-                out[f"first_within_{int(tol)}c_ms"] = float((start + N + lag * hop - onset) / sr * 1000)
+                out[f"first_within_{int(tol)}c_ms"] = float((start + N - onset) / sr * 1000)
                 break
-    out["note"] = "time from tone onset until the first estimate within tolerance is final (buffer end plus lookahead frames)"
-    out["lag_frames"] = lag
+    out["note"] = "time from tone onset until the first estimate within tolerance is final (end of the analysis buffer; live is plain YIN, no lookahead)"
     out["hop_ms"] = hop / sr * 1000
     out["buffer_ms"] = N / sr * 1000
     return out
@@ -233,12 +230,22 @@ def main() -> None:
     S["vibrato"] = {s: score_vibrato(s) for s in ("vib_sine_48k", "vib_harm_48k")}
     S["sf"] = score_sf()
     S["spectrum"] = score_spectrum()
-    S["latency"] = {m: score_latency(m) for m in ("tsyin", "tslive")}
+    S["latency"] = {"live": score_latency("tsyin")}
     voc = RES / "vocadito"
     S["vocadito_mir_eval"] = melody_eval(voc, ROOT / "datasets/vocadito/Annotations/F0")
-    S["vocadito_praat_agreement"] = {m: praat_agreement(voc, m) for m in ("ts", "tslive", "tsyin")}
+    S["vocadito_praat_agreement"] = {m: praat_agreement(voc, m) for m in ("ts", "tsyin")}
     S["vocadito_pyin_vs_praat"] = praat_agreement(voc, "pyin", "praat")
-    S["raw_praat_agreement"] = {m: praat_agreement(RES / "raw", m) for m in ("ts", "tslive", "tsyin")} if (RES / "raw").exists() else None
+    S["raw_praat_agreement"] = {m: praat_agreement(RES / "raw", m) for m in ("ts", "tsyin")} if (RES / "raw").exists() else None
+    # Criterion 3 (Praat agreement >= praat_frac within praat_within cents), explicit per path.
+    paths = {"whole_take": ("ts", "whole take (YIN + continuity)"), "live": ("tsyin", "live (plain YIN)")}
+    S["criterion3"] = {}
+    for name, (m, label) in paths.items():
+        row = dict(label=label, method=m, threshold=THRESH["praat_frac"], within_cents=THRESH["praat_within"])
+        for src, agree in (("vocadito", S["vocadito_praat_agreement"].get(m)), ("raw", (S["raw_praat_agreement"] or {}).get(m))):
+            if agree:
+                row[src] = dict(within10=agree["within10"], joint_voiced_frames=agree["joint_voiced_frames"],
+                                verdict="pass" if agree["within10"] >= THRESH["praat_frac"] else "fail")
+        S["criterion3"][name] = row
     (RES / "summary.json").write_text(json.dumps(S, indent=1))
 
     L = []
@@ -256,6 +263,13 @@ def main() -> None:
         for m, r in d.items():
             s = r["summary"]
             L.append(f"| {sname} | {METHODS[m]} | {s['cases']} | {s['detected']} | {s['rate_err_median']:.4f} | {s['rate_err_max']:.4f} | {100*s['extent_rel_err_median']:.2f}% | {100*s['extent_rel_err_max']:.2f}% | {100*s['extent_signed_mean']:+.2f}% | {s['failing']} |")
+    L.append("\n## Criterion 3: Praat agreement, within 10 c on >= 95% of jointly voiced frames (Vocadito stand-in)\n")
+    L.append("| Path | Within 10 c | Joint voiced frames | Verdict |")
+    L.append("|---|---|---|---|")
+    for r in S["criterion3"].values():
+        v = r.get("vocadito")
+        if v:
+            L.append(f"| {r['label']} | {100*v['within10']:.2f}% | {v['joint_voiced_frames']} | {v['verdict']} |")
     (RES / "tables.md").write_text("\n".join(L) + "\n")
     print("\n".join(L))
 

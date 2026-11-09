@@ -10,7 +10,9 @@
 // voicing decision and every candidate's frequency value are exactly those of plain YIN;
 // only the choice between candidates changes.
 //
-// Live use decodes with a fixed lag of `lag` frames. When frame t + lag arrives, frame t is committed
+// Used offline, whole-take only (decodeAll with lag Infinity). The fixed-lag mode described next exists
+// and is tested, but it is not used live because it locked onto octave-down picks on Vocadito (see
+// VALIDATION.md section 4). With a fixed lag of `lag` frames, when frame t + lag arrives, frame t is committed
 // to the first state of the cheapest path over the window t .. t + lag, where that path starts from
 // the previously committed frame's chosen candidate (jump cost included). After each commit the
 // remaining pending frames are re-optimised from the committed choice, so every later window is
@@ -32,7 +34,7 @@ export const DEFAULT_CONTINUITY: ContinuityConfig = {
   wDown: 0.05,
   wUp: 0.1,
   wJump: 2,
-  lag: 8,
+  lag: Infinity, // whole-take. The fixed-lag mode (e.g. 8) is tested but rejected for live use, see VALIDATION.md 4.5.
 };
 
 export interface CandidateFrame {

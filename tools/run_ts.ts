@@ -1,8 +1,7 @@
 // Offline runner for the browser tracker code.
-//   node tools/run_ts.ts track <in.wav|dir> <out_dir> [yin|cont|live]   -> <out_dir>/<name>.json frames
-//     yin  = plain YIN threshold pick (the M1 tracker)
+//   node tools/run_ts.ts track <in.wav|dir> <out_dir> [yin|cont]   -> <out_dir>/<name>.json frames
+//     yin  = plain YIN threshold pick (the M1 tracker; what the live view shows)
 //     cont = YIN + continuity over the whole take (default; post-take analysis)
-//     live = YIN + continuity with the live lookahead (DEFAULT_CONTINUITY.lag frames)
 //   node tools/run_ts.ts vibrato <frames.json> [...]        -> prints vibrato JSON per file
 // Frames JSON format (shared with py/reference.py): { method, sampleRate, hop, t: [], f0: [] } with f0 = 0 when unvoiced.
 
@@ -11,7 +10,7 @@ import { basename, join } from 'node:path';
 import { readWav } from './wav.ts';
 import { FrameAnalyzer } from '../src/dsp/analyzer.ts';
 import { analyzeVibrato } from '../src/dsp/vibrato.ts';
-import { decodeAll, DEFAULT_CONTINUITY } from '../src/dsp/continuity.ts';
+import { decodeAll } from '../src/dsp/continuity.ts';
 
 const [cmd, ...args] = process.argv.slice(2);
 
@@ -28,8 +27,7 @@ function listWavs(p: string): string[] {
 
 if (cmd === 'track') {
   const [input, outDir, mode = 'cont'] = args;
-  if (!['yin', 'cont', 'live'].includes(mode)) throw new Error(`unknown mode ${mode}`);
-  const lag = mode === 'live' ? DEFAULT_CONTINUITY.lag : Infinity;
+  if (!['yin', 'cont'].includes(mode)) throw new Error(`unknown mode ${mode}`);
   mkdirSync(outDir, { recursive: true });
   let totalAudio = 0, totalMs = 0;
   for (const f of listWavs(input)) {
@@ -37,14 +35,13 @@ if (cmd === 'track') {
     const an = new FrameAnalyzer({ sampleRate: wav.sampleRate });
     const t0 = performance.now();
     const frames = an.run(wav.samples, true);
-    const f0 = mode === 'yin' ? frames.map((x) => (x.voiced ? x.f0 : 0)) : decodeAll(frames, { lag }).map((d) => d.f0);
+    const f0 = mode === 'yin' ? frames.map((x) => (x.voiced ? x.f0 : 0)) : decodeAll(frames, { lag: Infinity }).map((d) => d.f0);
     totalMs += performance.now() - t0;
     totalAudio += wav.samples.length / wav.sampleRate;
     let eSf = 0, eRef = 0;
     for (const fr of frames) if (fr.voiced) { eSf += fr.eSf; eRef += fr.eRef; }
     const out = {
       method: `ts-${mode}`,
-      lagFrames: mode === 'yin' ? 0 : lag === Infinity ? null : lag,
       file: f,
       sampleRate: wav.sampleRate,
       hop: an.hop,

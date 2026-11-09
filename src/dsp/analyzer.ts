@@ -5,6 +5,9 @@ import { Spectrum, SF_BAND, REF_BAND } from './spectrum.ts';
 
 export const DEFAULT_HOP = 256;
 
+/** Shared empty array handed out when candidates are not requested (avoids per-frame copies). */
+const NO_CANDIDATES = new Float64Array(0);
+
 export interface Frame {
   /** Index of the first sample of the analysis buffer. */
   start: number;
@@ -17,7 +20,8 @@ export interface Frame {
   /** Band energies for the singer's formant ratio (summed over frames later). */
   eSf: number;
   eRef: number;
-  /** YIN candidate dips (index 0 = threshold pick). Copies, safe to keep. */
+  /** YIN candidate dips (index 0 = threshold pick). Copies, safe to keep. Empty (candCount 0) when
+   *  analyzed with withCandidates = false. */
   candF0: Float64Array;
   candD: Float64Array;
   candCount: number;
@@ -42,7 +46,7 @@ export class FrameAnalyzer {
   }
 
   /** Analyze one buffer of N samples that begins at absolute sample index `start`. */
-  analyzeAt(x: ArrayLike<number>, offset: number, start: number, withSpectrum = true): Frame {
+  analyzeAt(x: ArrayLike<number>, offset: number, start: number, withSpectrum = true, withCandidates = true): Frame {
     const r = this.yin.analyze(x, offset);
     let eSf = 0, eRef = 0;
     if (withSpectrum) {
@@ -59,16 +63,16 @@ export class FrameAnalyzer {
       rmsDb: r.rmsDb,
       eSf,
       eRef,
-      candF0: r.candF0.slice(0, r.candCount),
-      candD: r.candD.slice(0, r.candCount),
-      candCount: r.candCount,
+      candF0: withCandidates ? r.candF0.slice(0, r.candCount) : NO_CANDIDATES,
+      candD: withCandidates ? r.candD.slice(0, r.candCount) : NO_CANDIDATES,
+      candCount: withCandidates ? r.candCount : 0,
     };
   }
 
   /** Offline: every hop over a whole signal. */
-  run(x: Float32Array | Float64Array, withSpectrum = true): Frame[] {
+  run(x: Float32Array | Float64Array, withSpectrum = true, withCandidates = true): Frame[] {
     const out: Frame[] = [];
-    for (let s = 0; s + this.N <= x.length; s += this.hop) out.push(this.analyzeAt(x, s, s, withSpectrum));
+    for (let s = 0; s + this.N <= x.length; s += this.hop) out.push(this.analyzeAt(x, s, s, withSpectrum, withCandidates));
     return out;
   }
 }

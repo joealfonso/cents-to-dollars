@@ -1,8 +1,7 @@
 // Bare M1 test page wiring. No designed UI.
 
 import { startLive, loadTracker, makeTrackerNode, type LiveSession } from '../audio/capture.ts';
-import type { WorkletMeter, WorkletF0 } from '../audio/tracker.worklet.ts';
-import { DEFAULT_CONTINUITY } from '../dsp/continuity.ts';
+import type { WorkletFrame } from '../audio/tracker.worklet.ts';
 import { nearestNote, centsBetween } from '../dsp/pitch.ts';
 import { analyzeVibrato, type ContourFrame } from '../dsp/vibrato.ts';
 import { SF_BAND } from '../dsp/spectrum.ts';
@@ -10,35 +9,30 @@ import { SF_BAND } from '../dsp/spectrum.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const a4 = () => Number($<HTMLInputElement>('a4').value) || 440;
 const fx = (x: number, d = 1) => (Number.isFinite(x) ? x.toFixed(d) : 'n/a');
+// Discrete-run status for CSS. Never called for #live-readout.
 
 // ---------------------------------------------------------------- live
 let live: LiveSession | null = null;
-// One entry per frame, created from its 'meter' message (immediate). f0 is NaN until the frame's
-// continuity-tracked F0 is final (its 'f0' message, up to DEFAULT_CONTINUITY.lag frames later).
+// One entry per frame, plain YIN F0 (0 when unvoiced).
 type HistoryEntry = ContourFrame & { voiced: boolean; eSf: number; eRef: number };
 const history: HistoryEntry[] = [];
-const awaitingF0 = new Map<number, HistoryEntry>(); // keyed on frame start sample
-const isFinal = (h: HistoryEntry) => !Number.isNaN(h.f0);
 const canvas = $<HTMLCanvasElement>('spectrogram');
 const g = canvas.getContext('2d')!;
 const SPEC_TOP_HZ = 4000;
-let pending: WorkletMeter[] = []; // spectrogram columns not yet drawn
-let pendingF0: WorkletF0[] = []; // F0 marks not yet drawn
-let colCount = 0; // columns drawn so far
-const colOf = new Map<number, number>(); // frame start sample -> column number, until its F0 mark is drawn
+let pending: WorkletFrame[] = []; // spectrogram columns not yet drawn
 
 function drawColumns() {
   if (!live) return;
   const fs = live.ctx.sampleRate;
   const W = canvas.width, H = canvas.height;
-  const cols = pending.splice(0);
-  if (cols.length) {
+  let cols = pending.splice(0);
+  if (cols.length > W) cols = cols.slice(-W); // keep only what fits; getImageData width must stay > 0
+  if (cols.length && cols.length < W) {
     const img = g.getImageData(cols.length, 0, W - cols.length, H);
     g.putImageData(img, 0, 0);
   }
   cols.forEach((f, i) => {
     const x = W - cols.length + i;
-    colOf.set(f.start, colCount++);
     g.fillStyle = '#fff';
     g.fillRect(x, 0, 1, H);
     if (f.power) {
@@ -56,29 +50,20 @@ function drawColumns() {
     // singer's formant band guide lines
     g.fillStyle = 'rgba(228,64,27,0.25)';
     for (const hz of SF_BAND) g.fillRect(x, Math.round(H - 1 - (hz / SPEC_TOP_HZ) * (H - 1)), 1, 1);
+    // F0 mark
+    if (f.voiced) {
+      g.fillStyle = '#E4401B';
+      g.fillRect(x, Math.round(H - 1 - (f.f0 / SPEC_TOP_HZ) * (H - 1)) - 1, 2, 3);
+    }
   });
-  // F0 marks land on their frame's column, which has scrolled left by the frames drawn since.
-  g.fillStyle = '#E4401B';
-  for (const f of pendingF0.splice(0)) {
-    const col = colOf.get(f.start);
-    if (col === undefined) continue;
-    colOf.delete(f.start);
-    const x = W - colCount + col;
-    if (f.voiced && x >= 0) g.fillRect(x, Math.round(H - 1 - (f.f0 / SPEC_TOP_HZ) * (H - 1)) - 1, 2, 3);
-  }
 }
 
 function renderReadout() {
-  // F0, note and vibrato use the newest final frames; the band ratio uses every frame up to now.
   const newest = history[history.length - 1];
-  let li = history.length - 1;
-  while (li >= 0 && !isFinal(history[li])) li--;
-  const last = li >= 0 ? history[li] : null;
   if (!newest) return;
+  const last = newest;
   const lines: string[] = [];
-  if (!last) {
-    lines.push('F0        pending');
-  } else if (last.f0 > 0) {
+  if (last.f0 > 0) {
     const n = nearestNote(last.f0, a4());
     lines.push(`F0        ${fx(last.f0, 2)} Hz`);
     lines.push(`Note      ${n.name}  ${n.cents >= 0 ? '+' : ''}${fx(n.cents, 1)} cents (A4 = ${a4()} Hz)`);
@@ -86,7 +71,7 @@ function renderReadout() {
     lines.push('F0        unvoiced');
   }
   const recent = history.filter((h) => h.t > newest.t - 2.5);
-  const v = analyzeVibrato(recent.filter(isFinal));
+  const v = analyzeVibrato(recent);
   lines.push(v ? `Vibrato   rate ${fx(v.rateHz, 2)} Hz, extent plus or minus ${fx(v.extentCents, 1)} cents (last 2.5 s)` : 'Vibrato   not detected in last 2.5 s');
   let eSf = 0, eRef = 0;
   for (const h of recent) if (h.voiced) { eSf += h.eSf; eRef += h.eRef; }
@@ -96,35 +81,33 @@ function renderReadout() {
 }
 
 let rafId = 0;
-const frameWaiters: ((f: WorkletF0, drawnAt: number) => void)[] = [];
-let undrawn: WorkletF0[] = [];
+const frameWaiters: ((f: WorkletFrame, drawnAt: number) => void)[] = [];
+let undrawn: WorkletFrame[] = [];
 function loop(ts: number) {
-  drawColumns();
-  renderReadout();
-  const frames = undrawn.splice(0);
-  for (const w of frameWaiters) for (const f of frames) w(f, ts);
-  rafId = requestAnimationFrame(loop);
+  rafId = requestAnimationFrame(loop); // re-arm first so a throw below cannot freeze the display
+  try {
+    drawColumns();
+    renderReadout();
+    const frames = undrawn.splice(0);
+    for (const w of frameWaiters) for (const f of frames) w(f, ts);
+  } catch (e) {
+    console.error('loop error', e);
+  }
 }
 
 async function ensureLive() {
   if (live) return live;
   history.length = 0;
-  awaitingF0.clear();
-  colOf.clear();
-  pending = []; pendingF0 = []; undrawn = [];
+  pending = []; undrawn = [];
   live = await startLive({
-    onMeter: (m) => {
-      const h: HistoryEntry = { t: m.t, f0: NaN, voiced: m.voiced, eSf: m.eSf, eRef: m.eRef };
-      history.push(h);
-      awaitingF0.set(m.start, h);
+    onFrame: (m) => {
+      history.push({ t: m.t, f0: m.voiced ? m.f0 : 0, voiced: m.voiced, eSf: m.eSf, eRef: m.eRef });
       if (history.length > 4000) history.splice(0, history.length - 4000);
+      // Cap the queues: rAF stops while the tab is hidden but the worklet keeps posting.
       pending.push(m);
-    },
-    onF0: (f) => {
-      const h = awaitingF0.get(f.start);
-      if (h) { h.f0 = f.voiced ? f.f0 : 0; awaitingF0.delete(f.start); }
-      pendingF0.push(f);
-      undrawn.push(f);
+      if (pending.length > canvas.width) pending.splice(0, pending.length - canvas.width);
+      undrawn.push(m);
+      if (undrawn.length > canvas.width) undrawn.splice(0, undrawn.length - canvas.width);
     },
   });
   $<HTMLButtonElement>('live-start').disabled = true;
@@ -134,7 +117,7 @@ async function ensureLive() {
 }
 
 async function stopLive() {
-  await live?.stop(); // flushes the tracker first, so the last frames' F0 arrive before close
+  await live?.stop();
   cancelAnimationFrame(rafId);
   drawColumns();
   renderReadout();
@@ -190,7 +173,7 @@ $('loop-run').addEventListener('click', async () => {
       const outPerf = (ts.performanceTime ?? 0) + (T - (ts.contextTime ?? 0)) * 1000;
       const drawn = await new Promise<number | null>((resolve) => {
         const timer = setTimeout(() => { frameWaiters.splice(frameWaiters.indexOf(w), 1); resolve(null); }, 1500);
-        const w = (f: WorkletF0, drawnAt: number) => {
+        const w = (f: WorkletFrame, drawnAt: number) => {
           if (f.voiced && Math.abs(centsBetween(f.f0, 440)) < 50 && f.readyAt / s.ctx.sampleRate > T) {
             clearTimeout(timer); frameWaiters.splice(frameWaiters.indexOf(w), 1); resolve(drawnAt);
           }
@@ -218,25 +201,27 @@ function truthAt(e: Entry, t: number) {
   return e.extent === 0 ? e.f0 : e.f0 * Math.pow(2, (e.extent / 1200) * Math.sin(2 * Math.PI * e.rate * t));
 }
 
-async function renderFixture(e: Entry): Promise<WorkletF0[]> {
+async function renderFixture(e: Entry): Promise<WorkletFrame[]> {
   const buf = await (await fetch(`/fixtures/synthetic/${e.file}`)).arrayBuffer();
   const len = Math.round(e.dur * e.sr);
   const ctx = new OfflineAudioContext(1, len, e.sr);
   await loadTracker(ctx);
   const audio = await ctx.decodeAudioData(buf);
-  const frames: WorkletF0[] = [];
-  const node = makeTrackerNode(ctx, { onF0: (f) => frames.push(f) });
+  const frames: WorkletFrame[] = [];
+  const node = makeTrackerNode(ctx, { onFrame: (f) => frames.push(f) });
   node.port.postMessage({ type: 'spectrum', enabled: false });
   const src = ctx.createBufferSource();
   src.buffer = audio;
   src.connect(node).connect(ctx.destination);
   src.start();
   await ctx.startRendering();
-  // Counts 'f0' messages. The last voiced run's final `lag` frames are never settled in an offline render
-  // (no flush is sent); they fall in the trimmed tail.
-  const expected = Math.floor((len - 2048) / 256) - 1 - DEFAULT_CONTINUITY.lag;
+  // Counts 'frame' messages. The worklet runs in 128-sample blocks and emits a frame once 2048 samples
+  // are in and 256 have passed since the last, so with len a multiple of 128 there are exactly
+  // floor((len - 2048) / 256) + 1 frames (same as FrameAnalyzer.run).
+  const expected = Math.floor((len - 2048) / 256) + 1;
   const t0 = performance.now();
   while (frames.length < expected && performance.now() - t0 < 3000) await new Promise((r) => setTimeout(r, 20));
+  if (frames.length < expected) throw new Error(`${e.id}: got ${frames.length} of ${expected} frames before timeout`);
   return frames.sort((a, b) => a.start - b.start);
 }
 
@@ -281,7 +266,7 @@ async function selfTest() {
   const first = lf.find((f) => f.voiced && Math.abs(centsBetween(f.f0, 440)) <= 50 && f.readyAt > lat.onset_sample!);
   const latMs = first ? ((first.readyAt - lat.onset_sample!) / lat.sr) * 1000 : NaN;
   report.algorithmicLatencyMs = latMs;
-  lines.push(`latency          onset to first final frame within 50 cents: ${fx(latMs, 2)} ms (worklet, offline render, ${DEFAULT_CONTINUITY.lag}-frame lookahead)`);
+  lines.push(`latency          onset to first frame within 50 cents: ${fx(latMs, 2)} ms (worklet, offline render, plain YIN)`);
   report.userAgent = navigator.userAgent;
   (window as unknown as { __selfTest: unknown }).__selfTest = report;
   out.textContent = lines.join('\n');

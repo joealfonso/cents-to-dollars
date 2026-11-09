@@ -20,18 +20,6 @@
     "within10_frac": 0.9784906013279716,
     "within10_where_praat_right": 0.9796090563915061
    },
-   "tslive": {
-    "joint": 42772,
-    "within10": 41442,
-    "both_wrong_agree": 65,
-    "praat_right_joint": 42666,
-    "praat_right_within10": 41376,
-    "octave_frames": 44663,
-    "octave_up": 49,
-    "octave_down": 488,
-    "within10_frac": 0.9689048910502198,
-    "within10_where_praat_right": 0.9697651525805091
-   },
    "tsyin": {
     "joint": 42772,
     "within10": 41227,
@@ -63,18 +51,6 @@
     "octave_down": 883,
     "within10_frac": 0.9636367866365773,
     "within10_where_praat_right": 0.9820576769413303
-   },
-   "tslive": {
-    "joint": 42983,
-    "within10": 40439,
-    "both_wrong_agree": 834,
-    "praat_right_joint": 41299,
-    "praat_right_within10": 39600,
-    "octave_frames": 43255,
-    "octave_up": 3,
-    "octave_down": 1837,
-    "within10_frac": 0.9408138101109741,
-    "within10_where_praat_right": 0.9588609893702027
    },
    "tsyin": {
     "joint": 42983,
@@ -108,18 +84,6 @@
     "within10_frac": 0.9710454200921229,
     "within10_where_praat_right": 0.980813434168999
    },
-   "tslive": {
-    "joint": 85755,
-    "within10": 81881,
-    "both_wrong_agree": 899,
-    "praat_right_joint": 83965,
-    "praat_right_within10": 80976,
-    "octave_frames": 87918,
-    "octave_up": 52,
-    "octave_down": 2325,
-    "within10_frac": 0.9548247915573436,
-    "within10_where_praat_right": 0.9644018340975407
-   },
    "tsyin": {
     "joint": 85755,
     "within10": 81445,
@@ -152,18 +116,6 @@
     "within10_frac": 0.9778572137821467,
     "within10_where_praat_right": 0.9826504337391565
    },
-   "tslive": {
-    "joint": 40284,
-    "within10": 38445,
-    "both_wrong_agree": 91,
-    "praat_right_joint": 40001,
-    "praat_right_within10": 38349,
-    "octave_frames": 40509,
-    "octave_up": 3,
-    "octave_down": 1080,
-    "within10_frac": 0.9543491212392017,
-    "within10_where_praat_right": 0.9587010324741881
-   },
    "tsyin": {
     "joint": 40284,
     "within10": 38677,
@@ -195,18 +147,6 @@
     "octave_down": 100,
     "within10_frac": 0.9781833943363514,
     "within10_where_praat_right": 0.9810807214487038
-   },
-   "tslive": {
-    "joint": 83056,
-    "within10": 79887,
-    "both_wrong_agree": 156,
-    "praat_right_joint": 82667,
-    "praat_right_within10": 79725,
-    "octave_frames": 85172,
-    "octave_up": 52,
-    "octave_down": 1568,
-    "within10_frac": 0.9618450202273165,
-    "within10_where_praat_right": 0.9644114338248636
    },
    "tsyin": {
     "joint": 83056,
