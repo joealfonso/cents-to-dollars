@@ -6433,5 +6433,116 @@
     "verdict": "fail"
    }
   }
+ },
+ "m2": {
+  "parity": {
+   "spec": "specs/M2.md 4.6 F-01 to F-03, 4.7 V-01",
+   "generatedAt": "2026-11-09T16:50:41.419Z",
+   "set": {
+    "files": 68,
+    "synthetic": 63,
+    "vocadito": [
+     "vocadito_2",
+     "vocadito_21",
+     "vocadito_30",
+     "vocadito_34",
+     "vocadito_37"
+    ],
+    "vocaditoClean": "vocadito_37",
+    "vocaditoCleanReason": "highest whole-take Raw Pitch Accuracy of the 40 Vocadito tracks (0.990); continuity changes 14 of its frames"
+   },
+   "toleranceCents": 0.001,
+   "f01": {
+    "files": 68,
+    "failingFiles": [],
+    "sampleMismatches": 0,
+    "samplesCompared": 10293556,
+    "verdict": "pass"
+   },
+   "f02": {
+    "files": 68,
+    "failingFiles": [],
+    "frames": 39702,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0,
+    "verdict": "pass"
+   },
+   "f03": {
+    "files": 68,
+    "failingFiles": [],
+    "voicedFrames": 33166,
+    "framesOutsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqualFrames": 33166,
+    "vsTrackJson": {
+     "framesOutsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00011777150765471508,
+     "missingTrackJson": []
+    },
+    "verdict": "pass"
+   }
+  },
+  "vibrato_windows": {
+   "F-24": {
+    "summary": {
+     "set": "vib_long_48k",
+     "files": 2,
+     "missing": [],
+     "spans_total": 24,
+     "spans_scored": 20,
+     "spans_not_scored": 4,
+     "spans_found": 20,
+     "spans_failing": 0,
+     "verdict": "pass",
+     "rate_err_max": 0.0009579296235529,
+     "extent_rel_err_max": 0.0234802807829152,
+     "rate_err_median": 0.0004599114913044211,
+     "extent_rel_err_median": 0.022881079257361065
+    },
+    "failing": []
+   },
+   "F-25": {
+    "summary": {
+     "set": "vib_change_48k",
+     "files": 2,
+     "missing": [],
+     "spans_total": 24,
+     "spans_scored": 12,
+     "spans_not_scored": 12,
+     "spans_found": 12,
+     "spans_failing": 0,
+     "verdict": "pass",
+     "rate_err_max": 0.0005714265350880154,
+     "extent_rel_err_max": 0.033023085925684016,
+     "rate_err_median": 0.00011615398705178137,
+     "extent_rel_err_median": 0.025601665202462164
+    },
+    "failing": []
+   },
+   "F-26": {
+    "summary": {
+     "set": "steady_long_48k",
+     "files": 3,
+     "missing": [],
+     "spans_total": 36,
+     "spans_scored": 36,
+     "spans_not_scored": 0,
+     "spans_found": 0,
+     "spans_failing": 0,
+     "verdict": "pass"
+    },
+    "failing": []
+   },
+   "span_s": 2.5,
+   "step_s": 0.5,
+   "edge_s": 0.07,
+   "thresholds": {
+    "rate_hz": 0.3,
+    "extent_rel": 0.1
+   }
+  }
  }
 }

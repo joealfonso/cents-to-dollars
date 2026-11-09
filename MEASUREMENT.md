@@ -36,6 +36,8 @@ Code: `src/dsp/yin.ts`, continuity step in `src/dsp/continuity.ts`, frame schedu
 | H (hop) | 256 samples | 5.33 ms at 48 kHz, 187.5 frames per second |
 | Lag range | tau_min = floor(fs / 2000), tau_max = min(N - W, ceil(fs / 60)) | F0 search range 60 to 2000 Hz (lower limit 60 Hz at 48 kHz is set by fs/60 = 800 < N - W = 1024) |
 
+**Known limit at 96 kHz (live view).** The live view analyses at the device rate and does not resample, so the input rate sets the lowest F0 it can report. At 96 kHz, tau_max = min(1024, ceil(96000 / 60) = 1600) = 1024, so the lowest F0 is 96000 / 1024 = 93.75 Hz. The lag search stops at 1024 samples, so no F0 below 93.75 Hz is reported at that rate. Code: `src/dsp/yin.ts` (`tauMax`), `src/audio/tracker.worklet.ts` (`sampleRate` from the worklet global).
+
 ### 1.2 Procedure (de Cheveigne and Kawahara 2002, steps 2 to 5)
 
 For a buffer x[0..N-1]:
@@ -121,6 +123,12 @@ Code: `src/dsp/vibrato.ts`. The same function scores this tracker, pYIN and Praa
 
 **Extent (cents), stated as plus or minus.** Extent = half the median of |o(peak) - o(adjacent trough)| over all consecutive extrema. A vibrato swinging from -50 to +50 cents has extent plus or minus 50 cents. Peak-to-peak extent (2 x extent) is also returned as `extentPeakToPeakCents`, and any UI must label which one it shows.
 
+**Minimum extent (design choice).** If the extent is below `VIB_MIN_EXTENT_C` = 5 cents (plus or minus), analyzeVibrato returns null, which the spec calls "none found". The check is the last step in `analyzeVibrato`, after the rate and extrema checks, and it uses a strict less-than, so an extent of exactly 5 cents is reported. The value is the default of the `minExtentCents` option, so a caller can pass another value. Every caller gets the floor: the live view, the test page, the checks, the Node runner and the whole-take windows in section 12.
+
+Why 5 cents (specs/M2.md 4.4): the spec says 5 cents is well above the small periodic ripple the detector reports on a pure steady tone, and well below the smallest synthetic vibrato, 30 cents (`fixtures/synthetic/manifest.json`). The ripple shows on the 2.5 s windows of section 12, not on whole takes. With the floor set to 0, the pure-sine `steady_long_48k` files (220 and 440 Hz) report vibrato in 11 of 12 windows each, extent at most 0.005 cents. The harmonic steady file reports none. On whole takes of the steady fixtures the 0.3 autocorrelation gate in step 2 already returns null. The spec's upper figure of 0.02 cents came from a test-writer fixture and was not re-checked here. The floor was set by owner decision on 2026-11-09. Test F-30 (`tests/take.vibrato-floor.test.ts`) checks that plus or minus 10 cents is reported and plus or minus 2 cents is not.
+
+Whether real straight-tone singing stays under 5 cents is **not validated**. No recording of a steady singer has been measured against this floor.
+
 **Known bias.** The 1024-sample integration window averages pitch over about 21 ms, which flattens fast vibrato. The expected attenuation of a sinusoidal modulation is roughly sin(pi r T) / (pi r T) with T the window length. At r = 7.5 Hz, T = 21.3 ms this is about 4%. Measured mean bias is -2.8% and worst case -4.3% (VALIDATION.md). No correction is applied.
 
 ## 4. Spectrogram
@@ -203,7 +211,7 @@ Status key: **checked** = opened in this session; **not checked** = cited from p
 | Bittner, R. M. et al. (2021). vocadito: A dataset of solo vocals with f0, note, and lyric annotations. arXiv:2110.05580. | Dataset | checked (Zenodo record and license via the Zenodo API; README in the archive) |
 | VocalSet, Zenodo 1442513; MIR-1K, Zenodo 3532216 | Dataset availability | checked (license and access fields via the Zenodo API) |
 
-**Could not source:** the continuity weights wD, wDown, wUp, wJump, the candidate limits (6 candidates, d' < 0.5) and the fixed-lag example L = 8 in section 1.5 (unshipped, not the default) (tuned on data, VALIDATION.md 4.4 and 4.5); the specific band edges in section 5 (project convention); the 0.15 YIN threshold and -50 dBFS gate (engineering choices, validated empirically rather than sourced); the 0.3 autocorrelation and 3 to 9 Hz limits in the vibrato detector (engineering choices).
+**Could not source:** the continuity weights wD, wDown, wUp, wJump, the candidate limits (6 candidates, d' < 0.5) and the fixed-lag example L = 8 in section 1.5 (unshipped, not the default) (tuned on data, VALIDATION.md 4.4 and 4.5); the specific band edges in section 5 (project convention); the 0.15 YIN threshold and -50 dBFS gate (engineering choices, validated empirically rather than sourced); the 0.3 autocorrelation and 3 to 9 Hz limits in the vibrato detector (engineering choices); the 5 cent minimum extent in section 3 (design choice, owner decision 2026-11-09; the steady-tone ripple it removes was seen only on 2.5 s windows of pure sines, and whether real straight-tone singing stays under it is not validated); the 0.5 s window step in section 12 (design choice).
 
 ## 10. Defaults pending her answers
 
@@ -214,3 +222,17 @@ Status key: **checked** = opened in this session; **not checked** = cited from p
 | -50 dBFS voicing gate | Her mic and interface gain |
 | Live path is plain YIN (no lookahead) | Whether she accepts occasional octave slips in the live readout (VALIDATION.md section 11) |
 | Band edges 2.5 to 3.5 kHz vs 0.05 to 2 kHz | Voice type (section 5 caveat) |
+
+## 12. Vibrato over time
+
+Code: `vibratoSpans` and the constants `VIB_WINDOW_S` and `VIB_STEP_S` in `src/take/analyse.ts`. The detector is section 3, unchanged.
+
+**Input.** The whole-take F0 contour from `analyseTake`, which is the whole-take decode of section 1.5 with the frame times of section 1.4. Unvoiced frames are 0, as in section 1.
+
+**Windows.** Spans [t0, t0 + 2.5 s), with t0 = k x 0.5 s for k = 0, 1, 2, and so on (`VIB_WINDOW_S` = 2.5, `VIB_STEP_S` = 0.5). Consecutive spans overlap by 2.0 s. A span is kept only if it ends within the take, so the last span ends at or before the take's duration. The 0.5 s step is a design choice (specs/M2.md 4.4). If the take has no voiced frame, this list is empty.
+
+**Frames in a span.** The span holds the contiguous frames from the first one with t >= t0 up to the first one at or after t1 = t0 + 2.5 s. Frame times are not strictly increasing, because each frame's time includes its own lag (section 1.4), so the cut follows the order of the frames. A span with no frames has no result.
+
+**Per span.** Each span is passed to `analyzeVibrato` (section 3) with default options and unchanged. The result is a rate in Hz and an extent in cents (plus or minus), or "none found" (null) when the detector reports none, including the 5 cent floor of section 3. There is no averaging across spans, so each span's rate and extent stand alone.
+
+**Known limit: note changes.** A span that covers a note change contains a step in the contour. The spec says behaviour on such spans is not validated. The fixtures score only spans inside one steady-vibrato section: `vib_change_48k` is scored per half, and a span that straddles the change is not scored (specs/M2.md 4.4, F-25). A straddling span can still report a rate and extent; those values carry no validation.

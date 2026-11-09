@@ -11,6 +11,7 @@ results/pyin/
 results/praat/
 results/vocadito/
 results/raw/
+results/take/
 results/*.log
 data/raw/
 results/tsyin/

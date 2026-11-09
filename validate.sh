@@ -1,5 +1,5 @@
 #!/bin/sh
-# Re-runs every M1 check. Results land in results/; VALIDATION.md quotes results/summary.json.
+# Re-runs every M1 check and the M2.1 Node checks. Results land in results/; VALIDATION.md quotes results/summary.json.
 #   ./validate.sh            synthetic + Vocadito
 #   ./validate.sh raw        also her recordings in ./data/raw (browser tracker vs Praat)
 set -e
@@ -18,6 +18,11 @@ for i in 0 1 2 3 4 5 6 7; do
     $PY py/reference.py datasets/vocadito/Audio results/vocadito --shard $i/8 >/dev/null ) &
 done
 wait
+# M2.1 (specs/M2.md 4.7): shared take module on the vibrato-span sets (V-02), and Node parity (V-01)
+for s in vib_long_48k vib_change_48k steady_long_48k; do
+  node tools/run_ts.ts take fixtures/synthetic/$s results/take
+done
+node tools/m2_parity.ts
 if [ "$1" = "raw" ]; then
   [ -d data/raw ] || { echo "data/raw does not exist"; exit 1; }
   node tools/run_ts.ts track data/raw results/raw/ts cont

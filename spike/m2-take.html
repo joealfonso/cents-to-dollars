@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>M2.1 take pipeline memory run</title>
+</head>
+<body>
+  <h1>M2.1 take pipeline memory run (not app code)</h1>
+  <p>Driven by <code>node tools/spike_m2_run.ts --take</code>. Pick a file to decode and analyse it once with src/file/client.ts.</p>
+  <input type="file" id="file" accept=".wav,.mp3,.m4a,audio/*">
+  <pre id="out"></pre>
+  <script type="module" src="./m2-take.ts"></script>
+</body>
+</html>

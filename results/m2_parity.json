@@ -1,0 +1,2432 @@
+{
+ "spec": "specs/M2.md 4.6 F-01 to F-03, 4.7 V-01",
+ "generatedAt": "2026-11-09T16:50:41.419Z",
+ "set": {
+  "files": 68,
+  "synthetic": 63,
+  "vocadito": [
+   "vocadito_2",
+   "vocadito_21",
+   "vocadito_30",
+   "vocadito_34",
+   "vocadito_37"
+  ],
+  "vocaditoClean": "vocadito_37",
+  "vocaditoCleanReason": "highest whole-take Raw Pitch Accuracy of the 40 Vocadito tracks (0.990); continuity changes 14 of its frames"
+ },
+ "toleranceCents": 0.001,
+ "f01": {
+  "files": 68,
+  "failingFiles": [],
+  "sampleMismatches": 0,
+  "samplesCompared": 10293556,
+  "verdict": "pass"
+ },
+ "f02": {
+  "files": 68,
+  "failingFiles": [],
+  "frames": 39702,
+  "startMismatches": 0,
+  "voicedMismatches": 0,
+  "tMismatchesVsTrackJson": 0,
+  "verdict": "pass"
+ },
+ "f03": {
+  "files": 68,
+  "failingFiles": [],
+  "voicedFrames": 33166,
+  "framesOutsideTol": 0,
+  "voicingMismatches": 0,
+  "maxAbsCents": 0,
+  "exactEqualFrames": 33166,
+  "vsTrackJson": {
+   "framesOutsideTol": 0,
+   "voicingMismatches": 0,
+   "maxAbsCents": 0.00011777150765471508,
+   "missingTrackJson": []
+  },
+  "verdict": "pass"
+ },
+ "perFile": [
+  {
+   "name": "tone_sine_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00006624775826177019
+    }
+   }
+  },
+  {
+   "name": "tone_sine_44k_000",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00006656774271727419
+    }
+   }
+  },
+  {
+   "name": "tone_harm_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00006457680160147739
+    }
+   }
+  },
+  {
+   "name": "tone_noise20_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 179,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 179,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00006552305974180133
+    }
+   }
+  },
+  {
+   "name": "tone_high_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000007784305244154685
+    }
+   }
+  },
+  {
+   "name": "vib_sine_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00004002279138037759
+    }
+   }
+  },
+  {
+   "name": "vib_harm_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00001989659132991083
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_44k_000",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000044062978548448095
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_44k_001",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019598177162448304
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_44k_002",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008739987612985896
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_44k_003",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00002006717113878994
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_44k_000",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00004415978174319985
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_44k_001",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019669798185383437
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_44k_002",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008748063899722515
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_44k_003",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020168582226318817
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_44k_000",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000044136824927113434
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_44k_001",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019594583331934178
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_44k_002",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008719116776660062
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_44k_003",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020163949153267345
+    }
+   }
+  },
+  {
+   "name": "fmt_float_44k_000",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000044136826849169285
+    }
+   }
+  },
+  {
+   "name": "fmt_float_44k_001",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00001959458179428944
+    }
+   }
+  },
+  {
+   "name": "fmt_float_44k_002",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008718994918315243
+    }
+   }
+  },
+  {
+   "name": "fmt_float_44k_003",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020163946654594642
+    }
+   }
+  },
+  {
+   "name": "fmt_double_44k_000",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000044136826849169285
+    }
+   }
+  },
+  {
+   "name": "fmt_double_44k_001",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00001959458179428944
+    }
+   }
+  },
+  {
+   "name": "fmt_double_44k_002",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008718994918315243
+    }
+   }
+  },
+  {
+   "name": "fmt_double_44k_003",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020163946654594642
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_44k_000",
+   "sampleRate": 44100,
+   "channels": 2,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.0000438943441268133
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_44k_001",
+   "sampleRate": 44100,
+   "channels": 2,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019605933648782472
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_44k_002",
+   "sampleRate": 44100,
+   "channels": 2,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008738200485398926
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_44k_003",
+   "sampleRate": 44100,
+   "channels": 2,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019990969694017378
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_44k_000",
+   "sampleRate": 44100,
+   "channels": 3,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000043984056083775723
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_44k_001",
+   "sampleRate": 44100,
+   "channels": 3,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019553273737192765
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_44k_002",
+   "sampleRate": 44100,
+   "channels": 3,
+   "samples": 44100,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 165,
+    "runnerFrames": 165,
+    "trackJsonFrames": 165,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 165,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 165,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008658401144663527
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_44k_003",
+   "sampleRate": 44100,
+   "channels": 3,
+   "samples": 132300,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 509,
+    "runnerFrames": 509,
+    "trackJsonFrames": 509,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 509,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 509,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020193690811100087
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000044145740190983306
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_48k_001",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019469607603851136
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_48k_002",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008758974021380847
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm16_48k_003",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020039359718630265
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00004401301412738036
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_48k_001",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019060355576152463
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_48k_002",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008751006330883793
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm24_48k_003",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020166146832011617
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.0000440558327288327
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_48k_001",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019356262236171863
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_48k_002",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008754664387658534
+    }
+   }
+  },
+  {
+   "name": "fmt_pcm32_48k_003",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.0000201499658120042
+    }
+   }
+  },
+  {
+   "name": "fmt_float_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00004405563706353687
+    }
+   }
+  },
+  {
+   "name": "fmt_float_48k_001",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019356263197199826
+    }
+   }
+  },
+  {
+   "name": "fmt_float_48k_002",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008754664003247356
+    }
+   }
+  },
+  {
+   "name": "fmt_float_48k_003",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020149965235387426
+    }
+   }
+  },
+  {
+   "name": "fmt_double_48k_000",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00004405563706353687
+    }
+   }
+  },
+  {
+   "name": "fmt_double_48k_001",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000019356263197199826
+    }
+   }
+  },
+  {
+   "name": "fmt_double_48k_002",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008754664003247356
+    }
+   }
+  },
+  {
+   "name": "fmt_double_48k_003",
+   "sampleRate": 48000,
+   "channels": 1,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020149965235387426
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_48k_000",
+   "sampleRate": 48000,
+   "channels": 2,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000043889459181293574
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_48k_001",
+   "sampleRate": 48000,
+   "channels": 2,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00001932362803305352
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_48k_002",
+   "sampleRate": 48000,
+   "channels": 2,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00000875655876594625
+    }
+   }
+  },
+  {
+   "name": "fmt_stereo_48k_003",
+   "sampleRate": 48000,
+   "channels": 2,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000020102575601126436
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_48k_000",
+   "sampleRate": 48000,
+   "channels": 3,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000043761846006280916
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_48k_001",
+   "sampleRate": 48000,
+   "channels": 3,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00001923275090105797
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_48k_002",
+   "sampleRate": 48000,
+   "channels": 3,
+   "samples": 48000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 180,
+    "runnerFrames": 180,
+    "trackJsonFrames": 180,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 180,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 180,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.000008735460786901977
+    }
+   }
+  },
+  {
+   "name": "fmt_wavex3_48k_003",
+   "sampleRate": 48000,
+   "channels": 3,
+   "samples": 144000,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 555,
+    "runnerFrames": 555,
+    "trackJsonFrames": 555,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 555,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 555,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00002012222093473196
+    }
+   }
+  },
+  {
+   "name": "vocadito_2",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 1552673,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 6058,
+    "runnerFrames": 6058,
+    "trackJsonFrames": 6058,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 4483,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 4483,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00003399363286403952
+    }
+   }
+  },
+  {
+   "name": "vocadito_21",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 970200,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 3782,
+    "runnerFrames": 3782,
+    "trackJsonFrames": 3782,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 2796,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 2796,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00009556528886063333
+    }
+   }
+  },
+  {
+   "name": "vocadito_30",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 574086,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 2235,
+    "runnerFrames": 2235,
+    "trackJsonFrames": 2235,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 1227,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 1227,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00007228635553074923
+    }
+   }
+  },
+  {
+   "name": "vocadito_34",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 1096039,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 4274,
+    "runnerFrames": 4274,
+    "trackJsonFrames": 4274,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 2820,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 2820,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00011777150765471508
+    }
+   }
+  },
+  {
+   "name": "vocadito_37",
+   "sampleRate": 44100,
+   "channels": 1,
+   "samples": 1708258,
+   "f01": {
+    "pass": true,
+    "rateMatch": true,
+    "channelsMatch": true,
+    "lengthMatch": true,
+    "sampleMismatches": 0
+   },
+   "f02": {
+    "pass": true,
+    "frames": 6665,
+    "runnerFrames": 6665,
+    "trackJsonFrames": 6665,
+    "startMismatches": 0,
+    "voicedMismatches": 0,
+    "tMismatchesVsTrackJson": 0
+   },
+   "f03": {
+    "pass": true,
+    "voicedFrames": 5153,
+    "outsideTol": 0,
+    "voicingMismatches": 0,
+    "maxAbsCents": 0,
+    "exactEqual": 5153,
+    "vsTrackJson": {
+     "outsideTol": 0,
+     "voicingMismatches": 0,
+     "maxAbsCents": 0.00011060122766484518
+    }
+   }
+  }
+ ]
+}

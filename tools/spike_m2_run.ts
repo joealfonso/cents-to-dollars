@@ -2,8 +2,12 @@
 //
 //   node tools/spike_m2_fixtures.ts           # once, writes fixtures/spike/ (gitignored)
 //   node tools/spike_m2_run.ts [substring]    # all fixtures, or only names containing substring
+//   node tools/spike_m2_run.ts --take [substring]
+//       same measurement, but the page is spike/m2-take.html, which runs the real M2.1 pipeline
+//       (src/file/client.ts: decodeFile, Worker with analyseTake, transferred result) and holds the TakeResult.
 //
-// Writes results/m2_spike.json and results/m2_spike.md. Not part of `npm run test:browser` or `npm test`.
+// Writes results/m2_spike.json and results/m2_spike.md (or, with --take, results/m2_take_memory.json and .md,
+// compared against results/m2_spike.json). Not part of `npm run test:browser` or `npm test`.
 // It starts its own Vite dev server on port 5181 (in this process, closed in finally) and, for each
 // file, a fresh Chrome via Playwright's chromium.launchServer({ channel: 'chrome' }) so the browser
 // PID is known and no memory carries over between files. The page is spike/m2-file.html.
@@ -172,7 +176,7 @@ async function attempt(fx: Fixture, baseURL: string): Promise<Record<string, unk
     const crash = new Promise<never>((_, reject) => { crashed = reject; });
     crash.catch(() => {});
     page.on('crash', () => { errors.push('page crashed'); crashed(new Error('renderer crashed (possibly out of memory)')); });
-    await page.goto(`${baseURL}/spike/m2-file.html`);
+    await page.goto(`${baseURL}/${PAGE}`);
     await page.waitForFunction(() => (window as unknown as { __spikeReady: () => boolean }).__spikeReady());
     await page.waitForLoadState('networkidle');
     sampler.start();
@@ -304,7 +308,9 @@ function machineMemory(): Record<string, unknown> {
   };
 }
 
-const filter = process.argv[2] ?? '';
+const TAKE = process.argv.includes('--take');
+const PAGE = TAKE ? 'spike/m2-take.html' : 'spike/m2-file.html';
+const filter = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '';
 const manifest = JSON.parse(readFileSync('fixtures/spike/manifest.json', 'utf8')) as { seed: number; files: Fixture[]; skipped: unknown[] };
 const fixtures = manifest.files.filter((f) => basename(f.file).includes(filter));
 
@@ -319,16 +325,21 @@ try {
     process.stdout.write(`${basename(fx.file)} ... `);
     const r = await measure(fx, baseURL);
     runs.push(r);
-    const w = r.result as { decodeMs: number; worker: { analysisMs: number } } | undefined;
+    const w = r.result as { decodeMs: number; worker?: { analysisMs: number }; analyseMs?: number } | undefined;
     const m = r.memory as { verdictBytes: number; rss: { rendererPeakBytes: number } } | undefined;
+    const analysisMs = w ? (w.worker?.analysisMs ?? w.analyseMs ?? NaN) : NaN;
     console.log(r.ok && w && m
-      ? `decode ${w.decodeMs.toFixed(0)} ms, analysis ${(w.worker.analysisMs / 1000).toFixed(2)} s, renderer footprint peak ${(m.verdictBytes / MB).toFixed(0)} MB, renderer RSS peak ${(m.rss.rendererPeakBytes / MB).toFixed(0)} MB`
+      ? `decode ${w.decodeMs.toFixed(0)} ms, analysis ${(analysisMs / 1000).toFixed(2)} s, renderer footprint peak ${(m.verdictBytes / MB).toFixed(0)} MB, renderer RSS peak ${(m.rss.rendererPeakBytes / MB).toFixed(0)} MB`
       : `FAILED: ${String(r.error)}`);
   }
 } finally {
   await vite.close();
 }
 const memEnd = machineMemory();
+if (TAKE) {
+  writeTakeReport(runs, manifest, memStart, memEnd);
+  process.exit(0);
+}
 
 const pwVersion = (JSON.parse(readFileSync('node_modules/@playwright/test/package.json', 'utf8')) as { version: string }).version;
 const report = {
@@ -417,3 +428,100 @@ Caveats on memory: ${report.methods.memoryCaveats.join(' ')}
 `;
 writeFileSync('results/m2_spike.md', md);
 console.log('wrote results/m2_spike.json and results/m2_spike.md');
+
+// ---------------------------------------------------------------- --take report
+
+function writeTakeReport(runs: Record<string, unknown>[], manifest: { seed: number; skipped: unknown[] }, memStart: Record<string, unknown>, memEnd: Record<string, unknown>): void {
+  const pwVersion = (JSON.parse(readFileSync('node_modules/@playwright/test/package.json', 'utf8')) as { version: string }).version;
+  const prev = JSON.parse(readFileSync('results/m2_spike.json', 'utf8')) as { generatedAt: string; runs: { name: string; ok: boolean; memory?: { verdictBytes: number } }[] };
+  const prevPeak = new Map(prev.runs.filter((r) => r.ok && r.memory).map((r) => [r.name, r.memory!.verdictBytes]));
+  const command = `node tools/spike_m2_run.ts --take${filter ? ` ${filter}` : ''}`;
+  const report = {
+    spec: 'specs/M2.md 4.5, re-measured with the real M2.1 pipeline (src/file/client.ts)',
+    generatedAt: new Date().toISOString(),
+    command,
+    browser: { name: 'Google Chrome (installed, Playwright channel "chrome")', version: (runs.find((r) => r.chrome)?.chrome as string) ?? null, headless: true, playwright: pwVersion },
+    machine: {
+      cpu: os.cpus()[0]?.model, logicalCores: os.cpus().length, ramBytes: os.totalmem(),
+      os: `macOS ${tryCmd('sw_vers', ['-productVersion']) ?? '?'} (Darwin ${os.release()})`, arch: os.arch(),
+      hwModel: tryCmd('sysctl', ['-n', 'hw.model']), node: process.version,
+      memoryAtStart: memStart, memoryAtEnd: memEnd,
+    },
+    methods: {
+      page: 'spike/m2-take.html + spike/m2-take.ts: analyseFile(file) from src/file/client.ts, result held on the main thread until the tail of sampling ends.',
+      fileInput: 'Playwright setInputFiles on <input type=file>; decodeFile reads File.arrayBuffer().',
+      decode: 'src/file/decode.ts. Size and duration limits checked first (src/take/limits.ts). WAV at 44.1 or 48 kHz: header read only (readWavInfo), the file bytes go to the Worker. MP3 and M4A: header rate, decodeAudioData in an OfflineAudioContext at that rate when 44.1 or 48 kHz, else 48 kHz; the AudioBuffer is dropped and its channel arrays go to the Worker. decodeMs = analyseFile start to decodeFile resolved (read, header, decodeAudioData).',
+      transfer: 'WAV bytes or decoded float32 channels transferred to a new module Worker (src/file/take.worker.ts), one Worker per job, terminated after the result. The Worker parses the WAV (parseWav) or mixes the channels (mixToMono) into a Float64Array mono, then analyses in a later task so the message is unreachable.',
+      analysis: 'Worker: analyseTake (src/take/analyse.ts): FrameAnalyzer frames with the continuity decoder (lag Infinity) run as the frames are produced, 0 to 4 kHz power copied into one flat Float32Array from the same FFT, then vibrato spans. Result posted with every typed-array buffer transferred (takeTransferables). analyseMs = post to the Worker to result received on the main thread (includes Worker start, WAV parse or mix, spectrum, vibrato spans and the transfer). RTF = audio seconds / analyse seconds.',
+      memory: `As results/m2_spike.json: renderer phys_footprint lifetime peak from vmmap -summary (verdict), footprint -j about every ${FP_INTERVAL_MS} ms, ps RSS about every ${PS_INTERVAL_MS} ms. Baseline = mean over ${BASELINE_MS} ms after a ${SETTLE_MS} ms settle with the page loaded (no Worker yet: client.ts starts one per job, the earlier spike page started its Worker on load). Peak window: run plus ${TAIL_MS} ms tail while the page holds the result.`,
+      memoryCaveats: [
+        'phys_footprint counts the renderer only; GPU, browser and utility processes are in the RSS tree column, not in the verdict.',
+        'The vmmap lifetime peak has no sampling gaps, but vmmap output is rounded to 0.1 MB and the number includes everything since the renderer started.',
+        'RSS leaves out compressed and swapped pages and double-counts shared pages in the tree sum.',
+        'Garbage collection timing changes the peak: freed buffers may stay resident until the next GC.',
+        'Headless Chrome; a headed tab adds compositor and GPU memory not measured here.',
+        'One run per file. The comparison column is a separate run (results/m2_spike.json), so small differences are within run-to-run variation.',
+      ],
+      budgets: { peakTabMemoryBytes: BUDGET_MEM_BYTES, analysisMs: BUDGET_ANALYSIS_MS, note: 'Placeholders from specs/M2.md 4.5 (OPEN Q2). Memory fit judged on the renderer physical footprint lifetime peak (vmmap).' },
+      comparedWith: `results/m2_spike.json generated ${prev.generatedAt}`,
+    },
+    skippedFixtures: manifest.skipped,
+    runs: runs.map((r) => ({ ...r, spikeVerdictBytes: prevPeak.get(String(r.name)) ?? null })),
+  };
+  mkdirSync('results', { recursive: true });
+  writeFileSync('results/m2_take_memory.json', JSON.stringify(report, null, 1));
+
+  interface TW { decodeMs: number; analyseMs: number; totalMs: number; sampleRate: number; rateSource: string; durationS: number; frames: number; resultTypedArrayBytes: number; progressNonDecreasing: boolean }
+  interface TM {
+    verdictBytes: number;
+    footprint: { vmmapLifetimePeakBytes: number | null; sampledPeakBytes: number; sampledPeakMinusBaselineBytes: number };
+    rss: { rendererPeakBytes: number; rendererPeakMinusBaselineBytes: number; treePeakBytes: number; treePeakMinusBaselineBytes: number };
+  }
+  const yes = (b: boolean) => (b ? 'yes' : 'NO');
+  const mb = (b: number) => (b / MB).toFixed(0);
+  const signed = (b: number) => `${b >= 0 ? '+' : '-'}${Math.abs(b / MB).toFixed(0)}`;
+  const rows = runs.map((r) => {
+    if (!r.ok) return `| ${String(r.name)} | failed: ${String(r.error)} | | | | | | | | | | | | | |`;
+    const w = r.result as TW;
+    const m = r.memory as TM;
+    const life = m.footprint.vmmapLifetimePeakBytes;
+    const old = prevPeak.get(String(r.name));
+    return `| ${String(r.name)} | ${(Number(r.bytes) / MB).toFixed(1)} | ${w.sampleRate} (${w.rateSource}) | ${w.decodeMs.toFixed(0)} | ${(w.analyseMs / 1000).toFixed(2)} | ${(w.durationS / (w.analyseMs / 1000)).toFixed(1)} | ${(w.totalMs / 1000).toFixed(2)} | ${(w.resultTypedArrayBytes / MB).toFixed(1)} | ${life !== null ? mb(life) : 'n/a'} | ${mb(m.footprint.sampledPeakBytes)} (+${mb(m.footprint.sampledPeakMinusBaselineBytes)}) | ${mb(m.rss.rendererPeakBytes)} (+${mb(m.rss.rendererPeakMinusBaselineBytes)}) | ${mb(m.rss.treePeakBytes)} (+${mb(m.rss.treePeakMinusBaselineBytes)}) | ${yes(m.verdictBytes < BUDGET_MEM_BYTES)}${life === null ? ' (sampled)' : ''} | ${yes(w.analyseMs < BUDGET_ANALYSIS_MS)} | ${old !== undefined ? `${mb(old)} (${signed(m.verdictBytes - old)})` : 'n/a'} |`;
+  });
+  const ok = runs.filter((r) => r.ok);
+  const memFail = ok.filter((r) => (r.memory as TM).verdictBytes >= BUDGET_MEM_BYTES).map((r) => String(r.name));
+  const timeFail = ok.filter((r) => (r.result as TW).analyseMs >= BUDGET_ANALYSIS_MS).map((r) => String(r.name));
+  const longest = ok.filter((r) => Number(r.durationS) === Math.max(...ok.map((x) => Number(x.durationS))));
+  const maxLong = longest.length ? Math.max(...longest.map((r) => (r.memory as TM).verdictBytes)) : null;
+  const nonMono = ok.filter((r) => !(r.result as TW).progressNonDecreasing).map((r) => String(r.name));
+  const failed = runs.filter((r) => !r.ok).map((r) => `${String(r.name)}: ${String(r.error)}`);
+  const retried = runs.filter((r) => r.retriedAfter).map((r) => `${String(r.name)} (${String(r.retriedAfter)})`);
+  const memLine = (x: Record<string, unknown>) => `${x.memoryPressureFreePercent ?? '?'}% free (memory_pressure), swap ${x.swapUsage ?? '?'}`;
+  const md = `# M2.1 take pipeline: memory and time with the real pipeline
+
+Generated by \`${command}\` at ${report.generatedAt}. Every number in this note is written by the runner from \`results/m2_take_memory.json\`. One run per file. The last column is the same file in the earlier spike (\`results/m2_spike.json\`, ${prev.generatedAt}), which decoded every file with decodeAudioData, sent float32 channels to the Worker, and returned the result by structured clone.
+
+- Browser: ${report.browser.name} ${report.browser.version}, headless, Playwright ${pwVersion}
+- Machine: ${report.machine.cpu} (${report.machine.hwModel ?? 'model unknown'}), ${report.machine.logicalCores} cores, ${(os.totalmem() / 2 ** 30).toFixed(0)} GiB RAM, ${report.machine.os}
+- Machine memory at start: ${memLine(memStart)}. At end: ${memLine(memEnd)}.
+- Pipeline: ${report.methods.decode} ${report.methods.transfer} ${report.methods.analysis}
+- Hold: the page keeps the returned TakeResult (flat typed arrays, size in the "Result MB" column) while memory is sampled.
+- Memory: ${report.methods.memory} MB = 10^6 bytes.
+- Budgets (placeholders, OPEN Q2): peak tab memory under 1 GB (taken as 10^9 bytes, judged on the renderer footprint peak from vmmap), analysis under 60 s.
+
+| File | Size MB | Analysis rate (source) | Decode ms | Analyse s | RTF | Total s | Result MB | Footprint peak MB | Footprint sampled MB (+delta) | Renderer RSS MB (+delta) | Tree RSS MB (+delta) | Memory fits | Analysis fits | Spike footprint peak MB (change) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+${rows.join('\n')}
+
+Files over the memory placeholder: ${memFail.length ? memFail.join(', ') : 'none'}. Files over the analysis placeholder: ${timeFail.length ? timeFail.join(', ') : 'none'}.
+Highest footprint peak at the longest tested duration (${longest.length ? String(longest[0].durationS) : '?'} s): ${maxLong !== null ? `${mb(maxLong)} MB, ${(100 * maxLong / BUDGET_MEM_BYTES).toFixed(1)}% of 10^9 bytes` : 'n/a'}.
+Progress values non-decreasing in every run: ${nonMono.length ? `NO (${nonMono.join(', ')})` : 'yes'}.
+Failed files: ${failed.length ? failed.join('; ') : 'none'}.
+Baseline retries: ${retried.length ? retried.join('; ') : 'none'}.
+Skipped fixtures: ${manifest.skipped.length ? JSON.stringify(manifest.skipped) : 'none'}.
+
+Caveats on memory: ${report.methods.memoryCaveats.join(' ')}
+`;
+  writeFileSync('results/m2_take_memory.md', md);
+  console.log('wrote results/m2_take_memory.json and results/m2_take_memory.md');
+}

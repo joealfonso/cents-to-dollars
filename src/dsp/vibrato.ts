@@ -22,9 +22,18 @@ export interface VibratoOptions {
   /** Unvoiced gaps up to this many frames are bridged by linear interpolation in cents. */
   maxGapFrames: number;
   minDurationS: number;
+  /** Plus or minus extent in cents below which the result is "none found" (null). See VIB_MIN_EXTENT_C. */
+  minExtentCents: number;
 }
 
-export const DEFAULT_VIBRATO: VibratoOptions = { minRateHz: 3, maxRateHz: 9, maxGapFrames: 3, minDurationS: 0.5 };
+/**
+ * Minimum vibrato extent, plus or minus cents (specs/M2.md 4.4 and F-30, owner decision 2026-11-09; design
+ * choice). Below it analyzeVibrato reports "none found": on a pure steady tone the detector otherwise reports
+ * a periodic ripple of about 0.001 to 0.02 c. Applies to the live view and the whole-take spans alike.
+ */
+export const VIB_MIN_EXTENT_C = 5;
+
+export const DEFAULT_VIBRATO: VibratoOptions = { minRateHz: 3, maxRateHz: 9, maxGapFrames: 3, minDurationS: 0.5, minExtentCents: VIB_MIN_EXTENT_C };
 
 function longestVoicedRun(frames: ContourFrame[], maxGap: number): [number, number] | null {
   let best: [number, number] | null = null;
@@ -146,6 +155,7 @@ export function analyzeVibrato(frames: ContourFrame[], opts: Partial<VibratoOpti
   const medianSwing = swings.length % 2 ? swings[mid] : 0.5 * (swings[mid - 1] + swings[mid]);
   const halfCycles = ext.length - 1;
   const rateHz = halfCycles / (2 * (ext[ext.length - 1].t - ext[0].t));
+  if (medianSwing / 2 < o.minExtentCents) return null;
   return {
     rateHz,
     extentCents: medianSwing / 2,

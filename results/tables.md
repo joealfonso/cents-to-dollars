@@ -42,3 +42,14 @@
 |---|---|---|---|
 | whole take (YIN + continuity) | 96.46% | 88735 | pass |
 | live (plain YIN) | 94.36% | 88735 | fail |
+
+## M2.1 parity (F-01 to F-03) and vibrato spans (F-24 to F-26)
+
+| Criterion | Detail | Verdict |
+|---|---|---|
+| F-01 | 68 files, 0 sample mismatches | pass |
+| F-02 | 39702 frames, 0 start and 0 voiced mismatches | pass |
+| F-03 | 33166 voiced frames, 0 outside 0.001 c, max 0 c | pass |
+| F-24 | vib_long_48k: 20 spans scored, 0 failing | pass |
+| F-25 | vib_change_48k: 12 spans scored, 0 failing | pass |
+| F-26 | steady_long_48k: 36 spans scored, 0 failing | pass |
