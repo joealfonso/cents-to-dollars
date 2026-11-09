@@ -289,6 +289,32 @@ The spec allows E1 input from "an uploaded file or a selected span of one" (6.1)
 - Changing the span, the target or A4 after a result: the result stays, with a line "Span, target or A4 changed. Press Measure held note to update." It does not recompute on its own, so a number on screen always matches a run she started.
 - **Range sweep on a file (CUTTABLE, E3):** if built, a second button "Find lowest and highest held notes" with the E3 result (section 5.6).
 
+### 3.6 Recording tips
+
+**User and problem.** A singer who records on a professional mic or an interface, not the laptop, picks the export settings herself and has no way to know which ones measure well. Assumption (untested): she exports from a recording app before she gets here. Test: ask Joseph what she uses at the setup visit.
+
+**Placement.**
+- No file and No file, after leaving (3.3): a block inside the drop zone panel, after the limits and "It stays on this computer." lines, open. It is below the "Open an audio file" button in read order, so the button stays first (3.1).
+- Done, Done with no pitch found: the same content as a collapsed `<details>` (`#fa-tips`) at the end of About this analysis, before the links. Closed by default. The summary reads "Recording tips". **Reason:** after a take loads, the tips help her next recording, not this reading, so they must not compete with the figures.
+- Not shown in error, Decoding, Analysing or Cancelled states. The error text already says what to do, and a second block would bury it. **Rejected:** a tips line inside every error. It repeats the same advice in nine places.
+
+**Copy (exact).** Heading "Recording tips" (`#fa-tips-title`). List `#fa-tips-list`:
+1. "Export a WAV file at 44.1 or 48 kHz. It is analysed as it is, with no resampling."
+2. "Other rates, such as 96 kHz, also open. They are converted to 48 kHz, and the file strip says so."
+3. "WAV is the format the measurements were checked on. MP3 and M4A files also open, and their accuracy has not been checked yet."
+4. "Turn off noise suppression, automatic gain, pitch correction and effects in the recording app. They change the sound that is measured."
+5. "Keep the recording to {MAX_DURATION_S formatted} or less."
+
+Item 5 is formatted from `MAX_DURATION_S` at runtime (3.3 rule). If the constant is unset, item 5 is left out. Item 3 is the one line to revisit when V-08 has verified numbers, with the "unverified" note in Notes on this file (3.2). No mic brands, prices or distances, because no spec source exists. No "in tune" wording (DESIGN.md "Not doing").
+
+**Markup and a11y.** In the drop zone, `#fa-tips-title` is an h3 under the h2 "Open a recording", and `#fa-tips-list` is a `<ul>` with `aria-labelledby="fa-tips-title"`. In Done, the `<summary>` is the toggle and is not a heading, so the outline stays under the About this analysis heading. Native `<details>` gives Enter and Space and the expanded state to screen readers. Focus order (section 6): the summary sits between the readings and the About links, so it comes before the links. No `aria-live`, no announcement. Text is `--ink-2`, at least `--control-h` for the summary, wraps at 320 and 200% text.
+
+**Motion.** None added. The disclosure uses the existing Details behaviour. In No file the block is static and takes part in the panel crossfade (section 7).
+
+**Model output.** None. The copy is static, so there is no uncertainty state and nothing to correct.
+
+**States.** Final: the placement and copy above. Open: whether she wants the tips at all once she has exported one good file (no evidence yet), and whether item 3 should name V-08 progress after it lands.
+
 ---
 
 ## 4. Interval recognition (`#/aural`, M2.2, Tool 02)
@@ -559,6 +585,7 @@ Uses only the existing tokens (`--dur-fast`, `--dur-base`, `--dur-enter`, `--dur
 | `ex-chk-run`, `ex-chk-cancel`, `ex-chk-status`, `ex-chk-progress`, `ex-chk-verdict`, `ex-chk-results`, `ex-chk-warning`, `ex-chk-stale`, `ex-chk-error` | speaker and microphone check |
 | `ex-rate-error` | input rate refusal (Option A), both exercises |
 | `fa-info-rate-note`, `fa-rate-error`, `fa-type-error` | file rate note line, rate refusal (Option A), file type error |
+| `fa-tips`, `fa-tips-title`, `fa-tips-list` | Recording tips (3.6) |
 
 The engineer can add IDs. These are the ones tests and the a11y-auditor will reference.
 
@@ -629,6 +656,8 @@ Also carried from DESIGN.md: OPEN 1 (reduced motion and fades), which applies to
 ---
 
 ## Changelog
+
+**Revision 4:** Added 3.6 Recording tips on `#/file` (open in the No file states, a collapsed disclosure in About this analysis in Done), with IDs in section 8. Grounded in spec 4.3, V-08 (not run) and `MAX_DURATION_S`.
 
 **Revision 3** (the-user-who-hates-this review, no behaviour questions decided):
 1. Speaker check (5.4): an opening line on why ("So the app knows when to listen for you."). The primary view is the verdict sentence and a plain line. Delay, dBFS, notes heard, spread and the pitch offset moved to Details, and the announcements no longer read numbers. The Ready check line and the Overview row have no numbers.

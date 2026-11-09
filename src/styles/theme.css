@@ -34,6 +34,19 @@
   --t-label-ls: 0.05em;
   --t-mono: 400 13px/20px var(--font-mono);
   --t-caption: italic 400 14px/20px var(--font-caption);
+  /* visual weight and mobile layout (1.10, 3.6). Compact values are in the max-width: 599px block below. */
+  --t-h3: 600 15px/20px var(--font-ui);
+  --t-reading: 350 28px/32px var(--font-display);
+  --sec-gap: 48px;
+  --sec-head-pad: 12px 0 16px;
+  --group-gap: 24px;
+  --item-gap: 20px;
+  --row-pad-y: 12px;
+  --route-pad-top: 24px;
+  --route-pad-bottom: 64px;
+  --page-head-pad: 24px 0;
+  --hit: 44px;
+  --bar-h: 0px;
   /* spacing (1.6), 4px base */
   --s-1: 4px;
   --s-2: 8px;
@@ -64,6 +77,27 @@
   --tilt-chip: 0deg;
   --focus-w: 2px;
   --focus-offset: 2px;
+  /* motion (1.7a): four size classes. The old --dur-*, --ease-enter, --ease-spring*, --stagger and --move-enter
+     stay frozen in tokens.css for #/legacy; app code uses only these. */
+  --dur-micro-in: 120ms;
+  --dur-micro-out: 80ms;
+  --dur-small-in: 180ms;
+  --dur-small-out: 120ms;
+  --dur-medium-in: 300ms;
+  --dur-medium-out: 200ms;
+  --dur-large-in: 480ms;
+  --dur-large-out: 320ms;
+  --dur-reveal-in: var(--dur-large-in);
+  --dur-reveal-out: var(--dur-large-out);
+  --move-micro: 4px;
+  --move-small: 6px;
+  --move-medium: 8px;
+  --move-large: 12px;
+  --ease-decelerate: cubic-bezier(.2, .65, .25, 1);
+  --ease-accelerate: cubic-bezier(.3, 0, .8, .15);
+  --ease-settle: cubic-bezier(.32, .1, .12, 1);
+  --stagger-step: 40ms;
+  --stagger-max: 120ms;
 
   /* aliases until Phase C, for the legacy test page (1.9) */
   --size-title: var(--t-display-1-size);
@@ -124,6 +158,26 @@
   --tilt-chip: 2deg;
   --focus-w: 4px;
   --focus-offset: 4px;
+  /* motion (1.7a): same values as Paper, dormant with the rest of Loud */
+  --dur-micro-in: 120ms;
+  --dur-micro-out: 80ms;
+  --dur-small-in: 180ms;
+  --dur-small-out: 120ms;
+  --dur-medium-in: 300ms;
+  --dur-medium-out: 200ms;
+  --dur-large-in: 480ms;
+  --dur-large-out: 320ms;
+  --dur-reveal-in: var(--dur-large-in);
+  --dur-reveal-out: var(--dur-large-out);
+  --move-micro: 4px;
+  --move-small: 6px;
+  --move-medium: 8px;
+  --move-large: 12px;
+  --ease-decelerate: cubic-bezier(.2, .65, .25, 1);
+  --ease-accelerate: cubic-bezier(.3, 0, .8, .15);
+  --ease-settle: cubic-bezier(.32, .1, .12, 1);
+  --stagger-step: 40ms;
+  --stagger-max: 120ms;
 
   /* aliases until Phase C, for the legacy test page (1.9) */
   --size-title: var(--t-display-1-size);
@@ -137,10 +191,22 @@
 @media (max-width: 599px) {
   :root,
   :root[data-theme="editorial"] {
-    --t-cue: 600 24px/28px var(--font-ui);
-    --t-chip: 500 24px/28px var(--font-label);
-    --t-display-1-size: 32px;
-    --t-display-1: 350 var(--t-display-1-size)/36px var(--font-display);
+    /* 3.6 token table, compact column. Cue and chip are 40/44 so she can read them from 2 m. */
+    --t-hero: 350 clamp(120px, 36cqi, 152px)/1 var(--font-display);
+    --t-cue: 600 40px/44px var(--font-ui);
+    --t-chip: 500 40px/44px var(--font-label);
+    --t-display-1-size: 28px;
+    --t-display-1: 350 var(--t-display-1-size)/32px var(--font-display);
+    --t-display-2: 350 22px/28px var(--font-display);
+    --t-display-3: 350 20px/24px var(--font-display);
+    --sec-gap: 32px;
+    --sec-head-pad: 8px 0 12px;
+    --group-gap: 20px;
+    --item-gap: 16px;
+    --row-pad-y: 10px;
+    --route-pad-top: 0px;
+    --route-pad-bottom: 32px;
+    --page-head-pad: 16px 0 12px;
     --gutter: 16px;
     --control-h: 44px;
   }
@@ -157,16 +223,49 @@
   }
 }
 
-/* Reduced motion (1.2): no rotation, no movement, no transition.
-   tokens.css also has a reduced-motion block that keeps 100 to 120ms fades. This block loads later with the
-   same specificity, so it wins: under reduced motion every duration is --rm-dur (0ms). Both stay until the
-   owner decides OPEN 1. To allow short fades, set --rm-dur to the fade length (for example 120ms); it is the
-   only line to change. If tokens.css gains a new --dur-* token, add it here too. */
+/* The Voice action bar is fixed only in compact portrait (3.6). Phone landscape under 600px wide puts the toggle in
+   the title row, so the bar takes no height there. */
+@media (max-width: 599px) and (orientation: portrait), (max-width: 599px) and (min-height: 501px) {
+  :root,
+  :root[data-theme="editorial"] { --bar-h: 64px; }
+}
+
+/* Live (1.7a principle 3): while the mic is on, nothing animates layout and nothing staggers. Same specificity
+   as the theme blocks and later, so it wins. Contents still fade and slide. */
+:root[data-live="on"],
+:root[data-live="on"][data-theme] {
+  --dur-reveal-in: 0ms;
+  --dur-reveal-out: 0ms;
+  --stagger-step: 0ms;
+}
+
+/* Reduced motion (1.7a, owner chose option A): nothing moves. tokens.css also has a reduced-motion block that
+   keeps 100 to 120ms fades for the old tokens; this block loads later with the same specificity, so it wins and
+   every duration is --rm-dur (0ms). Option B is six lines: set --rm-dur to 120ms and the five --dur-*-out
+   tokens to 80ms; --dur-reveal-*, --stagger-* and --move-* stay as they are. If a --dur-* token is added, add it here too. */
 @media (prefers-reduced-motion: reduce) {
   :root,
   :root[data-theme="editorial"],
-  :root[data-theme="loud"] {
+  :root[data-theme="loud"],
+  :root[data-live="on"],
+  :root[data-live="on"][data-theme] {
     --rm-dur: 0ms;
+    --dur-micro-in: var(--rm-dur);
+    --dur-micro-out: var(--rm-dur);
+    --dur-small-in: var(--rm-dur);
+    --dur-small-out: var(--rm-dur);
+    --dur-medium-in: var(--rm-dur);
+    --dur-medium-out: var(--rm-dur);
+    --dur-large-in: var(--rm-dur);
+    --dur-large-out: var(--rm-dur);
+    --dur-reveal-in: 0ms;
+    --dur-reveal-out: 0ms;
+    --move-micro: 0px;
+    --move-small: 0px;
+    --move-medium: 0px;
+    --move-large: 0px;
+    --stagger-step: 0ms;
+    --stagger-max: 0ms;
     --dur-fast: var(--rm-dur);
     --dur-base: var(--rm-dur);
     --dur-enter: var(--rm-dur);
@@ -183,4 +282,26 @@
     --tilt-chip: 0deg;
   }
   html { scroll-behavior: auto; }
+}
+
+/* Automation (1.7a): html[data-motion="off"] zeroes the new tokens too. tokens.css zeroes the old ones, and the
+   !important rule in app.css stays. */
+html[data-motion="off"],
+html[data-motion="off"][data-theme] {
+  --dur-micro-in: 0ms;
+  --dur-micro-out: 0ms;
+  --dur-small-in: 0ms;
+  --dur-small-out: 0ms;
+  --dur-medium-in: 0ms;
+  --dur-medium-out: 0ms;
+  --dur-large-in: 0ms;
+  --dur-large-out: 0ms;
+  --dur-reveal-in: 0ms;
+  --dur-reveal-out: 0ms;
+  --move-micro: 0px;
+  --move-small: 0px;
+  --move-medium: 0px;
+  --move-large: 0px;
+  --stagger-step: 0ms;
+  --stagger-max: 0ms;
 }

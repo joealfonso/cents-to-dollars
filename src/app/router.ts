@@ -3,7 +3,7 @@
 // route only if no newer navigation started meanwhile. Then it sets the title, the nav marker and focuses h1.
 // Screen changes run inside a view transition where the browser supports one (styles in app.css).
 
-export type RouteName = 'overview' | 'tools' | 'voice' | 'methods' | 'about' | 'notfound' | 'legacy';
+export type RouteName = 'overview' | 'tools' | 'voice' | 'file' | 'methods' | 'about' | 'notfound' | 'legacy';
 
 export interface Route {
   /** document.title. Overview is the bare app name. */
@@ -29,6 +29,7 @@ const PATHS: Record<string, RouteName> = {
   '': 'overview',
   tools: 'tools',
   voice: 'voice',
+  file: 'file',
   methods: 'methods',
   about: 'about',
   legacy: 'legacy',
@@ -44,6 +45,22 @@ export function parseHash(hash: string): { name: RouteName; sub: string } {
   if (!name) return { name: 'notfound', sub: '' };
   if (name === 'methods') return { name, sub: rest.join('/') };
   return rest.length ? { name: 'notfound', sub: '' } : { name, sub: '' };
+}
+
+/**
+ * Disclosures marked data-open-wide are open at 600px and up and closed under 600 (DESIGN.md 3.6). Each is set once,
+ * the first time its route is shown, while the section is still hidden, so nothing animates and nothing changes when
+ * she rotates or resizes later.
+ */
+function openWide(sec: HTMLElement | null) {
+  if (!sec?.querySelectorAll) return;
+  const list = sec.querySelectorAll<HTMLDetailsElement>('details[data-open-wide]:not([data-open-set])');
+  if (!list.length) return;
+  const wide = !!window.matchMedia?.('(min-width: 600px)').matches;
+  for (const d of list) {
+    d.open = wide;
+    d.setAttribute('data-open-set', '');
+  }
 }
 
 export function createRouter(routes: Record<RouteName, Route>) {
@@ -75,6 +92,8 @@ export function createRouter(routes: Record<RouteName, Route>) {
 
   async function go(focus: boolean) {
     const nav = ++navSeq;
+    // Read at click time: awaiting the leave hook of a live screen can turn live off before the swap (MOT-26a).
+    const animate = canAnimate();
     let name: RouteName = 'notfound';
     let sub = '';
     let route: Route = routes.notfound;
@@ -100,7 +119,7 @@ export function createRouter(routes: Record<RouteName, Route>) {
     if (name !== previous) {
       // `current` moves now so a navigation that starts mid-animation sees the right route to leave.
       current = name;
-      if (previous && canAnimate()) {
+      if (previous && animate) {
         const vt = document.startViewTransition(render);
         // A newer navigation (or a hidden tab) skips the animation; the DOM update still runs, so nothing is lost.
         vt.ready.catch(() => {});
@@ -126,12 +145,15 @@ export function createRouter(routes: Record<RouteName, Route>) {
   }
 
   /**
-   * Cross-fades screens with the View Transitions API where it exists. Skipped under reduced motion (the
-   * theme sets those durations to 0ms, so it would only block clicks) and when the harness sets data-motion="off".
+   * Animates the new screen in with the View Transitions API where it exists. Skipped under reduced motion (the
+   * theme sets those durations to 0ms, so it would only block clicks), when the harness sets data-motion="off",
+   * and while live (DESIGN.md 1.7a: nothing moves during a live reading unless she asked for it, and the swap
+   * should not compete with the hero's redraw).
    */
   function canAnimate() {
     return typeof document.startViewTransition === 'function'
       && document.documentElement.dataset.motion !== 'off'
+      && document.documentElement.dataset.live !== 'on'
       && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -142,17 +164,15 @@ export function createRouter(routes: Record<RouteName, Route>) {
   function render() {
     if (!current) return;
     const route = routes[current];
+    openWide(section(current));
     for (const n of Object.keys(routes) as RouteName[]) {
       const s = section(n);
       if (s) s.hidden = n !== current;
     }
     document.title = current === 'overview' ? APP_NAME : `${route.title} | ${APP_NAME}`;
     for (const a of document.querySelectorAll<HTMLElement>('[data-nav]')) {
-      if (a.dataset.nav === route.nav) {
-        a.setAttribute('aria-current', 'page');
-        // On compact screens the nav row scrolls sideways; keep the current item in view.
-        a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      } else a.removeAttribute('aria-current');
+      if (a.dataset.nav === route.nav) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
     }
     window.scrollTo(0, 0);
   }
@@ -160,11 +180,6 @@ export function createRouter(routes: Record<RouteName, Route>) {
   return {
     start() {
       window.addEventListener('hashchange', () => void go(true));
-      // On compact screens the nav row scrolls sideways. The browser leaves a half-visible link where it is on
-      // focus, which clips its ring; scroll-padding-inline on the list makes this leave room for the ring.
-      document.querySelector('.nav ul')?.addEventListener('focusin', (e) => {
-        if (e.target instanceof HTMLElement) e.target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      });
       void go(false); // first load: no focus move, the page starts at the top
     },
     /** The route on screen now. */

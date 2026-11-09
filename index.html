@@ -2,13 +2,8 @@
 <html lang="en" data-theme="editorial" data-live="off">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cents to Dollars</title>
-<script>
-  // Apply the saved theme before first paint (DESIGN.md 1.2). Unknown value or storage error: Paper.
-  try { var t = localStorage.getItem('centstodollars.theme'); document.documentElement.dataset.theme = t === 'loud' ? 'loud' : 'editorial'; }
-  catch (e) { document.documentElement.dataset.theme = 'editorial'; }
-</script>
 <link rel="stylesheet" href="/src/styles/tokens.css">
 <link rel="stylesheet" href="/src/styles/theme.css">
 <link rel="stylesheet" href="/src/styles/app.css">
@@ -21,40 +16,18 @@
 <div class="page">
 <header class="app-header">
   <div class="shell header-inner">
-    <a class="brand" href="#/">Cents to Dollars</a>
-    <nav class="nav" aria-label="Main">
+    <a class="brand" href="#/"><span class="brand-full">Cents to Dollars</span><span class="brand-short" aria-hidden="true">¢2$</span></a>
+    <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="site-nav"><span class="nav-toggle-label">Nav</span><svg class="nav-toggle-icon" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <nav class="nav" id="site-nav" aria-label="Main">
       <ul>
         <li><a href="#/" data-nav="overview">Overview</a></li>
         <li><a href="#/tools" data-nav="tools">Tools</a></li>
-        <li><span class="nav-off">Sessions <span class="tag-notbuilt"><span class="tag-long">Not built yet</span><span class="tag-short" aria-hidden="true">Soon</span></span></span></li>
+        <li><span class="nav-off">Sessions <span class="tag-notbuilt"><span class="tag-long">Not built yet</span></span></span></li>
         <li><a href="#/methods" data-nav="methods">Methods</a></li>
         <li><a href="#/about" data-nav="about">About</a></li>
       </ul>
     </nav>
-    <script>
-      // Right-edge fade cue (app.css): data-more is set on .nav only while items sit off-screen to the right.
-      (function () {
-        var nav = document.querySelector('.nav'), ul = nav && nav.querySelector('ul');
-        if (!ul) return;
-        function update() {
-          var more = ul.scrollWidth > ul.clientWidth + 1 && ul.scrollLeft + ul.clientWidth < ul.scrollWidth - 1;
-          if (more) nav.setAttribute('data-more', ''); else nav.removeAttribute('data-more');
-        }
-        ul.addEventListener('scroll', update, { passive: true });
-        window.addEventListener('resize', update);
-        if (window.ResizeObserver) { var ro = new ResizeObserver(update); ro.observe(ul); for (var i = 0; i < ul.children.length; i++) ro.observe(ul.children[i]); }
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(update);
-        update();
-      })();
-    </script>
     <div class="mic-indicator" id="mic-indicator" role="status"><span class="dot dot-live" aria-hidden="true"></span><span class="mic-text"></span></div>
-    <fieldset class="theme-switch" id="theme-switch">
-      <legend>Theme</legend>
-      <span class="seg">
-        <label><input type="radio" name="theme" value="editorial" checked>Paper</label>
-        <label><input type="radio" name="theme" value="loud">Loud</label>
-      </span>
-    </fieldset>
   </div>
 </header>
 
@@ -62,6 +35,7 @@
   <section data-route="overview" hidden></section>
   <section data-route="tools" hidden></section>
   <section data-route="voice" hidden></section>
+  <section data-route="file" hidden></section>
   <section data-route="methods" hidden></section>
   <section data-route="about" hidden></section>
   <section data-route="notfound" hidden></section>
@@ -70,16 +44,16 @@
        original IDs kept. Its script (src/testpage/main.ts) loads on the first visit to #/legacy. -->
   <section data-route="legacy" aria-labelledby="h-intro" hidden>
   <div class="wrap">
-  <div class="legacy-bar"><span class="mic-pill"><span id="live-dot" aria-hidden="true"></span><span id="mic-pill-text">Mic off</span></span></div>
+  <div class="legacy-bar"><span class="mic-pill"><span id="live-dot" aria-hidden="true"></span><span id="mic-pill-text">Not listening</span></span></div>
   <section class="intro" aria-labelledby="h-intro">
     <p class="eyebrow" style="--i:1">Singing practice</p>
     <h1 id="h-intro" class="words" aria-label="See the note you're singing"><span class="w"><span style="--w:0">See</span></span> <span class="w"><span style="--w:1">the</span></span> <span class="w"><span style="--w:2">note</span></span> <span class="w"><span style="--w:3">you're</span></span> <span class="w"><span style="--w:4">singing</span></span></h1>
-    <p class="lede" style="--i:3">Sing into your microphone. You'll see the nearest note, how far
+    <p class="lede" style="--i:3">Sing near your laptop or phone. You'll see the nearest note, how far
       <span class="term-wrap"><button type="button" class="term" aria-describedby="tip-cents">sharp or flat</button><span class="tip" role="tooltip" id="tip-cents">Measured in <strong>cents</strong>. 100 cents is one half step, like C to C♯ on a piano. A few cents either way is normal: singers often tune by ear, not to the piano.</span></span>
       you are, and your vibrato. It all runs in this browser. Nothing is recorded or uploaded.</p>
     <div class="setup-cta" style="--i:4">
       <button id="setup-toggle" type="button" aria-expanded="false" aria-controls="setup" aria-describedby="setup-hint"><svg class="btn-icon" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 1v2.2M7 10.8V13M1 7h2.2M10.8 7H13M2.8 2.8l1.5 1.5M9.7 9.7l1.5 1.5M2.8 11.2l1.5-1.5M9.7 4.3l1.5-1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span>Check your setup</span><svg class="btn-icon chev" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 5.5 7 9l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <span class="setup-hint" id="setup-hint">Optional. Run once for a new mic, interface or computer, before you sing.</span>
+      <span class="setup-hint" id="setup-hint">Optional. Run once for a new laptop, phone or room, before you sing.</span>
     </div>
   </section>
 
@@ -87,15 +61,15 @@
     <div class="section-head enter" style="--i:0">
       <p class="eyebrow">Optional, before you sing</p>
       <h2 id="h-checks">Check your setup</h2>
-      <p>Run these once when you use a new microphone, audio interface or computer. You don't need them to sing.</p>
+      <p>Run these once on a new laptop, phone or room. You don't need them to sing.</p>
     </div>
 
     <div class="cards">
       <article class="panel card enter" style="--i:1" aria-labelledby="h-cal">
-        <div class="panel-head"><h3 id="h-cal">Mic accuracy</h3><span class="step">01</span></div>
+        <div class="panel-head"><h3 id="h-cal">Pitch accuracy</h3><span class="step">01</span></div>
         <div class="panel-body">
-          <p class="what">Play a steady test tone of a known pitch into your mic. The app listens for 5 seconds and tells you how far its reading is from the real pitch.</p>
-          <p class="needs">You need: a tone generator app or a tuning fork app, playing near the mic.</p>
+          <p class="what">Play a steady test tone of a known pitch near your laptop or phone. The app listens for 5 seconds and tells you how far its reading is from the real pitch.</p>
+          <p class="needs">You need: a tone generator app or a tuning fork app, playing near your laptop or phone.</p>
           <div class="card-actions">
             <label class="field">
               <span class="field-label">Test tone pitch</span>
@@ -105,7 +79,7 @@
             <button id="cal-run" type="button"><span>Listen for 5 seconds</span></button>
           </div>
           <div id="cal-readout" class="readout">Not run yet.</div>
-          <details class="more"><summary>How it works<span class="visually-hidden">: mic accuracy check</span></summary><div class="more-body"><p>The app takes the median of every pitch reading over 5 seconds and compares it with the frequency you entered, in cents. "Steadiness" is the 95th percentile of how far single readings sit from that median. It needs at least 50 readings.</p></div></details>
+          <details class="more"><summary>How it works<span class="visually-hidden">: pitch accuracy check</span></summary><div class="more-body"><p>The app takes the median of every pitch reading over 5 seconds and compares it with the frequency you entered, in cents. "Steadiness" is the 95th percentile of how far single readings sit from that median. It needs at least 50 readings.</p></div></details>
         </div>
       </article>
 
@@ -113,19 +87,19 @@
         <div class="panel-head"><h3 id="h-loop">Screen delay</h3><span class="step">02</span></div>
         <div class="panel-body">
           <p class="what">Plays 10 short beeps through your speakers and times how long each one takes to show up on screen.</p>
-          <p class="needs">You need: speakers on (not headphones) and the mic able to hear them. Turn the volume down first.</p>
+          <p class="needs">You need: speakers on (not headphones) and the laptop or phone able to hear them. Turn the volume down first.</p>
           <div class="card-actions">
             <button id="loop-run" type="button"><span>Play 10 beeps</span></button>
           </div>
           <div id="loop-readout" class="readout">Not run yet.</div>
-          <details class="more"><summary>How it works<span class="visually-hidden">: screen delay check</span></summary><div class="more-body"><p>Each beep is a 440 Hz tone, 0.4 seconds long. The time runs from when the sound leaves the audio output to when the matching pitch is drawn on screen, so it includes the speaker, the room, the mic, the analysis and the display.</p></div></details>
+          <details class="more"><summary>How it works<span class="visually-hidden">: screen delay check</span></summary><div class="more-body"><p>Each beep is a 440 Hz tone, 0.4 seconds long. The time runs from when the sound leaves the audio output to when the matching pitch is drawn on screen, so it includes the speaker, the room, your laptop's or phone's sound input and the analysis, up to the moment the pitch is drawn.</p></div></details>
         </div>
       </article>
 
       <article class="panel card enter" style="--i:3" aria-labelledby="h-self">
         <div class="panel-head"><h3 id="h-self">Built-in accuracy test</h3><span class="step">03</span></div>
         <div class="panel-body">
-          <p class="what">Runs test recordings with known pitches through the same analyser and reports how close it got. It doesn't use the mic.</p>
+          <p class="what">Runs test recordings with known pitches through the same analyser and reports how close it got. It doesn't listen.</p>
           <p class="needs">You need: the dev server running, with the test files in place.</p>
           <div class="card-actions">
             <button id="self-run" type="button"><span>Run the test</span></button>
@@ -183,15 +157,15 @@
         <button id="live-toggle" class="primary toggle" type="button" data-state="idle">
           <span class="tg-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16">
-              <g class="ic-mic"><rect x="5.25" y="1.5" width="5.5" height="8.5" rx="2.75" fill="currentColor"/><path d="M3 7.5a5 5 0 0 0 10 0M8 12.5v2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></g>
+              <g class="ic-mic"><rect x="2" y="6" width="2" height="4" rx="1" fill="currentColor"/><rect x="5.5" y="3.5" width="2" height="9" rx="1" fill="currentColor"/><rect x="9" y="1.5" width="2" height="13" rx="1" fill="currentColor"/><rect x="12.5" y="5" width="2" height="6" rx="1" fill="currentColor"/></g>
               <circle class="ic-busy" cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="20 40"/>
               <rect class="ic-stop" x="3.5" y="3.5" width="9" height="9" rx="1.5" fill="currentColor"/>
             </svg>
           </span>
           <span class="tg-labels">
-            <span class="tg-l" data-for="idle">Start microphone</span>
+            <span class="tg-l" data-for="idle">Start listening</span>
             <span class="tg-l" data-for="busy">Waiting…</span>
-            <span class="tg-l" data-for="live">Stop microphone</span>
+            <span class="tg-l" data-for="live">Stop listening</span>
             <span class="tg-l" data-for="stopping">Stopping…</span>
           </span>
         </button>
@@ -208,14 +182,14 @@
 
       <figure class="plot">
         <div class="plot-head">
-          <h3 id="h-plot">What the mic hears</h3>
+          <h3 id="h-plot">What the app hears</h3>
           <span class="term-wrap label"><button type="button" class="term" aria-describedby="tip-plot">How to read this</button><span class="tip" role="tooltip" id="tip-plot">Time runs left to right, with the newest sound at the right edge. Height is pitch, from 0 at the bottom to 4 kHz at the top. Darker means louder. The orange marks show the pitch the app measured. If a mark jumps far above or below the lowest dark band, the app has probably picked the wrong octave for that moment.</span></span>
         </div>
         <div class="plot-frame">
           <div class="plot-axis" aria-hidden="true"><span>4 kHz</span><span>3</span><span>2</span><span>1</span><span>0</span></div>
           <div class="canvas-wrap" id="spec-wrap">
             <canvas id="spectrogram" role="img" width="960" height="300" aria-label="Spectrogram, 0 to 4 kHz, with the measured pitch marked. The readings are listed as text above."></canvas>
-            <p class="plot-empty">The picture fills in from the right once the mic is on.</p>
+            <p class="plot-empty">The picture fills in from the right once the app is listening.</p>
           </div>
         </div>
         <ul class="legend">

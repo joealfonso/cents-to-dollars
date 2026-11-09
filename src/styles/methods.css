@@ -3,31 +3,29 @@
    The working bar is static: the mic is on during calibration and loopback, and no animation runs while
    live capture is on (design/motion-testpage.md rule 3). */
 
-.m-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--gap-panel); align-items: start; }
-.m-grid > * { grid-column: span 12; }
-.m-grid > .m-half { grid-column: span 6; }
-@media (max-width: 959px) { .m-grid > .m-half { grid-column: span 12; } .m-grid { column-gap: 0; } } /* no column gaps: see .grid-12 */
+/* Layout: .sec-grid (components.css), Calibration and Loopback side by side from 960, the rest full width. */
 
-/* ---------------------------------------------------------------- result block (2.12) */
+/* ---------------------------------------------------------------- result block (2.12, 1.10)
+   Each check is a tier-1 section. While it has a state, the 3px state bar replaces its 1px top rule. */
 .m-check { position: relative; }
+.m-check[data-state] { border-top-color: transparent; }
 .m-check[data-state]::before {
-  content: ""; position: absolute; top: calc(-1 * var(--border-w)); left: calc(-1 * var(--border-w)); right: calc(-1 * var(--border-w));
+  content: ""; position: absolute; top: calc(-1 * var(--divider-w)); left: 0; right: 0;
   height: var(--state-bar-h); pointer-events: none;
 }
 .m-check[data-state="working"]::before { background: var(--state-working); opacity: 0.5; }
 .m-check[data-state="done"]::before { background: var(--state-done); }
 .m-check[data-state="error"]::before { background: var(--state-error); }
 
-.m-check .strip-title { scroll-margin-top: var(--s-8); } /* deep links scroll here; keep the strip and state bar in view */
-.m-check .strip-title:focus { outline: none; }
-.m-check .strip-title:focus-visible { outline: var(--focus-w) solid var(--focus); outline-offset: var(--focus-offset); }
-.m-status { display: inline-flex; align-items: center; gap: var(--s-2); text-align: right; }
+/* Deep links scroll to the title and clear the header (3.6). Its focus ring follows the modality rule in app.css. */
+.m-check .sec-title { scroll-margin-top: var(--s-4); }
+.m-status { text-align: right; }
 
 .m-req, .m-method { margin: 0; max-width: 62ch; font: var(--t-body-s); color: var(--muted); }
 .m-field { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0; }
 .m-field label { font-weight: var(--t-body-strong); }
 .m-input {
-  width: 9ch; min-height: var(--control-h); padding: 0 var(--s-2); text-align: right;
+  width: 9ch; min-height: var(--hit); padding: 0 var(--s-2); text-align: right;
   font: var(--t-body); font-variant-numeric: tabular-nums;
   color: var(--ink); background: var(--panel); border: var(--border-w) solid var(--ink); border-radius: var(--radius);
 }
@@ -48,16 +46,17 @@
 .m-detail { color: var(--muted); }
 .m-results:empty { display: none; }
 .m-results > * + * { margin-top: var(--s-3); }
-.m-results .kv-list { border-top: var(--divider-w) solid var(--divider-c); }
-.m-results .kv { padding-left: 0; padding-right: 0; }
+/* A live region: kept rendered when empty (clipped, not display: none) so its first message is announced. */
+.m-msg-slot:empty { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* One link per line, 24px apart, so the links' 44px hit areas (technique B) never meet. */
+/* Each link on a line of its own with its description in the next column, and 24px between items, so the links' 44px hit areas
+   (technique B) are never covered by text or by each other. */
+.m-docs-list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s-6); max-width: 62ch; color: var(--ink-2); }
+.m-docs-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-3); align-items: start; }
 .m-results .kv-value { font-variant-numeric: tabular-nums; }
 .m-kv-note { font: var(--t-body-s); color: var(--muted); }
-.m-msg { margin: 0; max-width: 62ch; }
-.m-msg[data-tone="error"] { color: var(--state-error); font-weight: var(--t-body-strong); }
-:root[data-theme="loud"] .m-msg[data-tone="error"] { color: var(--ink); }
 .m-nothreshold { margin: 0; font-weight: var(--t-body-strong); }
-.m-raw { margin: 0; padding: var(--s-3) 0 0; font: var(--t-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
-:root:not([data-theme="loud"]) .m-results details.disclosure > summary { padding-left: 0; padding-right: 0; }
+.m-method { padding: 0 0 var(--s-3); }
 
 /* ---------------------------------------------------------------- self-test table */
 /* Sizes to its panel, not the viewport: below 600px of panel width each set becomes one block. */

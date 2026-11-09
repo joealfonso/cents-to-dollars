@@ -149,7 +149,7 @@ export function createLive(startFn: StartFn) {
     // The legacy test page owns its own mic and sets html[data-live]. The router stops it on leave, so this
     // only guards against both pages holding the mic if that ever fails.
     if (htmlRoot()?.dataset.live === 'on' && !session) {
-      fail('busy', 'Another page in this app still has the microphone open.', who);
+      fail('busy', 'Another page in this app is still listening.', who);
       return null;
     }
 

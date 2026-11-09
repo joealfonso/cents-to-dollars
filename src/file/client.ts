@@ -11,8 +11,18 @@ import type { TakeResult } from '../take/analyse.ts';
 import type { TakeInput, TakeJob, TakeWorkerMessage } from './take.worker.ts';
 
 export type TakePhase = 'decoding' | 'analysing';
+/** What decoding learned about the take, delivered once before analysis starts (M2-DESIGN.md 3.3 Analysing). */
+export interface DecodedInfo {
+  sampleRate: number;
+  channels: number;
+  rateSource: RateSource;
+  nativeRate: number | null;
+  durationS: number;
+}
 export interface AnalyseFileOptions {
   onProgress?: (fraction: number, phase: TakePhase) => void;
+  /** Optional. Called once when decoding has finished, before the Worker starts; never for a cancelled job. */
+  onDecoded?: (info: DecodedInfo) => void;
   signal?: AbortSignal;
 }
 export interface AnalysedFile {
@@ -64,6 +74,7 @@ export async function analyseFile(file: File, opts: AnalyseFileOptions = {}): Pr
     let input: TakeInput | null = decoded.input;
     let transfer: ArrayBuffer[] = decoded.transfer;
     decoded = null;
+    if (live()) opts.onDecoded?.({ sampleRate, channels, rateSource, nativeRate, durationS });
 
     const result = await new Promise<TakeResult>((resolve, reject) => {
       rejectRun = reject;

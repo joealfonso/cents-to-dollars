@@ -318,7 +318,7 @@ function loop(ts: number) {
 
 type ToggleState = 'idle' | 'busy' | 'live' | 'stopping';
 function setLiveUi(on: boolean, label: string, toggle: ToggleState = on ? 'live' : 'idle') {
-  swapText($('mic-pill-text'), on ? 'Mic on' : 'Mic off');
+  swapText($('mic-pill-text'), on ? 'Listening' : 'Not listening');
   swapText($('live-state-label'), label);
   const t = $<HTMLButtonElement>('live-toggle');
   t.dataset.state = toggle;
@@ -354,7 +354,7 @@ async function ensureLive() {
     renderMeter(null, false);
     setText($('note-hint'), 'Listening. Sing a steady note.');
     document.documentElement.dataset.live = 'on';
-    $('live-status').textContent = 'Microphone on.';
+    $('live-status').textContent = 'Listening.';
     setLiveUi(true, 'Listening');
     if (toggleHadFocus) $('live-toggle').focus(); // the button is disabled while busy, which can drop focus
     rafId = requestAnimationFrame(loop);
@@ -392,7 +392,7 @@ export async function stopLive() {
   renderReadout();
   live = null;
   document.documentElement.dataset.live = 'off';
-  $('live-status').textContent = 'Microphone off.';
+  $('live-status').textContent = 'Stopped listening.';
   setLiveUi(false, 'Stopped');
   if (hadFocus) $('live-toggle').focus();
   if (lastNote) {
@@ -406,11 +406,11 @@ export async function stopLive() {
 
 function micErrorText(e: unknown): string {
   const name = (e as { name?: string })?.name;
-  if (name === 'NotAllowedError') return 'Microphone access is blocked for this page. Allow it in the browser’s site settings, then press Start again.';
-  if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'No microphone found. Connect one or switch on your audio interface, then press Start again.';
-  if (name === 'NotReadableError' || name === 'AbortError') return 'The microphone could not be opened. Another app may be using it. Close it, then press Start again.';
+  if (name === 'NotAllowedError') return 'Listening is blocked for this page. In your browser’s site settings, allow Microphone for this site, then press Start again.';
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'This laptop or phone has no microphone the browser can use. Check your sound settings, then press Start again.';
+  if (name === 'NotReadableError' || name === 'AbortError') return 'Another app is using the sound input. Close it, then press Start again.';
   if (!window.isSecureContext) return 'The microphone only works on a secure page. Open http://127.0.0.1:5173.';
-  return 'The microphone could not start.';
+  return 'The app could not start listening.';
 }
 
 $('live-toggle').addEventListener('click', () => {
@@ -440,7 +440,7 @@ $('cal-run').addEventListener('click', async () => {
   try {
     const s = await ensureLive();
     out.textContent = 'Listening to the test tone for 5 seconds…';
-    announce('Mic accuracy check running for 5 seconds.');
+    announce('Pitch accuracy check running for 5 seconds.');
     setState(out, 'working');
     const t0 = s.ctx.currentTime;
     await new Promise((r) => setTimeout(r, 5000));
@@ -508,7 +508,7 @@ $('loop-run').addEventListener('click', async () => {
       if (drawn !== null) results.push(drawn - outPerf);
       await new Promise((r) => setTimeout(r, 600));
     }
-    if (!results.length) { showResult(out, 'No beep was heard. Turn the speaker volume up a little and check that the mic is on.'); setState(out, 'error'); return; }
+    if (!results.length) { showResult(out, 'No beep was heard. Turn the speaker volume up a little and try again.'); setState(out, 'error'); return; }
     results.sort((a, b) => a - b);
     const med = results[results.length >> 1];
     showResult(out, `Typical delay: ${fx(med, 0)} ms from the speaker to the pitch being drawn.`, [

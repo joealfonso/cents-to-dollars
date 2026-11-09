@@ -19,7 +19,7 @@ a.link:hover { color: var(--signal-text); }
 .page-header {
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
   gap: var(--s-4) var(--s-8);
-  padding: var(--s-6) 0 var(--s-6);
+  padding: var(--page-head-pad);
 }
 .page-header .ph-text { display: grid; gap: var(--s-2); min-width: 0; }
 .page-header h1 {
@@ -29,7 +29,6 @@ a.link:hover { color: var(--signal-text); }
 }
 .page-header .ph-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-6); }
 @media (max-width: 599px) {
-  .page-header { padding: var(--s-4) 0; }
   .page-header .ph-action { width: 100%; }
   .page-header .ph-action .btn-primary { width: 100%; }
 }
@@ -66,11 +65,36 @@ a.link:hover { color: var(--signal-text); }
 .pbody > * + * { margin-top: var(--s-3); }
 .panel h2.panel-title { margin: 0; font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); }
 
-/* First-visit theme choice (2.1) */
-.theme-choice { margin-top: var(--s-6); }
-.theme-choice .pbody { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3) var(--s-6); }
-.theme-choice .choice-text { margin: 0; max-width: 62ch; }
-.theme-choice .choice-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin: 0; }
+/* ---------------------------------------------------------------- sections and groups (1.10)
+   Lines mark structure once: a tier-1 section is a 1px ink rule on its top edge, then a Newsreader title, and space
+   instead of a box. A tier-2 group is a hairline and a mono label. Nothing here is a box. */
+.sec { min-width: 0; margin-top: var(--sec-gap); border-top: var(--divider-w) solid var(--ink); }
+.sec-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s-1) var(--s-4);
+  padding: var(--sec-head-pad);
+}
+.sec-title { margin: 0; font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); overflow-wrap: anywhere; }
+.sec-meta, .group-label, .group-meta {
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
+}
+.sec-meta { display: inline-flex; align-items: center; gap: var(--s-2); }
+/* Two classes, so page rules that zero a paragraph's margin (methods.css .m-field, .m-action) do not undo it. */
+.sec .sec-body > * + * { margin-top: var(--s-3); }
+.group { min-width: 0; margin-top: var(--group-gap); border-top: var(--divider-w) solid var(--rule); }
+.group-label { margin: 0; padding-top: var(--s-2); }
+.group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s-3); padding-top: var(--s-2); }
+.group-head .group-label { padding-top: 0; }
+/* The page grid for sections: one column under 960, the 12 columns of 3.1, 3.3 and 3.4 from 960. Sections in it
+   use the grid gap, not their own top margin, so side-by-side sections line up. */
+.sec-grid { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sec-gap); margin-top: var(--sec-gap); align-items: start; }
+.sec-grid > .sec { margin-top: 0; }
+@media (min-width: 960px) {
+  .sec-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--s-12); }
+  .sec-grid > * { grid-column: span 12; }
+  .sec-grid > .col-7 { grid-column: span 7; }
+  .sec-grid > .col-5 { grid-column: span 5; }
+  .sec-grid > .col-6 { grid-column: span 6; }
+}
 
 /* ---------------------------------------------------------------- key-value rows (2.4) */
 .kv-list { margin: 0; }
@@ -89,17 +113,30 @@ a.link:hover { color: var(--signal-text); }
 .kv-action:empty { display: none; }
 .kv .kv-dot { align-self: center; }
 @media (max-width: 599px) { .kv { grid-template-columns: 1fr; } .kv-action { margin-left: 0; } }
+/* App routes (1.10, 3.6): hairline rows with no inline padding, so values align with the page gutter. Label 2fr and
+   value 3fr while the list is at least 280px wide (a container query, so it holds at 320), else stacked. Scoped away
+   from #/legacy and from #/file (M2), which keep their panels. */
+:where(main > :not([data-route="legacy"], [data-route="file"])) .kv-list { container-type: inline-size; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) .kv {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); padding: var(--row-pad-y) 0;
+}
+:where(main > :not([data-route="legacy"], [data-route="file"])) .kv-action { margin-left: 0; flex-basis: 100%; }
+@container (max-width: 279px) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) .kv { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ---------------------------------------------------------------- status dot (2.6) */
+/* The ring is an inset shadow, not a border: a dot is a glyph, not a box (1.10 counts borders). Forced colours drop
+   shadows, so that block below gives every dot a real 1px border. */
 .dot, .kv-dot {
   display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%;
-  border: 1px solid var(--muted); background: transparent;
+  border: 0; box-shadow: inset 0 0 0 1px var(--muted); background: transparent;
 }
-.dot-live { background: var(--signal); border-color: var(--signal); }
-.dot-ok, .kv[data-status="ok"] .kv-dot { background: var(--ok); border-color: var(--ok); }
+.dot-live { background: var(--signal); box-shadow: none; }
+.dot-ok, .kv[data-status="ok"] .kv-dot { background: var(--ok); box-shadow: none; }
 .kv[data-status="info"] .kv-dot { visibility: hidden; }
 .dot-error, .kv[data-status="error"] .kv-dot {
-  width: 12px; height: 12px; border-radius: 0; border: 1px solid var(--state-error);
+  width: 12px; height: 12px; border-radius: 0; box-shadow: inset 0 0 0 1px var(--state-error);
   position: relative;
 }
 .dot-error::after, .kv[data-status="error"] .kv-dot::after {
@@ -141,7 +178,7 @@ a.link:hover { color: var(--signal-text); }
   display: grid;
   grid-template-columns: 2.5em minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 0.8fr) minmax(max-content, 0.9fr);
   gap: var(--s-4); align-items: center;
-  padding: var(--row-pad);
+  padding: var(--row-pad-y) var(--s-3);
   border-bottom: var(--divider-w) solid var(--divider-c);
 }
 .itable [role="row"] > * { min-width: 0; overflow-wrap: anywhere; }
@@ -152,8 +189,11 @@ a.link:hover { color: var(--signal-text); }
 .itable .idesc { font: var(--t-body-s); color: var(--muted); }
 .itable .istatus { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
 .itable .ck { display: none; } /* cell labels for the stacked layout */
-/* A row that is a link: the name link stretches over the row. */
-.itable .irow-link { color: inherit; text-decoration: none; }
+/* A row that is a link: the name link stretches over the row (3.6 technique C). The name is underlined at rest and
+   the row ends with an arrow, so the row looks tappable without hover (1.10). */
+.itable .irow-link { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.itable .istat { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.itable .irow-arrow { font-family: var(--font-ui); }
 .itable .irow-link::after { content: ""; position: absolute; inset: 0; }
 .itable .irow-link:focus-visible { outline: none; }
 .itable [role="row"]:has(.irow-link:hover) { background: var(--hover); }
@@ -161,11 +201,26 @@ a.link:hover { color: var(--signal-text); }
 .itable [data-selected] { background: var(--hover); box-shadow: inset 3px 0 0 var(--signal); }
 :root[data-theme="loud"] .itable [data-selected] { box-shadow: inset 8px 0 0 var(--signal); }
 .itable [data-built="false"] { color: var(--muted); }
+/* Tools detail (3.6): the button right after the description, then the key-value list. */
+.tools-open { margin: 0; }
+@media (max-width: 599px) { .tools-open .btn-primary { width: 100%; } }
+.tools-kv { margin-top: var(--s-4); }
 @container (max-width: 599px) {
   .itable .ihead { display: none; }
-  /* number and name on the first line, the other cells below */
-  .itable [role="row"] { grid-template-columns: auto minmax(0, 1fr); gap: var(--s-1) var(--s-3); align-items: baseline; }
-  .itable [role="row"] > :nth-child(n + 3) { grid-column: 1 / -1; }
+  /* 3.6: number, name and status on line 1, the description on line 2, "Input: ..." on line 3 */
+  .itable [role="row"] {
+    grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "no name stat" "desc desc desc" "input input input";
+    gap: var(--s-1) var(--s-3); align-items: baseline; min-height: 64px;
+    /* The name link sits on line 1 and the whole row is its hit area (technique C). 14px above it keeps 21px of row
+       above the link's centre. */
+    padding-top: 14px; padding-bottom: 8px;
+  }
+  .itable .ino { grid-area: no; }
+  .itable .iname { grid-area: name; }
+  .itable .istat { grid-area: stat; }
+  .itable .idesc { grid-area: desc; font: var(--t-body); color: var(--ink-2); }
+  .itable .iinput { grid-area: input; font: var(--t-body-s); color: var(--muted); }
+  .itable [data-built="false"] .idesc { color: var(--muted); }
   .itable .ck { display: inline; color: var(--muted); }
   .itable .ck::after { content: ": "; }
 }
@@ -179,12 +234,15 @@ a.link:hover { color: var(--signal-text); }
   border: var(--border-w) solid var(--ink); border-radius: var(--radius);
   background: var(--panel); color: var(--ink);
   text-decoration: none; cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-standard);
+  /* Fill and colour are feedback (1.7a): they arrive at once and leave over --dur-micro-out. The transform is
+     the dormant Loud shift (small). */
+  transition: background-color var(--dur-micro-out) var(--ease-standard), color var(--dur-micro-out) var(--ease-standard),
+    transform var(--dur-small-in) var(--ease-standard), box-shadow var(--dur-micro-out) var(--ease-standard);
 }
 .btn-primary { background: var(--ink); color: var(--on-ink); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 @media (hover: hover) {
+  .btn:hover:not(:disabled) { transition: transform var(--dur-small-in) var(--ease-standard); }
   .btn-ghost:hover:not(:disabled) { background: var(--ink); color: var(--on-ink); }
   .btn-primary:hover:not(:disabled) { background: var(--signal-text); border-color: var(--signal-text); }
 }
@@ -192,6 +250,34 @@ a.link:hover { color: var(--signal-text); }
 :root[data-theme="loud"] .btn-primary:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); transform: translate(var(--btn-hover-shift), var(--btn-hover-shift)); }
 :root[data-theme="loud"] .btn:active:not(:disabled) { transform: translate(var(--btn-press-shift), var(--btn-press-shift)); box-shadow: 2px 2px 0 var(--ink); }
 .btn .arrow { font-family: var(--font-ui); }
+
+/* Ghost buttons (2.7, 1.10): border only. Visual 40px tall at every width; the hit area is 44 through a ::before
+   that reaches 2px above and below the border box (3.6 technique C; the inset counts from the padding box, so it
+   adds the border width). The primary button is 44 tall at compact, so it only gets
+   the extender at 600 and up, where it is 40. */
+:where(main > :not([data-route="legacy"], [data-route="file"])) .btn-ghost { background: transparent; min-height: 40px; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) .btn-ghost::before { content: ""; position: absolute; inset: calc(-2px - var(--border-w)) 0; }
+@media (min-width: 600px) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) .btn-primary::before { content: ""; position: absolute; inset: calc(-2px - var(--border-w)) 0; }
+}
+
+/* ---------------------------------------------------------------- system message callout (2.14)
+   One callout per state, in the flow next to its action: a 3px left rule, an icon, a title (what happened) and a
+   step (how to fix it). No fill, no other border, never red text, never uppercase, never animated. */
+.msg {
+  display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: var(--s-2); align-items: start;
+  max-width: 46ch; margin: 0; padding-left: var(--s-3);
+  border-left: 3px solid var(--signal);
+}
+.msg[data-kind="info"] { border-left-color: var(--muted); }
+.msg-icon { width: 16px; height: 16px; margin-top: 2px; color: var(--ink); }
+.msg-text { display: grid; gap: var(--s-1); min-width: 0; }
+.msg-title { margin: 0; font: var(--t-body); font-weight: var(--t-body-strong); color: var(--ink); }
+.msg-step { margin: 0; font: var(--t-body); color: var(--ink-2); max-width: none; }
+.msg-step:empty { display: none; }
+.msg details.disclosure { margin-top: var(--s-1); }
+.msg-raw { margin: 0; padding: 0 0 var(--s-2); font: var(--t-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (forced-colors: active) { .msg { border-left-color: CanvasText; } }
 
 /* ---------------------------------------------------------------- disclosure (2.11) */
 details.disclosure > summary {
@@ -204,9 +290,9 @@ details.disclosure > summary::-webkit-details-marker { display: none; }
 details.disclosure > summary::after {
   content: ""; width: 7px; height: 7px; flex: none; margin-right: var(--s-1);
   border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg); transition: transform var(--dur-base) var(--ease-standard);
+  transform: rotate(45deg); transition: transform var(--dur-micro-out) var(--ease-standard);
 }
-details.disclosure[open] > summary::after { transform: rotate(-135deg); }
+details.disclosure[open] > summary::after { transform: rotate(-135deg); transition-duration: var(--dur-micro-in); }
 /* The rule under an open summary fades with the slide instead of snapping. It is drawn by ::before in the
    border-w gap that margin-bottom opens below the summary, so the closed and open sizes match the old
    border-bottom exactly. A border (not a background) so forced-colors mode still shows it. Open: the rule
@@ -221,20 +307,50 @@ details.disclosure > summary::before {
 details.disclosure[open] > summary { margin-bottom: var(--border-w); }
 details.disclosure[open] > summary::before { opacity: 1; }
 :root[data-theme="loud"] details.disclosure > summary { background: var(--ink); color: var(--on-ink); }
+/* App routes (1.10, 3.6): no box and no strip. The disclosure is a full-width row with a hairline on top, a
+   sentence-case Geist 14/20 weight 500 label, at least 44px tall, and a 12px chevron (2px stroke) on the right.
+   The open body has no rule under the summary. */
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure { border-top: var(--divider-w) solid var(--rule); }
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary {
+  min-height: var(--hit); padding: 0;
+  font: var(--t-body); font-weight: var(--t-body-strong); letter-spacing: 0; text-transform: none;
+}
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary::before { display: none; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure[open] > summary { margin-bottom: 0; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary::after {
+  width: 12px; height: 12px; margin-right: 0; border: 0; background: currentColor; transform: none;
+  -webkit-mask: var(--chevron) center / 12px 12px no-repeat; mask: var(--chevron) center / 12px 12px no-repeat;
+}
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure[open] > summary::after { transform: rotate(180deg); }
+:root { --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.25 6 8.25l4-4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'/%3E%3C/svg%3E"); }
+@media (hover: hover) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary:hover { color: var(--signal-text); transition: none; }
+}
+@media (forced-colors: active) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary::after { forced-color-adjust: none; background: CanvasText; }
+}
 /* Open and close by sliding height and fading, where the browser can animate height to auto. Elsewhere
-   (including Safari without interpolate-size) it opens instantly as before. Reduced motion and
-   data-motion="off" take the durations to 0 through the tokens. */
+   (including Safari without interpolate-size) it opens instantly as before. Large class (1.7a pattern B): open
+   reveals the height over --dur-reveal-in on --ease-settle and fades in over --dur-medium-in; close collapses
+   over --dur-reveal-out on --ease-standard and fades out over --dur-small-out on --ease-accelerate. While live
+   the --dur-reveal-* tokens are 0ms, so the height snaps. Reduced motion and data-motion="off" take every
+   duration to 0 through the tokens. */
 @supports selector(::details-content) and (interpolate-size: allow-keywords) {
   details.disclosure { interpolate-size: allow-keywords; }
   details.disclosure::details-content {
     height: 0; overflow: clip; opacity: 0;
-    transition: height var(--dur-enter) var(--ease-enter), opacity var(--dur-base) var(--ease-standard),
-      content-visibility var(--dur-enter) allow-discrete;
+    transition: height var(--dur-reveal-out) var(--ease-standard), opacity var(--dur-small-out) var(--ease-accelerate),
+      content-visibility var(--dur-reveal-out) allow-discrete;
   }
-  details.disclosure[open]::details-content { height: auto; opacity: 1; }
-  details.disclosure > summary { transition: margin-bottom var(--dur-enter) var(--ease-enter); }
-  details.disclosure > summary::before { transition: opacity var(--dur-enter) var(--ease-standard); }
-  details.disclosure[open] > summary::before { transition: opacity var(--dur-base) var(--ease-standard); }
+  details.disclosure[open]::details-content {
+    height: auto; opacity: 1;
+    transition: height var(--dur-reveal-in) var(--ease-settle), opacity var(--dur-medium-in) var(--ease-standard),
+      content-visibility var(--dur-reveal-in) allow-discrete;
+  }
+  details.disclosure > summary { transition: margin-bottom var(--dur-reveal-out) var(--ease-standard); }
+  details.disclosure[open] > summary { transition: margin-bottom var(--dur-reveal-in) var(--ease-settle); }
+  details.disclosure > summary::before { transition: opacity var(--dur-reveal-out) var(--ease-standard); }
+  details.disclosure[open] > summary::before { transition: opacity var(--dur-micro-in) var(--ease-standard); }
 }
 .summary-meta { color: var(--muted); margin-left: auto; }
 :root[data-theme="loud"] .summary-meta { color: var(--on-ink); }

@@ -1,13 +1,14 @@
-// theme.ts, from DESIGN.md 1.2: default Paper ("editorial"), key centstodollars.theme, storage errors never
-// throw or show a message, 'themechange' dispatched on a real change only.
+// theme.ts, from DESIGN.md 1.2a and THM-02 to THM-04: Paper only. initTheme sets data-theme="editorial",
+// ignores any stored value, removes the key, and never throws or logs when storage fails.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 const KEY = 'centstodollars.theme';
 let store: Map<string, string>;
 let getThrows = false;
-let setThrows = false;
-let events: Array<{ type: string; detail: unknown }>;
+let removeThrows = false;
+let setCalls: string[];
+let consoleCalls: number;
 const root = { dataset: {} as Record<string, string | undefined> };
 
 function def(name: string, value: unknown) {
@@ -15,23 +16,23 @@ function def(name: string, value: unknown) {
 }
 def('localStorage', {
   getItem(k: string) { if (getThrows) throw new Error('denied'); return store.has(k) ? store.get(k)! : null; },
-  setItem(k: string, v: string) { if (setThrows) throw new Error('quota'); store.set(k, v); },
+  setItem(k: string, v: string) { setCalls.push(k); store.set(k, v); },
+  removeItem(k: string) { if (removeThrows) throw new Error('denied'); store.delete(k); },
 });
-def('document', {
-  documentElement: root,
-  querySelectorAll: () => [],
-  dispatchEvent(e: CustomEvent) { events.push({ type: e.type, detail: e.detail }); return true; },
-});
+def('document', { documentElement: root, querySelectorAll: () => [], dispatchEvent: () => true });
+for (const m of ['log', 'warn', 'error'] as const) {
+  const orig = console[m];
+  console[m] = (...a: unknown[]) => { consoleCalls++; orig(...a); };
+}
 
 const theme = await import('../src/app/theme.ts');
 
 beforeEach(() => {
-  store = new Map(); getThrows = false; setThrows = false; events = [];
+  store = new Map(); getThrows = false; removeThrows = false; setCalls = []; consoleCalls = 0;
   delete root.dataset.theme;
 });
 
-test('default is editorial when nothing is stored and nothing is set', () => {
-  assert.equal(theme.storedTheme(), null);
+test('currentTheme is editorial when nothing is set', () => {
   assert.equal(theme.currentTheme(), 'editorial');
 });
 
@@ -40,69 +41,64 @@ test('an invalid data-theme attribute reads as editorial', () => {
   assert.equal(theme.currentTheme(), 'editorial');
 });
 
-for (const bad of ['neon', '', 'Loud', 'LOUD', 'clinical', 'null', ' loud']) {
-  test(`invalid stored value ${JSON.stringify(bad)} falls back (storedTheme null, initTheme gives editorial)`, () => {
-    store.set(KEY, bad);
-    assert.equal(theme.storedTheme(), null);
-    root.dataset.theme = 'garbage';
-    theme.initTheme();
-    assert.equal(root.dataset.theme, 'editorial');
-  });
-}
-
-test('valid stored values are read, and initTheme applies them', () => {
-  store.set(KEY, 'loud');
-  assert.equal(theme.storedTheme(), 'loud');
+test('initTheme sets editorial on a bare page and currentTheme reports it', () => {
   theme.initTheme();
-  assert.equal(root.dataset.theme, 'loud');
-  store.set(KEY, 'editorial');
-  assert.equal(theme.storedTheme(), 'editorial');
-});
-
-test('localStorage.getItem throwing does not throw and gives editorial', () => {
-  getThrows = true;
-  assert.doesNotThrow(() => theme.storedTheme());
-  assert.equal(theme.storedTheme(), null);
-  assert.doesNotThrow(() => theme.initTheme());
+  assert.equal(root.dataset.theme, 'editorial');
   assert.equal(theme.currentTheme(), 'editorial');
 });
 
-test('setTheme writes the documented key and value', () => {
-  theme.setTheme('loud');
-  assert.equal(store.get(KEY), 'loud');
-  assert.equal(root.dataset.theme, 'loud');
+test('initTheme overrides a wrong data-theme already on the element', () => {
+  root.dataset.theme = 'loud';
+  theme.initTheme();
+  assert.equal(root.dataset.theme, 'editorial');
 });
 
-test('localStorage.setItem throwing does not throw, and the theme still holds for the visit', () => {
-  setThrows = true;
-  assert.doesNotThrow(() => theme.setTheme('loud'));
-  assert.equal(theme.currentTheme(), 'loud');
-  assert.equal(events.length, 1);
+for (const v of ['loud', 'editorial', 'neon', '', 'Loud', 'null']) {
+  test(`stored ${JSON.stringify(v)} is ignored: editorial applied, key removed (THM-02, THM-03)`, () => {
+    store.set(KEY, v);
+    theme.initTheme();
+    assert.equal(root.dataset.theme, 'editorial');
+    assert.equal(localStorage.getItem(KEY), null);
+    assert.equal(store.has(KEY), false);
+  });
+}
+
+test('initTheme leaves other storage keys alone', () => {
+  store.set(KEY, 'loud');
+  store.set('other.key', 'keep');
+  theme.initTheme();
+  assert.equal(store.get('other.key'), 'keep');
 });
 
-test('themechange fires on a real change with detail.theme, bubbles from document', () => {
-  theme.setTheme('loud');
-  assert.deepEqual(events, [{ type: 'themechange', detail: { theme: 'loud' } }]);
-  theme.setTheme('editorial');
-  assert.equal(events.length, 2);
-  assert.deepEqual(events[1], { type: 'themechange', detail: { theme: 'editorial' } });
+test('initTheme never writes to storage', () => {
+  theme.initTheme();
+  assert.deepEqual(setCalls, []);
 });
 
-test('themechange does not fire when the theme is set to what it already is', () => {
-  theme.setTheme('loud');
-  events.length = 0;
-  theme.setTheme('loud');
-  assert.equal(events.length, 0);
+test('localStorage.getItem throwing does not throw and gives editorial (THM-04)', () => {
+  getThrows = true;
+  assert.doesNotThrow(() => theme.initTheme());
+  assert.equal(root.dataset.theme, 'editorial');
+  assert.equal(theme.currentTheme(), 'editorial');
+  assert.equal(consoleCalls, 0);
 });
 
-test('setting editorial on a fresh default page (already editorial) does not fire, but still stores the choice', () => {
-  theme.setTheme('editorial');
-  assert.equal(events.length, 0);
-  assert.equal(store.get(KEY), 'editorial');
+test('localStorage.removeItem throwing does not throw, shows no message, still gives editorial (THM-04)', () => {
+  removeThrows = true;
+  store.set(KEY, 'loud');
+  assert.doesNotThrow(() => theme.initTheme());
+  assert.equal(root.dataset.theme, 'editorial');
+  assert.equal(consoleCalls, 0);
 });
 
-test('hasChosenTheme: true after a pick even when storage throws (first-visit panel closes)', () => {
-  setThrows = true; getThrows = true;
-  theme.setTheme('editorial');
-  assert.equal(theme.hasChosenTheme(), true);
+test('every storage call throwing still gives editorial', () => {
+  getThrows = true; removeThrows = true;
+  assert.doesNotThrow(() => theme.initTheme());
+  assert.equal(root.dataset.theme, 'editorial');
+});
+
+test('the removed API is gone', () => {
+  for (const name of ['storedTheme', 'setTheme', 'hasChosenTheme']) {
+    assert.equal((theme as Record<string, unknown>)[name], undefined, name);
+  }
 });

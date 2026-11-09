@@ -349,3 +349,7 @@ html[data-live="on"] [data-route="legacy"] .tune-line path { animation: tune-set
 @media (pointer: coarse) {
   [data-route="legacy"] .term { padding-block: 14px; margin-block: -14px; }
 }
+
+/* iPhone notch and rounded corners in landscape (index.html uses viewport-fit=cover). The app header and
+   footer take the top and bottom insets; this section only needs the sides. */
+[data-route="legacy"] { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }

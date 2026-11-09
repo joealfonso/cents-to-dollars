@@ -1,65 +1,89 @@
-/* Voice analysis, #/voice (DESIGN.md 2.8 to 2.10, 3.3). Values come from tokens. Per-theme differences are
-   only the 1.8 treatments, written as :root[data-theme="loud"] overrides. Never animated: readout digits,
-   cue, chip, meter marker, level bar (1.7). */
+/* Voice analysis, #/voice (DESIGN.md 2.8 to 2.10, 3.3; visual weight 1.10, messages 2.14, mobile 3.6). Values come
+   from tokens. Per-theme differences are only the 1.8 treatments, written as :root[data-theme="loud"] overrides (Loud
+   is dormant, 1.2a). Never animated: readout digits, cue, chip, meter marker, level bar, toggle fill, callout (1.7a). */
 
 /* hidden always wins over the display values below */
 [data-route="voice"] [hidden] { display: none !important; }
 
-/* ---------------------------------------------------------------- page header (compact h1, crumb hidden) */
-.va-header { padding: var(--s-4) 0; }
+/* ---------------------------------------------------------------- page header row: h1 and the status chip (3.6) */
+.va-header { flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-8); padding: var(--s-4) 0; }
+.va-header .ph-text { flex: 1 1 auto; }
+/* The status describes the page, so it sits beside the h1 at every width. Plain text and a dot: it is not tappable,
+   so it has no border (1.10 tap-affordance rule). */
+.va-status {
+  margin: 0; flex: none; display: inline-flex; align-items: center; gap: var(--s-2); white-space: nowrap;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--ink);
+}
+@media (min-width: 600px) and (max-width: 959px) {
+  :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 32px; line-height: 36px; }
+}
 @media (max-width: 599px) {
-  .va-route { padding-top: 0; }
-  .va-header { padding: var(--s-3) 0; }
+  .va-header { min-height: 44px; padding: 0; column-gap: var(--s-3); }
   .va-crumb { display: none; }
-  :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 24px; line-height: 28px; }
+  :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 20px; line-height: 24px; }
   :root[data-theme="loud"] .va-header h1 { font-size: 28px; line-height: 32px; }
+  :root[data-theme="editorial"] .va-status { font-size: 12px; }
 }
 
-/* Paper compact: the 11px mono labels go to 12px. Loud is already 14px. */
-@media (max-width: 599px) {
-  :root[data-theme="editorial"] [data-route="voice"] .strip,
-  :root[data-theme="editorial"] .va-a4-label { font-size: 12px; }
+/* One "Listening" on screen (fix round A): under 600px and in phone landscape the Voice status chip sits right under
+   the header, so the header's mic indicator is visually hidden on this route. It stays rendered, so it is still the one
+   live region that announces "Listening" (voice.ts does not say it again). */
+@media (max-width: 599px), (orientation: landscape) and (max-height: 500px) {
+  body:has([data-route="voice"]:not([hidden])) .mic-indicator {
+    position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
 }
 
-/* ---------------------------------------------------------------- layout */
-.va-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-panel); }
+/* ---------------------------------------------------------------- layout
+   One column in DOM order under 960 (hero, Readings, Spectrogram, How to read this, Setup). From 960 the grid puts
+   them back where they were: hero 5 and spectrogram 7, Readings 5 and How to read this 7, Setup 12. */
+.va-readings { margin-top: var(--group-gap); }
+.va-spec { margin-top: var(--group-gap); }
+.va-howto, .va-setup { margin-top: var(--sec-gap); }
 @media (min-width: 960px) {
-  .va-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; }
+  .va-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--s-8); row-gap: var(--sec-gap); align-items: start; }
+  .va-grid > * { margin-top: 0; }
   .va-hero { grid-column: 1 / span 5; grid-row: 1; align-self: stretch; }
-  .va-spec { grid-column: 6 / span 7; grid-row: 1; align-self: stretch; display: flex; }
+  .va-spec { grid-column: 6 / span 7; grid-row: 1; align-self: stretch; display: flex; flex-direction: column; }
   .va-readings { grid-column: 1 / span 5; grid-row: 2; }
   .va-howto { grid-column: 6 / span 7; grid-row: 2; }
   .va-setup { grid-column: 1 / -1; grid-row: 3; }
 }
 
-/* ---------------------------------------------------------------- hero (2.9) */
-.va-hero { transform: rotate(var(--tilt-a)); display: flex; flex-direction: column; container: va-hero / inline-size; }
+/* ---------------------------------------------------------------- hero (2.9, 3.6)
+   The one surface on the page: --panel fill with 2px ink rules top and bottom, so the instrument has edges on a
+   glary stand (1.10). Under 600 it is a full-bleed band with 16px inner padding. */
+.va-hero {
+  display: flex; flex-direction: column;
+  background: var(--panel); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+}
+/* No size container and no transform on the hero or its body: either one would become the containing block of the
+   fixed action bar. The note row is the container that --t-hero's cqi resolves against (it is as wide as the body). */
 .va-hero-body {
-  container-type: inline-size;
   display: flex; flex-direction: column; gap: var(--s-2);
-  padding: var(--s-4);
+  padding: var(--s-3) var(--s-4);
   flex: 1 0 auto;
 }
-@media (max-width: 599px) { .va-hero-body { padding: var(--s-3); } }
-/* Loud is taller (bigger type, 4px borders), so it packs tighter to keep the toggle in the first viewport */
-:root[data-theme="loud"] .va-hero-body { gap: var(--s-1); }
 @media (max-width: 599px) {
-  :root[data-theme="loud"] .va-hero-body { padding: var(--s-2) var(--s-3); }
+  .va-hero { margin: 0 calc(-1 * var(--edge-r)) 0 calc(-1 * var(--edge-l)); }
+  .va-hero-body { padding: var(--s-3) var(--edge-r) var(--s-3) var(--edge-l); }
 }
+:root[data-theme="loud"] .va-hero { border: var(--border-w) solid var(--ink); box-shadow: var(--shadow-panel); transform: rotate(var(--tilt-a)); }
+:root[data-theme="loud"] .va-hero-body { gap: var(--s-1); }
 
-/* status chip in .chip-tilt: inert in Paper, pink fill, shadow and tilt in Loud (1.8) */
-.chip-tilt { display: inline-flex; }
-.va-status { display: inline-flex; align-items: center; gap: var(--s-2); white-space: nowrap; }
-:root[data-theme="loud"] .chip-tilt {
+/* status chip: inert in Paper; pink fill, shadow and tilt in Loud (1.8, dormant) */
+:root[data-theme="loud"] .va-status {
   background: var(--signal); color: var(--ink);
   border: var(--border-w) solid var(--ink); box-shadow: var(--shadow-chip);
   transform: rotate(var(--tilt-chip)); padding: 0 var(--s-2);
 }
-:root[data-theme="loud"] .va-hero .strip .chip-tilt .dot { border-color: var(--ink); }
-:root[data-theme="loud"] .chip-tilt .dot-live { background: var(--ink); }
+:root[data-theme="loud"] .va-status .dot { border-color: var(--ink); }
+:root[data-theme="loud"] .va-status .dot-live { background: var(--ink); }
 
-/* note block: the slot keeps the hero line height so states do not move the controls */
-.va-note-slot { min-height: 1em; font: var(--t-hero); display: flex; flex-direction: column; justify-content: center; }
+/* note row: the note slot on the left; the cents chip and the read-only A4 on the right (3.6) */
+.va-note-row { container-type: inline-size; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s-2); align-items: start; }
+/* The slot keeps the hero line height (at least 120px at compact), so a state change never moves the controls. */
+.va-note-slot { position: relative; min-height: 1em; font: var(--t-hero); display: flex; flex-direction: column; justify-content: center; }
 .va-note-slot > * { font: var(--t-body); }
 .va-note { margin: 0; }
 .va-note .va-glyphs { display: inline-flex; align-items: stretch; font: var(--t-hero); letter-spacing: var(--t-hero-ls); white-space: nowrap; }
@@ -67,43 +91,53 @@
 /* accidental at the top, octave at the bottom, both 0.45em, so naturals and sharps have the same width */
 .va-ao { display: inline-flex; flex-direction: column; justify-content: space-between; font-size: 0.45em; line-height: 1; min-width: 1.1em; padding: 0.08em 0 0.06em 0.04em; }
 .va-acc { min-height: 1em; }
+/* "Last:" sits in the space above the letter's cap height, so the held state changes nothing in the layout. */
 .va-last {
-  align-self: flex-start; margin-right: var(--s-2);
+  position: absolute; top: 0; left: 0;
   font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
 }
 .va-note[data-empty] .va-glyphs { font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); }
 .va-note[data-empty] .va-ao { display: none; }
+/* Idle instruction: plain text, no rule, no icon (2.14 empty state). */
 .va-msg { margin: var(--s-1) 0 0; max-width: 46ch; color: var(--ink-2); }
-.va-error { display: grid; gap: var(--s-2); }
-.va-error-text { margin: 0; max-width: 46ch; color: var(--state-error); font-weight: var(--t-body-strong); }
-:root[data-theme="loud"] .va-error-text { color: var(--ink); }
-.va-error-more { border: var(--border-w) solid var(--ink); }
-.va-error-raw { margin: 0; padding: var(--row-pad); font: var(--t-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* direction cue and cents chip: both at least 24px (2.9, 1.5) */
-.va-cue-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-4); min-height: 36px; }
-.va-hero[data-has="none"] .va-cue-row { visibility: hidden; }
-.va-dir {
-  margin: 0; display: inline-flex; align-items: baseline; gap: var(--s-2); white-space: nowrap;
-  font: var(--t-cue); letter-spacing: var(--t-cue-ls);
-}
-.va-dir .va-arrow, .va-dir .va-ok-dot { align-self: center; }
-.va-dir-word { text-transform: uppercase; }
-.va-dir-unit { text-transform: none; font-size: 0.6em; }
-.va-arrow { width: 1em; height: 1em; flex: none; }
-.va-ok-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--ok); border: 1px solid var(--ok); flex: none; }
+.va-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-1); }
+.va-hero[data-has="none"] .va-side { align-self: end; }
+/* A message needs the slot's full width: the read-only A4 drops to its own line, right-aligned. */
+/* While a callout shows, the note area collapses to the callout: no reserved note height and no hidden cue line, so
+   the read-only A4 and the meter follow it directly. */
+.va-hero:is([data-msg="action"], [data-msg="info"]) .va-note-slot { min-height: 0; justify-content: flex-start; }
+.va-hero:is([data-msg="action"], [data-msg="info"]) .va-dir { display: none; }
+.va-hero:is([data-msg="action"], [data-msg="info"]) .va-side { grid-column: 1 / -1; grid-row: 2; margin-top: var(--s-2); }
+.va-a4-ro { margin: 0; font: var(--t-label); letter-spacing: var(--t-label-ls); color: var(--muted); white-space: nowrap; }
+
+/* Cents chip: a filled readout with no border, so it never looks like a button (1.10). */
 .va-chip {
   margin: 0; display: inline-flex; align-items: baseline; gap: 0.15em;
   font: var(--t-chip); letter-spacing: var(--t-chip-ls); text-transform: var(--t-chip-case);
-  border: var(--border-w) solid var(--ink); padding: 0 var(--s-2); background: var(--panel);
+  padding: 0 var(--s-2); background: var(--hover); color: var(--ink);
   white-space: nowrap;
 }
+.va-hero[data-has="none"] .va-chip { display: none; }
 .va-unit { font-size: 0.6em; }
-.va-hero[data-dir="within"] .va-chip { border-color: var(--ok); color: var(--ok); }
-:root[data-theme="loud"] .va-hero[data-dir="within"] .va-chip { background: var(--ok); color: var(--ink); border-color: var(--ink); }
-:root[data-theme="loud"] .va-chip { box-shadow: var(--shadow-chip); }
+.va-hero[data-dir="within"] .va-chip { background: var(--ok); color: var(--on-ink); }
+:root[data-theme="loud"] .va-chip { border: var(--border-w) solid var(--ink); background: var(--panel); box-shadow: var(--shadow-chip); }
+:root[data-theme="loud"] .va-hero[data-dir="within"] .va-chip { background: var(--ok); color: var(--ink); }
 
-/* cents meter: -50 to +50 c, ticks at -50, 0, +50, tolerance zone, marker at least 8px wide (2.9) */
+/* direction cue: its own line at --t-cue (40/44 compact). The "±{tol} c" suffix is 0.6em, so "WITHIN ±10 c" fits
+   at 320. Without pitch the line keeps its height and shows nothing. */
+.va-dir {
+  margin: 0; display: flex; align-items: center; gap: var(--s-2); white-space: nowrap; min-height: 1lh;
+  font: var(--t-cue); letter-spacing: var(--t-cue-ls);
+}
+.va-hero[data-has="none"] .va-dir { visibility: hidden; }
+.va-dir-word { text-transform: uppercase; }
+.va-dir-unit { text-transform: none; font-size: 0.6em; }
+.va-arrow { width: 1em; height: 1em; flex: none; }
+.va-ok-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--ok); flex: none; }
+
+/* cents meter: -50 to +50 c, ticks at -50, 0, +50, tolerance zone, marker at least 8px wide (2.9). The track is one of
+   the two data frames (1.10). */
 .va-meter { padding: 0 var(--s-1); }
 .va-track { position: relative; height: 24px; border: var(--border-w) solid var(--ink); background: var(--panel); }
 :root[data-theme="loud"] .va-track { height: 32px; }
@@ -120,34 +154,131 @@
 
 /* stale (held past HOLD_FULL_MS, or stopped): dimmed to --muted, with the "Last:" label */
 .va-hero[data-stale] .va-glyphs,
-.va-hero[data-stale] .va-dir,
-.va-hero[data-stale] .va-chip { color: var(--muted); border-color: var(--muted); }
-.va-hero[data-stale] .va-ok-dot { background: transparent; border-color: var(--muted); }
+.va-hero[data-stale] .va-dir { color: var(--muted); }
+.va-hero[data-stale] .va-chip { background: var(--hover); color: var(--muted); }
+.va-hero[data-stale] .va-ok-dot { background: transparent; box-shadow: inset 0 0 0 1px var(--muted); }
 .va-hero[data-stale] .va-marker { background: var(--muted); }
-/* The dim is on the letter and octave, not the "Last:" label: small text at 0.55 opacity is under 4.5:1. */
 :root[data-theme="loud"] .va-hero[data-stale] .va-letter,
 :root[data-theme="loud"] .va-hero[data-stale] .va-ao,
 :root[data-theme="loud"] .va-hero[data-stale] .va-dir { color: var(--ink); opacity: 0.55; }
 :root[data-theme="loud"] .va-hero[data-stale] .va-glyphs { color: var(--ink); }
 
-/* Narrow hero (compact, and the 5-column hero on wide screens): the chip sits beside the note and the cue
-   gets its own line, so "WITHIN ±10 CENTS" never wraps and pushes the toggle down. Loud type does not fit
-   cue and chip on one line below about 560px of hero. Same markup and the same rule in both themes. */
-@container va-hero (max-width: 560px) {
-  .va-hero-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s-2); }
-  .va-hero-body > * { grid-column: 1 / -1; }
-  .va-cue-row { display: contents; }
-  .va-hero-body > .va-note-slot { grid-column: 1; grid-row: 1; }
-  .va-chip { grid-column: 2; grid-row: 1; align-self: end; margin-bottom: var(--s-2); }
-  .va-hero[data-has="none"] .va-chip { display: none; }
-  .va-dir { grid-column: 1 / -1; min-height: 1lh; }
+/* caption and gate hint share one slot (3.6). Both sit in the same grid cell; the hint keeps its space while hidden,
+   so showing it moves nothing (MSG-19), and while it shows the caption is hidden in place. */
+.va-cap-slot { display: grid; }
+.va-cap-slot > * { grid-area: 1 / 1; align-self: start; }
+.va-caption { margin: 0; font: var(--t-body-s); color: var(--muted); }
+.va-hint { margin: 0; display: flex; align-items: flex-start; gap: var(--s-2); font: var(--t-hint); color: var(--ink); }
+.va-hint .msg-icon { flex: none; margin-top: 4px; }
+[data-route="voice"] .va-cap-slot .va-hint[hidden] { display: flex !important; visibility: hidden; }
+.va-cap-slot:has(.va-hint:not([hidden])) .va-caption { visibility: hidden; }
+
+/* level bar with the gate tick (aria-hidden; the number and gate are in Details). 4px, no border (1.10). */
+/* The track's extent is drawn as a 1px --muted ring (an inset shadow, so the bar stays a line, not a box, 1.10). */
+.va-level { position: relative; height: 4px; background: var(--rule); box-shadow: inset 0 0 0 1px var(--muted); }
+:root[data-theme="loud"] .va-level { height: 8px; border: 2px solid var(--ink); background: var(--panel); }
+.va-level-fill { position: absolute; inset: 0; background: var(--ink); transform-origin: left center; transform: scaleX(0); }
+.va-level-gate { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--signal); transform: translateX(-50%); }
+
+/* ---------------------------------------------------------------- toggle and the action bar (2.7, 3.6)
+   Idle: ink fill. Listening: --signal-text fill with an 8px live dot before "Stop listening", so the state reads from
+   2 m by colour, shape and word. Busy: disabled at 0.5 opacity with the busy label. The fill changes on the frame the
+   state arrives: no transition at all on the toggle. */
+.va-actionbar { display: grid; gap: var(--s-2); }
+.va-actionbar:has(> .va-toggle[hidden]) { display: none; }
+.va-toggle { width: 100%; min-height: 56px; gap: var(--s-2); transition: none; }
+.va-live-dot { display: none; width: 8px; height: 8px; border-radius: 50%; background: var(--on-ink); flex: none; }
+.va-toggle[data-state="live"] { background: var(--signal-text); border-color: var(--signal-text); color: var(--on-ink); }
+.va-toggle[data-state="live"] .va-live-dot { display: inline-block; }
+@media (hover: hover) {
+  /* A desktop hover on the idle toggle must never look like "listening". */
+  .va-toggle[data-state="idle"]:hover:not(:disabled) { background: var(--ink-2); border-color: var(--ink-2); transition: none; }
+  .va-toggle[data-state="live"]:hover:not(:disabled) { background: var(--signal-text); border-color: var(--signal-text); transition: none; }
+}
+:root[data-theme="loud"] .va-toggle { font: var(--t-cue); }
+.va-space-hint { margin: 0; font: var(--t-body-s); color: var(--muted); text-align: center; }
+
+/* Compact portrait: the bar is fixed to the bottom of the screen, full width, over a --bg fill with a hairline on
+   top. The route and, on Voice, the footer leave room for it. While the A4 field has focus the bar is hidden, so it
+   never rides over the field above an on-screen keyboard (WCAG 2.4.11). */
+@media (max-width: 599px) and (orientation: portrait), (max-width: 599px) and (min-height: 501px) {
+  .va-actionbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--bg); border-top: var(--divider-w) solid var(--rule);
+    padding: var(--s-2) var(--edge-r) max(var(--s-2), env(safe-area-inset-bottom)) var(--edge-l);
+  }
+  .va-toggle { min-height: 48px; }
+  .va-space-hint { display: none; }
+  .va-route:has(.va-a4-input:focus) .va-actionbar { visibility: hidden; }
+  /* WCAG 2.4.11: focus and scroll-into-view keep the focused control above the bar. */
+  html:has([data-route="voice"]:not([hidden])) { scroll-padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom)); }
+  [data-route="voice"] :is(a, button, input, summary, label) { scroll-margin-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom) + var(--s-2)); }
+  /* The footer, which always follows the route, takes the bar's height, so the disclaimer and the last content
+     scroll clear of the bar. (3.6 also gives the route the same padding; that would only add empty space.) */
+  body:has([data-route="voice"]:not([hidden])) .app-footer .shell { padding-bottom: calc(var(--s-4) + var(--bar-h) + env(safe-area-inset-bottom)); }
 }
 
-/* caption and A4 stepper (2.8) */
-.va-cap-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-4); }
-.va-caption { margin: 0; font: var(--t-body-s); color: var(--muted); }
-.va-a4 { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); max-width: 100%; }
-.va-a4-label { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); }
+/* ---------------------------------------------------------------- Readings: a stat grid (3.6)
+   Two cells per row, a mono label above the value, a vertical hairline between the columns and no horizontal rules.
+   Vibrato speed and width come first and use --t-reading, so she can read them from the stand. */
+.va-stats { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.va-stat { min-width: 0; padding: var(--s-2) var(--s-3) var(--s-2) 0; }
+.va-stat:nth-child(even) { padding: var(--s-2) 0 var(--s-2) var(--s-3); border-left: var(--divider-w) solid var(--rule); }
+.va-stat-label { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); }
+.va-stat-body { margin: var(--s-1) 0 0; display: flex; flex-direction: column; min-width: 0; }
+.va-stat-v { font: var(--t-body); font-weight: var(--t-body-strong); overflow-wrap: anywhere; }
+.va-stat-big .va-stat-v { font-variant-numeric: tabular-nums; }
+.va-num { font: var(--t-reading); font-variant-numeric: tabular-nums; }
+.va-stat-unit { font: var(--t-body-s); }
+.va-stat-v[data-empty] { font: var(--t-body-s); font-weight: 400; color: var(--muted); }
+.va-kv-note { font: var(--t-body-s); color: var(--muted); }
+.kv-body .va-kv-note { flex-basis: 100%; }
+.va-details { margin-top: var(--s-2); }
+/* The document links sit on a line of their own (44px hit areas, technique B); the note follows 12px below. */
+.va-docs { margin: 0; }
+.va-docs-note { font: var(--t-body-s); color: var(--muted); }
+@media (max-width: 599px) {
+  .va-readings { margin-top: var(--s-3); }
+  /* Still the group's heading for screen readers; the hairline is enough on a phone. */
+  .va-readings-label {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+}
+
+/* ---------------------------------------------------------------- spectrogram (2.10, 1.10, 2.14)
+   A tier-2 group: label, span and state word in the meta line. The plot area is the only box, and nothing is drawn
+   over it. */
+.va-spec-meta { margin: 0; }
+.va-spec-state { color: var(--muted); }
+.plot-frame { flex: 1 1 auto; display: flex; min-width: 0; }
+.va-spec-panel { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
+:root[data-theme="loud"] .plot-frame {
+  background: var(--accent-2); padding: var(--s-4);
+  border: var(--border-w) solid var(--ink); box-shadow: var(--shadow-panel);
+  transform: rotate(var(--tilt-b));
+}
+:root[data-theme="loud"] .va-spec-panel { background: var(--panel); border: var(--border-w) solid var(--ink); }
+.va-plot { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-2); padding-top: var(--s-3); flex: 1 0 auto; }
+.va-axis {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); color: var(--muted); height: 300px;
+}
+.va-canvas-wrap { position: relative; height: 300px; border: var(--border-w) solid var(--ink); background: var(--surface-plot); }
+.va-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+@media (max-width: 599px) { .va-axis, .va-canvas-wrap { height: 200px; } }
+.va-legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6); margin: 0; padding: var(--s-3) 0 0; list-style: none; font: var(--t-body-s); }
+.va-legend li { display: inline-flex; align-items: center; gap: var(--s-2); }
+.va-sw { width: 16px; height: 6px; flex: none; }
+.va-sw-f0 { background: var(--signal); outline: 1px solid var(--surface-plot); }
+.va-sw-band { height: 2px; background: var(--plot-band); }
+.va-plot-caption { margin: 0; padding: var(--s-2) 0 0; font: var(--t-caption); color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- Setup: the A4 stepper (2.8, 3.6) */
+.va-a4-row { padding: var(--s-2) 0 var(--s-3); }
+.va-a4 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); max-width: 100%; }
+.va-a4-label { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); margin-right: var(--s-2); }
+/* Shared with Recording analysis (#/file), which keeps these base sizes. */
 .va-step { width: 48px; min-width: 48px; height: 48px; min-height: 48px; padding: 0; font: var(--t-display-3); }
 .va-a4-input {
   width: 7ch; min-width: 0; flex: 0 1 auto; height: 48px; padding: 0 var(--s-2); text-align: center;
@@ -161,63 +292,72 @@
 /* A live region (role=status): kept rendered when empty so the message is announced when it appears. */
 .va-a4-error:empty { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
 :root[data-theme="loud"] .va-a4-error { color: var(--ink); }
-
-/* gate hint: reserved slot so the hint does not push the toggle */
-.va-hint-slot { min-height: 24px; }
-.va-hint { margin: 0; font: var(--t-hint); }
-
-/* level bar with the gate tick (aria-hidden; the number and gate are in Details) */
-.va-level { position: relative; height: 6px; background: var(--hover); border: 1px solid var(--ink); }
-:root[data-theme="loud"] .va-level { height: 8px; border-width: 2px; background: var(--panel); }
-.va-level-fill { position: absolute; inset: 0; background: var(--ink); transform-origin: left center; transform: scaleX(0); }
-.va-level-gate { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--signal); transform: translateX(-50%); }
-
-/* hero toggle: full width, 56px (2.7) */
-.va-toggle { width: 100%; min-height: 56px; }
-:root[data-theme="loud"] .va-toggle { font: var(--t-cue); }
-.va-space-hint { margin: 0; font: var(--t-body-s); color: var(--muted); text-align: center; }
-
-/* ---------------------------------------------------------------- spectrogram (2.10) */
-.va-spec { min-width: 0; }
-.plot-frame { flex: 1 1 auto; display: flex; min-width: 0; }
-.plot-frame > .panel { flex: 1 1 auto; }
-:root[data-theme="loud"] .plot-frame {
-  background: var(--accent-2); padding: var(--s-4);
-  border: var(--border-w) solid var(--ink); box-shadow: var(--shadow-panel);
-  transform: rotate(var(--tilt-b));
+/* Voice (3.6 technique A): − and + are 44 x 44 buttons whose visual is a 32px square with a 1px ink outline at rest,
+   drawn by ::before; the negative margins give the layout back, so the row is as wide as the squares. */
+#va-setup .va-step {
+  position: relative; display: inline-grid; place-items: center;
+  width: var(--hit); min-width: var(--hit); height: var(--hit); min-height: var(--hit); margin: 0 -6px;
+  border: 0; background: none; color: var(--ink); font: 400 20px/1 var(--font-ui); cursor: pointer;
 }
-:root[data-theme="loud"] .plot-frame > .panel { box-shadow: none; }
-.va-spec-panel { display: flex; flex-direction: column; }
-.va-plot { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-2); padding: var(--s-3) var(--s-4) 0 var(--s-2); flex: 1 0 auto; }
-.va-axis {
-  display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;
-  font: var(--t-label); letter-spacing: var(--t-label-ls); color: var(--muted); height: 300px;
-}
-.va-canvas-wrap { position: relative; height: 300px; border: var(--border-w) solid var(--ink); background: var(--surface-plot); }
-.va-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
-@media (max-width: 599px) { .va-axis, .va-canvas-wrap { height: 200px; } }
-.va-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--s-4); text-align: center; }
-.va-overlay p { margin: 0; max-width: 40ch; padding: var(--s-2) var(--s-3); background: var(--panel); color: var(--ink); border: var(--border-w) solid var(--ink); }
-.va-spec-chip {
-  position: absolute; top: var(--s-2); right: var(--s-2);
-  padding: 0 var(--s-2); background: var(--panel); color: var(--ink); border: var(--border-w) solid var(--ink);
-  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase;
-}
-.va-legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6); margin: 0; padding: var(--s-3) var(--s-4) 0; list-style: none; font: var(--t-body-s); }
-.va-legend li { display: inline-flex; align-items: center; gap: var(--s-2); }
-.va-sw { width: 16px; height: 6px; flex: none; }
-.va-sw-f0 { background: var(--signal); outline: 1px solid var(--surface-plot); }
-.va-sw-band { height: 2px; background: var(--plot-band); }
-.va-plot-caption { margin: 0; padding: var(--s-2) var(--s-4) var(--s-4); font: var(--t-caption); color: var(--ink-2); }
-
-/* ---------------------------------------------------------------- Readings, Details, Setup */
-.va-kv-note { flex-basis: 100%; font: var(--t-body-s); color: var(--muted); }
-.va-details { border-top: var(--border-w) solid var(--ink); }
+#va-setup .va-step::before { content: ""; position: absolute; inset: 6px; border: var(--border-w) solid var(--ink); }
+#va-setup .va-step > span { position: relative; }
+#va-setup .va-step:active::before { background: var(--hover); }
+#va-setup .va-a4-input { width: 76px; height: var(--hit); }
+/* Done: the iOS decimal keypad has no Done key. Shown while the A4 group has focus, so it is still there when focus
+   moves from the field onto it. */
+.va-a4-done { display: none; }
+.va-a4:focus-within .va-a4-done { display: inline-flex; margin-left: var(--s-2); }
 /* The label is the touch target: at least 44 x 44 even though the box itself is 20px (WCAG 2.5.8). */
 .va-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: max(44px, var(--control-h)); min-width: 44px; cursor: pointer; }
 .va-switch input { width: 20px; height: 20px; margin: 0; accent-color: var(--ink); cursor: pointer; }
 
+/* ---------------------------------------------------------------- phone landscape (3.6)
+   (orientation: landscape) and (max-height: 500px), at any width, budgeted against 667 x 320. The toggle sits at the
+   right end of the page header row (no bottom bar: it would take a fifth of the height). The hero is a band: note,
+   cue and chip side by side, then the meter, then the caption or hint with the read-only A4, then the level. From
+   800 wide the vibrato pair sits to the right of the hero. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root, :root[data-theme="editorial"] {
+    --t-hero: 350 104px/1 var(--font-display);
+    --t-cue: 600 40px/44px var(--font-ui);
+    --t-chip: 500 40px/44px var(--font-label);
+  }
+  .va-route { position: relative; padding-top: 0; }
+  /* The toggle is drawn at the right end of this row (below); the row reserves the toggle's measured width and height
+     (voice.ts sets --va-toggle-w and --va-toggle-h), so the h1 and chip wrap beside it when text is enlarged. */
+  .va-header { min-height: max(48px, var(--va-toggle-h, 44px) + 4px); padding: 0 calc(var(--va-toggle-w, 180px) + var(--s-4)) 0 0; }
+  :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 20px; line-height: 24px; }
+  .va-crumb { display: none; }
+  .va-hero-body { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; column-gap: var(--s-4); row-gap: var(--s-2); align-items: center; }
+  .va-note-row, .va-side { display: contents; }
+  .va-note-slot { grid-column: 1; grid-row: 1; }
+  .va-dir { grid-column: 2; grid-row: 1; }
+  .va-chip { grid-column: 3; grid-row: 1; justify-self: start; }
+  .va-meter { grid-column: 1 / -1; grid-row: 2; }
+  .va-cap-slot { grid-column: 1 / 4; grid-row: 3; }
+  .va-a4-ro { grid-column: 4; grid-row: 3; justify-self: end; align-self: start; }
+  .va-level { grid-column: 1 / -1; grid-row: 4; }
+  .va-hero:is([data-msg="action"], [data-msg="info"]) .va-note-slot { grid-column: 1 / -1; }
+  /* The toggle: out of the hero's flow, drawn at the right end of the page header row. Same two states. */
+  .va-actionbar { position: absolute; top: 2px; right: var(--edge-r); }
+  .va-toggle { width: auto; max-width: 45vw; min-height: 44px; height: auto; padding-block: var(--s-2); white-space: normal; text-align: left; }
+  .va-space-hint { display: none; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 800px) {
+  .va-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 0.6fr); column-gap: var(--s-6); align-items: start; }
+  .va-grid > * { grid-column: 1 / -1; }
+  .va-hero { grid-column: 1; grid-row: 1; }
+  .va-readings { grid-column: 2; grid-row: 1; margin-top: 0; }
+}
+
 @media (forced-colors: active) {
   .va-marker, .va-level-fill, .va-ok-dot, .va-tol { forced-color-adjust: none; background: CanvasText; border: 1px solid CanvasText; }
   .va-tol { background: Canvas; }
+  /* Fills are dropped here, so the chip and the listening toggle get a border, and the live dot keeps its shape. */
+  .va-chip, .va-toggle[data-state="live"] { border: 1px solid CanvasText; }
+  .va-live-dot { forced-color-adjust: none; background: CanvasText; }
+  #va-setup .va-step::before { border-color: ButtonText; }
+  /* The shared spectrogram renderer draws F0 in Highlight and band lines in CanvasText here; the swatches match. */
+  .va-sw-f0 { forced-color-adjust: none; background: Highlight; outline-color: Canvas; }
+  .va-sw-band { forced-color-adjust: none; background: CanvasText; }
 }

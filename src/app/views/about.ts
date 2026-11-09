@@ -26,7 +26,6 @@ const html = `
 <div class="shell route about">
   <header class="page-header">
     <div class="ph-text">
-      <p class="eyebrow">About</p>
       <h1 id="about-title" tabindex="-1">About Cents to Dollars</h1>
       <p class="lede">Cents to Dollars shows you what your voice is doing while you sing: the note you are on, how far sharp or flat you are, and your vibrato. It runs in your browser and nothing you sing leaves it.</p>
     </div>
@@ -42,17 +41,18 @@ const html = `
   </nav>
 
   <div class="about-grid">
-    <section class="panel" aria-labelledby="about-who">
-      <div class="strip"><h2 class="strip-title" id="about-who" tabindex="-1">Who it's for</h2></div>
-      <div class="pbody">
-        <p class="prose">Singers who practise on their own and want something more exact than their ear between lessons. I built it first for a classically trained singer who practises alone with a microphone, so the singing screen is made to be read from a metre or two away.</p>
+    <section class="sec about-sec" aria-labelledby="about-who">
+      <header class="sec-head"><h2 class="sec-title" id="about-who" tabindex="-1">Who it's for</h2></header>
+      <div class="sec-body">
+        <p class="prose">I built Cents to Dollars for an opera singer, to give her and other singers tools to hear what their voices are doing and get better.</p>
+        <p class="prose">Opera is sung without a microphone, and you don't need one here. The app listens through the laptop or phone you already have, from a metre or two away, and the singing screen is made to be read from there.</p>
         <p class="prose">You don't need to know any acoustics to use it. Every reading is in plain words on the screen, and the technical detail is there when you want it.</p>
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="about-what">
-      <div class="strip"><h2 class="strip-title" id="about-what" tabindex="-1">What it measures</h2></div>
-      <div class="pbody about-list">
+    <section class="sec about-sec" aria-labelledby="about-what">
+      <header class="sec-head"><h2 class="sec-title" id="about-what" tabindex="-1">What it measures</h2></header>
+      <div class="sec-body about-list">
         <div class="about-item">
           <h3>Your note, and how far above or below it you are</h3>
           <p class="prose">The nearest note to what you are singing, and the distance from it in cents. 100 cents is one half step, so 20 cents sharp is a fifth of the way to the next note up. The note is named against your tuning reference, A4 = 440 Hz unless you change it.</p>
@@ -78,9 +78,9 @@ const html = `
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="about-accuracy">
-      <div class="strip"><h2 class="strip-title" id="about-accuracy" tabindex="-1">How accurate it is</h2></div>
-      <div class="pbody">
+    <section class="sec about-sec" aria-labelledby="about-accuracy">
+      <header class="sec-head"><h2 class="sec-title" id="about-accuracy" tabindex="-1">How accurate it is</h2></header>
+      <div class="sec-body">
         <p class="prose">I test it two ways: on test tones where the right answer is known exactly, and on recordings of real singing, compared with Praat, a program voice researchers use to measure pitch.</p>
         <p class="prose">On test tones, steady and with vibrato, it meets every target I set. On real singing, the live view doesn't yet agree with Praat as often as my target asks, partly because it sometimes jumps an octave for a moment. It hasn't been tested on recordings from the singer it was built for.</p>
         <p class="prose">The full results, including what fails, are in <a class="link" href="/VALIDATION.md" aria-describedby="about-doc-note">VALIDATION.md</a>, and every measurement is defined in <a class="link" href="/MEASUREMENT.md" aria-describedby="about-doc-note">MEASUREMENT.md</a>. ${DOC_NOTE}</p>
@@ -91,25 +91,25 @@ const html = `
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="about-privacy">
-      <div class="strip"><h2 class="strip-title" id="about-privacy" tabindex="-1">Your privacy</h2></div>
-      <div class="pbody">
-        <p class="prose">Your microphone is only on while you are listening, and the header shows "Mic on" while it is. The sound is measured in your browser as it arrives and then thrown away. Nothing is recorded, saved or uploaded, and there is no account.</p>
-        <p class="prose">The only things the site keeps are your choice of look, Paper or Loud, your tuning reference, and whether the space bar starts and stops listening, saved in this browser so they are there next time.</p>
+    <section class="sec about-sec" aria-labelledby="about-privacy">
+      <header class="sec-head"><h2 class="sec-title" id="about-privacy" tabindex="-1">Your privacy</h2></header>
+      <div class="sec-body">
+        <p class="prose">The app only listens after you press Start, and the header shows "Listening" while it does. The sound is measured in your browser as it arrives and then thrown away. Nothing is recorded, saved or uploaded, and there is no account.</p>
+        <p class="prose">The only things the site keeps are your tuning reference and whether the space bar starts and stops listening, saved in this browser so they are there next time.</p>
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="about-limits">
-      <div class="strip"><h2 class="strip-title" id="about-limits" tabindex="-1">What it isn't</h2></div>
-      <div class="pbody">
+    <section class="sec about-sec" aria-labelledby="about-limits">
+      <header class="sec-head"><h2 class="sec-title" id="about-limits" tabindex="-1">What it isn't</h2></header>
+      <div class="sec-body">
         <p class="prose">For practice and study. Not a diagnostic or medical device, and it can't tell you anything about the health of your voice.</p>
         <p class="prose">It doesn't judge your singing either. Sharp and flat describe which way you sit from the equal-tempered note at your tuning reference, not whether you sang it right.</p>
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="about-next">
-      <div class="strip"><h2 class="strip-title" id="about-next" tabindex="-1">Coming later</h2></div>
-      <div class="pbody">
+    <section class="sec about-sec" aria-labelledby="about-next">
+      <header class="sec-head"><h2 class="sec-title" id="about-next" tabindex="-1">Coming later</h2></header>
+      <div class="sec-body">
         <p class="prose">Voice analysis is the first tool. Next on the list are aural skills practice (intervals and pitch matching), separating your voice from an accompaniment, a register of the works you are learning, and saved sessions with notes. None of these exist yet.</p>
         <p class="prose">Cents to Dollars is made by Joseph Alfonso.</p>
       </div>

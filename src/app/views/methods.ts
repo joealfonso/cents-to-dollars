@@ -20,99 +20,125 @@ import {
 import '../../styles/methods.css';
 
 type Kind = 'calibration' | 'latency' | 'selftest';
-type BlockStatus = 'Not run this visit' | 'Needs microphone' | 'Running' | 'Done' | 'Done with a warning' | 'Could not run' | 'Cancelled';
+type BlockStatus = 'Not run this visit' | 'Needs permission to listen' | 'Running' | 'Done' | 'Done with a warning' | 'Could not run' | 'Cancelled';
 
 const NO_THRESHOLD = 'No pass threshold is set yet.';
 const DEV_ONLY = '(dev server only, opens raw text)';
-const INSECURE_MSG = 'The microphone only works on a secure page. Open http://127.0.0.1:5173.';
+const INSECURE_MSG = 'Listening only works on a secure page. Open http://127.0.0.1:5173.';
 const ANOTHER = 'Another check is running.';
 const CANCELLED_MSG = 'Cancelled because you left the page.';
 /** leave() waits this long for a check to settle, then goes on without it (a hung render must not freeze navigation). */
 const LEAVE_CAP_MS = 3000;
 
-const MIC_MSG: Record<LiveErrorKind, string> = {
-  denied: "Microphone access is blocked for this page. Allow it in the browser's site settings, then run the check again.",
-  nodevice: 'No microphone found. Connect one or switch on your audio interface, then run the check again.',
-  busy: 'The microphone could not be opened. Another app may be using it. Close it, then run the check again.',
-  insecure: INSECURE_MSG,
-  analyser: 'This browser could not start the audio analyser.',
-  ended: 'The microphone stopped during the check. It may have been unplugged. Run the check again.',
+/** 2.14 Methods copy: what happened (title), then the fix as one step that ends with "run the check again." */
+type Msg = { title: string; step: string };
+const MIC_MSG: Record<LiveErrorKind, Msg> = {
+  denied: { title: 'Listening is blocked for this page.', step: "In your browser's site settings, allow Microphone for this site, then run the check again." },
+  nodevice: { title: 'This laptop or phone has no microphone the browser can use.', step: 'Check your sound settings, then run the check again.' },
+  busy: { title: 'Another app is using the sound input.', step: 'Close it, then run the check again.' },
+  insecure: { title: 'Listening only works on a secure page.', step: 'Open http://127.0.0.1:5173.' },
+  analyser: { title: 'This browser could not start the audio analyser.', step: 'Run the check again.' },
+  ended: { title: 'Listening stopped during the check.', step: 'Run the check again.' },
 };
+/** Status meta per error (2.14): only a blocked or insecure page needs permission; the rest could not run. */
+const MIC_STATUS: Record<LiveErrorKind, BlockStatus> = {
+  denied: 'Needs permission to listen', insecure: 'Needs permission to listen',
+  nodevice: 'Could not run', busy: 'Could not run', analyser: 'Could not run', ended: 'Could not run',
+};
+const FIXTURES_MSG: Msg = { title: 'Test files not found at /fixtures/synthetic/.', step: 'Start the dev server (npx vite) and generate them with py/synth.py.' };
+const CRITERIA_MSG: Msg = { title: 'Criteria not found in results/summary.json.', step: '' };
+/** A check that threw: no fix she can make, so no step (2.14 copy rule 2); Details has the raw text. */
+const FAILED_MSG: Msg = { title: 'The check could not run.', step: '' };
+/** checks.ts warnings are one string, "What is wrong. What to try." Split at the first sentence end. */
+function splitWarning(text: string): Msg {
+  const i = text.indexOf('. ');
+  return i < 0 ? { title: text, step: '' } : { title: text.slice(0, i + 1), step: text.slice(i + 2) };
+}
+const ICON_ALERT = '<svg class="msg-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v5" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="11.6" r="1.1" fill="currentColor"/></svg>';
+const ICON_INFO = '<svg class="msg-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="4.6" r="1.1" fill="currentColor"/><path d="M8 7v5" stroke="currentColor" stroke-width="1.75"/></svg>';
 
 /** Fixed decimals with a real minus sign. Not finite: null, so the caller says why there is no number. */
 const fx = (x: number, d: number): string | null => (Number.isFinite(x) ? x.toFixed(d).replace(/^-/, MINUS) : null);
 const pctText = (frac: number) => `${+(frac * 100).toFixed(2)}%`;
 
 // ---------------------------------------------------------------- markup
+// Each check is a tier-1 section (1.10, 3.6): title and status meta, purpose, requirement, input, the message slot
+// (2.14: a callout directly above the Run button), a ghost Run button, the progress line, results, then a Method
+// disclosure (open at 600 and up). The state bar replaces the section's top rule while a check has a state.
 const html = `
 <div class="shell route m-route">
   <header class="page-header">
     <div class="ph-text">
-      <p class="eyebrow">Setup</p>
       <h1 id="methods-title" tabindex="-1">Methods and setup checks</h1>
-      <p class="lede">Run these once on a new microphone, interface or computer. You do not need them to sing.</p>
+      <p class="lede">Run these once on a new laptop, phone or room. You do not need them to sing.</p>
     </div>
   </header>
 
-  <div class="m-grid">
-    <section class="panel m-check m-half" id="m-cal" aria-labelledby="m-cal-title">
-      <div class="strip">
-        <h2 class="strip-title" id="m-cal-title" tabindex="-1">Calibration</h2>
-        <span class="m-status"><span class="dot" id="m-cal-dot" aria-hidden="true"></span><span id="m-cal-status">Not run this visit</span></span>
-      </div>
-      <div class="pbody">
-        <p class="prose">Checks how closely your setup reads a tone of known pitch. Play a steady reference tone into the microphone, enter its frequency, and measure for ${CAL_MS / 1000} s.</p>
-        <p class="m-req">Needs the microphone and a steady reference tone, for example from a tone generator.</p>
+  <div class="sec-grid m-grid">
+    <section class="sec m-check col-6" id="m-cal" aria-labelledby="m-cal-title">
+      <header class="sec-head">
+        <h2 class="sec-title" id="m-cal-title" tabindex="-1">Calibration</h2>
+        <span class="sec-meta m-status"><span class="dot" id="m-cal-dot" aria-hidden="true"></span><span id="m-cal-status">Not run this visit</span></span>
+      </header>
+      <div class="sec-body">
+        <p class="prose">Checks how closely your setup reads a tone of known pitch. Play a steady reference tone near your laptop or phone, enter its frequency, and measure for ${CAL_MS / 1000} s.</p>
+        <p class="m-req">Needs permission to listen and a steady reference tone, for example from a tone generator.</p>
         <p class="m-field">
           <label for="m-cal-hz">Reference</label>
-          <input class="m-input" id="m-cal-hz" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${CAL_DEFAULT_HZ}" aria-describedby="m-cal-hz-unit m-cal-hz-error">
+          <input class="m-input" id="m-cal-hz" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" spellcheck="false" value="${CAL_DEFAULT_HZ}" aria-describedby="m-cal-hz-unit m-cal-hz-error">
           <span class="m-unit" id="m-cal-hz-unit">Hz, ${CAL_HZ_MIN} to ${CAL_HZ_MAX}</span>
         </p>
         <p class="m-error" id="m-cal-hz-error" role="status"></p>
-        <p class="m-action"><button type="button" class="btn btn-primary" id="m-cal-run" aria-describedby="m-cal-reason">Measure for ${CAL_MS / 1000} s</button><span class="m-reason" id="m-cal-reason" hidden></span></p>
+        <div class="m-msg-slot" id="m-cal-msg" role="status"></div>
+        <p class="m-action"><button type="button" class="btn btn-ghost" id="m-cal-run" aria-describedby="m-cal-reason">Measure for ${CAL_MS / 1000} s</button><span class="m-reason" id="m-cal-reason" hidden></span></p>
         <p class="m-progress" id="m-cal-progress" role="status"></p>
         <p class="m-detail" id="m-cal-detail"></p>
         <div class="m-results" id="m-cal-results"></div>
-        <p class="m-method">Method: the median of the voiced frames in the ${CAL_MS / 1000} s window. Offset is 1200 × log2(median ÷ reference) in cents. Frame spread P95 is the 95th percentile of each frame's distance from that median. At least ${CAL_MIN_FRAMES} voiced frames are needed.</p>
+        <details class="disclosure m-method-d" data-open-wide><summary aria-label="Method: Calibration">Method</summary><p class="m-method">The median of the voiced frames in the ${CAL_MS / 1000} s window. Offset is 1200 × log2(median ÷ reference) in cents. Frame spread P95 is the 95th percentile of each frame's distance from that median. At least ${CAL_MIN_FRAMES} voiced frames are needed.</p></details>
       </div>
     </section>
 
-    <section class="panel m-check m-half" id="m-loop" aria-labelledby="m-loop-title">
-      <div class="strip">
-        <h2 class="strip-title" id="m-loop-title" tabindex="-1">Loopback latency</h2>
-        <span class="m-status"><span class="dot" id="m-loop-dot" aria-hidden="true"></span><span id="m-loop-status">Not run this visit</span></span>
-      </div>
-      <div class="pbody">
+    <section class="sec m-check col-6" id="m-loop" aria-labelledby="m-loop-title">
+      <header class="sec-head">
+        <h2 class="sec-title" id="m-loop-title" tabindex="-1">Loopback latency</h2>
+        <span class="sec-meta m-status"><span class="dot" id="m-loop-dot" aria-hidden="true"></span><span id="m-loop-status">Not run this visit</span></span>
+      </header>
+      <div class="sec-body">
         <p class="prose">Measures the delay from a test tone leaving the speakers to its pitch being drawn on screen.</p>
         <p class="m-req">Speakers on, not headphones. Set the volume low first. Keep this tab visible.</p>
-        <p class="m-action"><button type="button" class="btn btn-primary" id="m-loop-run" aria-describedby="m-loop-reason">Play ${LOOP_TONES} test tones</button><span class="m-reason" id="m-loop-reason" hidden></span></p>
+        <div class="m-msg-slot" id="m-loop-msg" role="status"></div>
+        <p class="m-action"><button type="button" class="btn btn-ghost" id="m-loop-run" aria-describedby="m-loop-reason">Play ${LOOP_TONES} test tones</button><span class="m-reason" id="m-loop-reason" hidden></span></p>
         <p class="m-progress" id="m-loop-progress" role="status"></p>
         <p class="m-detail" id="m-loop-detail"></p>
         <div class="m-results" id="m-loop-results"></div>
-        <p class="m-method">Method: each tone is 440 Hz. The delay runs from the time the tone reaches the output device, as the browser reports it, to the first drawn frame within ${LOOP_MATCH_CENTS} cents of 440 Hz. Median and range over the tones detected.</p>
+        <details class="disclosure m-method-d" data-open-wide><summary aria-label="Method: Loopback latency">Method</summary><p class="m-method">Each tone is 440 Hz. The delay runs from the time the tone reaches the output device, as the browser reports it, to the first drawn frame within ${LOOP_MATCH_CENTS} cents of 440 Hz. Median and range over the tones detected.</p></details>
       </div>
     </section>
 
-    <section class="panel m-check" id="m-self" aria-labelledby="m-self-title">
-      <div class="strip">
-        <h2 class="strip-title" id="m-self-title" tabindex="-1">Self-test</h2>
-        <span class="m-status"><span class="dot" id="m-self-dot" aria-hidden="true"></span><span id="m-self-status">Not run this visit</span></span>
-      </div>
-      <div class="pbody">
-        <p class="prose">Runs the synthetic test files through the same AudioWorklet offline and scores them against the known pitch. Does not use the microphone. Needs the dev server.</p>
+    <section class="sec m-check" id="m-self" aria-labelledby="m-self-title">
+      <header class="sec-head">
+        <h2 class="sec-title" id="m-self-title" tabindex="-1">Self-test</h2>
+        <span class="sec-meta m-status"><span class="dot" id="m-self-dot" aria-hidden="true"></span><span id="m-self-status">Not run this visit</span></span>
+      </header>
+      <div class="sec-body">
+        <p class="prose">Runs the synthetic test files through the same AudioWorklet offline and scores them against the known pitch. Does not listen. Needs the dev server.</p>
         <p class="m-req">The test files are served from /fixtures/synthetic/ by the dev server only (npx vite), and are generated with py/synth.py.</p>
-        <p class="m-action"><button type="button" class="btn btn-primary" id="m-self-run" aria-describedby="m-self-reason">Run the self-test</button><span class="m-reason" id="m-self-reason" hidden></span></p>
+        <div class="m-msg-slot" id="m-self-msg" role="status"></div>
+        <p class="m-action"><button type="button" class="btn btn-ghost" id="m-self-run" aria-describedby="m-self-reason">Run the self-test</button><span class="m-reason" id="m-self-reason" hidden></span></p>
         <p class="m-progress" id="m-self-progress" role="status"></p>
         <p class="m-detail" id="m-self-detail"></p>
         <div class="m-results" id="m-self-results"></div>
-        <p class="m-method">Method: verdicts use the thresholds in results/summary.json, written by py/score.py. Steady-tone frames within ${Math.round(SELF_EDGE_S * 1000)} ms of either end of a file are skipped. A file that is rendering cannot be stopped, so leaving the page cancels the run after that file and keeps no numbers.</p>
+        <details class="disclosure m-method-d" data-open-wide><summary aria-label="Method: Self-test">Method</summary><p class="m-method">Verdicts use the thresholds in results/summary.json, written by py/score.py. Steady-tone frames within ${Math.round(SELF_EDGE_S * 1000)} ms of either end of a file are skipped. A file that is rendering cannot be stopped, so leaving the page cancels the run after that file and keeps no numbers.</p></details>
       </div>
     </section>
 
-    <section class="panel m-docs" aria-labelledby="m-docs-title">
-      <div class="strip"><h2 class="strip-title" id="m-docs-title">Documents</h2></div>
-      <div class="pbody">
-        <p class="prose"><a class="link" href="/MEASUREMENT.md">MEASUREMENT.md</a> defines every measurement. <a class="link" href="/VALIDATION.md">VALIDATION.md</a> has the full results, including what fails. Both ${DEV_ONLY}.</p>
+    <section class="sec m-docs" aria-labelledby="m-docs-title">
+      <header class="sec-head"><h2 class="sec-title" id="m-docs-title">Documents</h2><span class="sec-meta">${DEV_ONLY.replace(/^\(|\)$/g, '')}</span></header>
+      <div class="sec-body">
+        <ul class="m-docs-list" role="list">
+          <li><a class="link link-hit" href="/MEASUREMENT.md">MEASUREMENT.md</a><span class="m-doc-desc">Defines every measurement.</span></li>
+          <li><a class="link link-hit" href="/VALIDATION.md">VALIDATION.md</a><span class="m-doc-desc">The full results, including what fails.</span></li>
+        </ul>
       </div>
     </section>
   </div>
@@ -136,13 +162,21 @@ function kvList(rows: Row[]): HTMLElement {
   }
   return dl;
 }
-function msg(text: string, tone: 'error' | null = null): HTMLElement {
-  const p = h('p', 'm-msg', text);
-  if (tone) p.dataset.tone = tone;
-  return p;
-}
-function rawDetails(text: string): HTMLElement {
-  return h('details', 'disclosure', h('summary', null, 'Details'), h('pre', 'm-raw', text));
+/** The 2.14 callout: icon, title, optional step, optional Details with the raw text. */
+function callout(kind: 'action' | 'warn' | 'info', m: Msg, raw = ''): HTMLElement {
+  const box = h('div', 'msg');
+  box.dataset.kind = kind;
+  const icon = h('span', 'msg-icon-slot');
+  icon.innerHTML = kind === 'info' ? ICON_INFO : ICON_ALERT;
+  const text = h('div', 'msg-text', h('p', 'msg-title', m.title));
+  if (m.step) text.append(h('p', 'msg-step', m.step));
+  if (raw) {
+    const sum = h('summary', null, 'Details');
+    sum.setAttribute('aria-label', 'Error details');
+    text.append(h('details', 'disclosure', sum, h('pre', 'msg-raw', raw)));
+  }
+  box.append(icon, text);
+  return box;
 }
 
 // ---------------------------------------------------------------- view
@@ -159,7 +193,7 @@ export function methodsRoute(root: HTMLElement): Route {
   interface Block {
     kind: Kind; field: FieldName; sub: string; needsMic: boolean;
     section: HTMLElement; title: HTMLElement; status: HTMLElement; dot: HTMLElement;
-    run: HTMLButtonElement; reason: HTMLElement; progress: HTMLElement; detail: HTMLElement; results: HTMLElement;
+    run: HTMLButtonElement; reason: HTMLElement; progress: HTMLElement; detail: HTMLElement; results: HTMLElement; msg: HTMLElement;
     idle: string; busy: string;
   }
   const block = (kind: Kind, p: string, field: FieldName, sub: string, needsMic: boolean, busy: string): Block => {
@@ -167,7 +201,7 @@ export function methodsRoute(root: HTMLElement): Route {
     return {
       kind, field, sub, needsMic,
       section: $(p), title: $(`${p}-title`), status: $(`${p}-status`), dot: $(`${p}-dot`),
-      run, reason: $(`${p}-reason`), progress: $(`${p}-progress`), detail: $(`${p}-detail`), results: $(`${p}-results`),
+      run, reason: $(`${p}-reason`), progress: $(`${p}-progress`), detail: $(`${p}-detail`), results: $(`${p}-results`), msg: $(`${p}-msg`),
       idle: run.textContent ?? '', busy,
     };
   };
@@ -185,7 +219,7 @@ export function methodsRoute(root: HTMLElement): Route {
     b.status.textContent = s;
     const state = s === 'Running' ? 'working'
       : s === 'Done' || s === 'Done with a warning' ? 'done'
-        : s === 'Could not run' || s === 'Needs microphone' ? 'error' : null;
+        : s === 'Could not run' || s === 'Needs permission to listen' ? 'error' : null;
     if (state) b.section.dataset.state = state; else delete b.section.dataset.state;
     b.dot.className = `dot${s === 'Running' && b.needsMic ? ' dot-live' : s === 'Done' ? ' dot-ok' : state === 'error' ? ' dot-error' : ''}`;
   }
@@ -217,12 +251,13 @@ export function methodsRoute(root: HTMLElement): Route {
     const r = { kind: b.kind, ctrl, done: Promise.resolve(), stopping: false, abandoned: false };
     running = r;
     b.results.replaceChildren();
+    b.msg.replaceChildren();
     setStatus(b, 'Running');
     field(b, 'idle', 'Running');
     syncButtons();
     // An abandoned run (leave() stopped waiting for it) never paints: the block may belong to a later visit.
     r.done = fn(ctrl.signal, () => r.abandoned)
-      .catch((e) => { console.error('check failed', e); if (!r.abandoned) showError(b, 'The check could not run.', String(e)); })
+      .catch((e) => { console.error('check failed', e); if (!r.abandoned) showError(b, FAILED_MSG, String(e)); })
       .finally(() => {
         if (r.abandoned) return;
         if (running === r) running = null;
@@ -233,25 +268,31 @@ export function methodsRoute(root: HTMLElement): Route {
   }
 
   // ------------------------------------------------ shared outcome handling
+  // Messages (2.14): one callout per state, in the check's message slot directly above its Run button. The slot
+  // (role="status") announces it once; the progress line only says the status, so the message is on the page once.
+  // Warnings go there too, so they are announced (results have no live role).
   function showCancelled(b: Block) {
     setStatus(b, 'Cancelled');
     b.progress.textContent = '';
     b.detail.textContent = '';
-    b.results.replaceChildren(msg(CANCELLED_MSG));
+    b.results.replaceChildren();
+    b.msg.replaceChildren(callout('info', { title: CANCELLED_MSG, step: '' }));
     field(b, 'idle', 'Cancelled');
   }
-  function showError(b: Block, text: string, detail: string, status: BlockStatus = 'Could not run') {
+  function showError(b: Block, m: Msg, detail: string, status: BlockStatus = 'Could not run') {
     setStatus(b, status);
-    b.progress.textContent = status === 'Needs microphone' ? 'Needs microphone.' : 'Could not run.';
+    b.progress.textContent = `${status}.`;
     b.detail.textContent = '';
-    b.results.replaceChildren(msg(text, 'error'), ...(detail ? [rawDetails(detail)] : []));
+    b.results.replaceChildren();
+    b.msg.replaceChildren(callout('action', m, detail));
     field(b, 'error', status);
   }
   function showWarning(b: Block, text: string) {
     setStatus(b, 'Done with a warning');
-    b.progress.textContent = `Done with a warning. ${text}`;
+    b.progress.textContent = 'Done with a warning.';
     b.detail.textContent = '';
-    b.results.replaceChildren(msg(text, 'error'));
+    b.results.replaceChildren();
+    b.msg.replaceChildren(callout('warn', splitWarning(text)));
     field(b, 'idle', 'Done with a warning');
   }
   /** Handles every outcome except 'done'. Returns the result when there is one. */
@@ -259,10 +300,8 @@ export function methodsRoute(root: HTMLElement): Route {
     if (o.kind === 'done') return o.result;
     if (o.kind === 'cancelled') showCancelled(b);
     else if (o.kind === 'warning') showWarning(b, o.message);
-    else if (o.kind === 'mic') {
-      const needs = o.error === 'denied' || o.error === 'nodevice' || o.error === 'insecure';
-      showError(b, MIC_MSG[o.error], o.error === 'analyser' ? o.detail : '', needs ? 'Needs microphone' : 'Could not run');
-    } else showError(b, 'The check could not run.', o.detail);
+    else if (o.kind === 'mic') showError(b, MIC_MSG[o.error], o.error === 'analyser' ? o.detail : '', MIC_STATUS[o.error]);
+    else showError(b, FAILED_MSG, o.detail);
     return null;
   }
 
@@ -289,7 +328,7 @@ export function methodsRoute(root: HTMLElement): Route {
     begin(b, async (signal, gone) => {
       // The live region says it once; the countdown goes to the non-live line.
       b.progress.textContent = `Measuring for ${CAL_MS / 1000} s.`;
-      b.detail.textContent = 'Starting the microphone…';
+      b.detail.textContent = 'Starting to listen…';
       const o = await runCalibration({ live, signal, refHz, onProgress: (n) => { if (!gone()) b.detail.textContent = `Measuring, ${n} s left`; } });
       if (gone()) return;
       const r = settle(b, o);
@@ -300,6 +339,7 @@ export function methodsRoute(root: HTMLElement): Route {
   function showCalibration(b: Block, r: CalibrationResult) {
     const off = signedFixed(r.offsetCents, 2);
     setStatus(b, 'Done');
+    b.msg.replaceChildren();
     b.detail.textContent = '';
     b.progress.textContent = `Done. Offset ${off} cents from ${r.refHz} Hz.`;
     b.results.replaceChildren(
@@ -320,7 +360,7 @@ export function methodsRoute(root: HTMLElement): Route {
     const b = blocks.latency;
     begin(b, async (signal, gone) => {
       b.progress.textContent = `Playing ${LOOP_TONES} test tones.`;
-      b.detail.textContent = 'Starting the microphone…';
+      b.detail.textContent = 'Starting to listen…';
       const o = await runLoopback({ live, signal, onProgress: (i, n) => { if (!gone()) b.detail.textContent = `Tone ${i} of ${n}`; } });
       if (gone()) return;
       const r = settle(b, o);
@@ -331,6 +371,7 @@ export function methodsRoute(root: HTMLElement): Route {
   function showLoopback(b: Block, r: LoopbackResult) {
     const ms = (s: number | undefined) => (s === undefined ? 'not reported by this browser' : `${fx(s * 1000, 1)} ms`);
     setStatus(b, 'Done');
+    b.msg.replaceChildren();
     b.detail.textContent = '';
     b.progress.textContent = `Done. Median ${fx(r.medianMs, 1)} ms over ${r.detected} of ${r.of} tones.`;
     b.results.replaceChildren(
@@ -350,7 +391,7 @@ export function methodsRoute(root: HTMLElement): Route {
     const b = blocks.selftest;
     begin(b, async (signal, gone) => {
       const th = THRESHOLDS;
-      if (!th) { showError(b, 'Could not run: criteria not found in results/summary.json', ''); return; }
+      if (!th) { showError(b, CRITERIA_MSG, ''); return; }
       b.progress.textContent = 'Running the self-test.';
       b.detail.textContent = 'Loading the test files…';
       const off = await import('../../audio/offline.ts');
@@ -367,7 +408,7 @@ export function methodsRoute(root: HTMLElement): Route {
       });
       if (gone()) return;
       if (o.kind === 'error' && o.reason === 'fixtures') {
-        showError(b, 'Test files not found at /fixtures/synthetic/. Start the dev server (npx vite) and generate them with py/synth.py.', o.detail);
+        showError(b, FIXTURES_MSG, o.detail);
         return;
       }
       const r = settle(b, o);
@@ -420,6 +461,7 @@ export function methodsRoute(root: HTMLElement): Route {
     const table = h('table', 'm-table', h('caption', 'visually-hidden', 'Self-test results'), head, body);
 
     setStatus(b, all ? 'Done' : 'Done with a warning');
+    b.msg.replaceChildren();
     b.detail.textContent = '';
     b.progress.textContent = `Done. ${met} of ${verdicts.length} criteria met.`;
     b.results.replaceChildren(h('div', 'm-table-wrap', table));
@@ -427,7 +469,7 @@ export function methodsRoute(root: HTMLElement): Route {
   }
 
   // ------------------------------------------------ initial state
-  if (insecure()) for (const b of [blocks.calibration, blocks.latency]) setStatus(b, 'Needs microphone');
+  if (insecure()) for (const b of [blocks.calibration, blocks.latency]) setStatus(b, 'Needs permission to listen');
   syncButtons();
 
   const targets: Record<string, Block> = { calibration: blocks.calibration, latency: blocks.latency, 'self-test': blocks.selftest };

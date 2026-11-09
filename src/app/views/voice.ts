@@ -12,7 +12,7 @@
 import type { Route } from '../router.ts';
 import type { WorkletFrame } from '../../audio/tracker.worklet.ts';
 import { live, type LiveSnapshot } from '../live.ts';
-import { savedA4, setField } from '../fields.ts';
+import { currentA4, setA4 } from '../fields.ts';
 import { TOLERANCE_CENTS, HOLD_FULL_MS, GATE_HINT_MS } from '../readout-constants.ts';
 import {
   MINUS, signedFixed, centsLabel, noteGlyph, splitNote, directionFor, holdExpired, gateHintDue, shouldAnnounce, stableFor,
@@ -21,11 +21,11 @@ import {
 import { nearestNote } from '../../dsp/pitch.ts';
 import { analyzeVibrato } from '../../dsp/vibrato.ts';
 import { SF_BAND, REF_BAND } from '../../dsp/spectrum.ts';
+import { SPEC_TOP_HZ, readSpecPalette, fillSpecColumn, putF0Mark } from '../spectrogram.ts';
 import { DEFAULT_YIN } from '../../dsp/yin.ts';
 import { DEFAULT_HOP } from '../../dsp/analyzer.ts';
 
 // ---------------------------------------------------------------- UI constants (from the legacy main.ts)
-const SPEC_TOP_HZ = 4000;
 const VIB_WINDOW_S = 2.5;
 const HISTORY_MAX = 4000;
 /** Level bar range, a display choice: the left end of the bar is this many dBFS. */
@@ -39,30 +39,40 @@ const SILENCE_DB = DEFAULT_YIN.silenceDb;
 const RING_W = 960;
 const RING_H = 300;
 
-const A4_KEY = 'centstodollars.a4';
 const SPACE_KEY = 'centstodollars.space';
 const A4_MIN = 400;
 const A4_MAX = 480;
 
-// ---------------------------------------------------------------- states and copy (3.0)
+// ---------------------------------------------------------------- states and copy (2.14, supersedes 3.0)
 type ViewState =
   | 'idle' | 'requesting' | 'listening' | 'stopping' | 'stopped'
   | 'denied' | 'nodevice' | 'busy' | 'insecure' | 'analyser' | 'ended';
 
-interface Copy { chip: string; msg: string; action: string | null; error: boolean }
+/**
+ * chip: the status chip in the page header row. msg: the plain idle instruction (no callout). kind/title/step: the
+ * one callout in the note slot (2.14), when there is one. The step ends with the action's exact label. error: the
+ * chip dot is the error square.
+ */
+interface Copy { chip: string; msg: string; kind: 'action' | 'info' | null; title: string; step: string; action: string | null; error: boolean }
 const COPY: Record<ViewState, Copy> = {
-  idle: { chip: 'Idle', msg: 'Press Start listening and sing a steady note. Audio stays in this browser and is not saved.', action: 'Start listening', error: false },
-  requesting: { chip: 'Waiting for permission', msg: 'Your browser is asking to use the microphone. Choose Allow.', action: 'Waiting for permission…', error: false },
-  listening: { chip: 'Listening', msg: '', action: 'Stop listening', error: false },
-  stopping: { chip: 'Listening', msg: '', action: 'Stopping…', error: false },
-  stopped: { chip: 'Stopped', msg: '', action: 'Start listening', error: false },
-  denied: { chip: 'Microphone blocked', msg: "Microphone access is blocked for this page. Allow it in the browser's site settings, then press Try again.", action: 'Try again', error: true },
-  nodevice: { chip: 'No microphone', msg: 'No microphone found. Connect one or switch on your audio interface, then press Try again.', action: 'Try again', error: true },
-  busy: { chip: 'Microphone unavailable', msg: 'The microphone could not be opened. Another app may be using it. Close it, then press Try again.', action: 'Try again', error: true },
-  insecure: { chip: 'Not available', msg: 'The microphone only works on a secure page. Open http://127.0.0.1:5173.', action: null, error: true },
-  analyser: { chip: 'Error', msg: 'This browser could not start the audio analyser.', action: 'Try again', error: true },
-  ended: { chip: 'Microphone stopped', msg: 'The microphone stopped. It may have been unplugged. Press Start listening to continue.', action: 'Start listening', error: true },
+  idle: { chip: 'Idle', msg: 'Press Start listening and sing a steady note. Audio stays in this browser and is not saved.', kind: null, title: '', step: '', action: 'Start listening', error: false },
+  requesting: { chip: 'Waiting for permission', msg: '', kind: 'info', title: 'Your browser is asking if this page can listen.', step: 'Choose Allow.', action: 'Waiting for permission…', error: false },
+  listening: { chip: 'Listening', msg: '', kind: null, title: '', step: '', action: 'Stop listening', error: false },
+  stopping: { chip: 'Listening', msg: '', kind: null, title: '', step: '', action: 'Stopping…', error: false },
+  stopped: { chip: 'Stopped', msg: '', kind: null, title: '', step: '', action: 'Start listening', error: false },
+  denied: { chip: 'Listening blocked', msg: '', kind: 'action', title: 'Listening is blocked for this page.', step: "In your browser's site settings, allow Microphone for this site, then press Try again.", action: 'Try again', error: true },
+  nodevice: { chip: 'Can\'t listen', msg: '', kind: 'action', title: 'This laptop or phone has no microphone the browser can use.', step: 'Check your sound settings, then press Try again.', action: 'Try again', error: true },
+  busy: { chip: 'Can\'t listen', msg: '', kind: 'action', title: 'Another app is using the sound input.', step: 'Close it, then press Try again.', action: 'Try again', error: true },
+  insecure: { chip: 'Not available', msg: '', kind: 'action', title: 'Listening only works on a secure page.', step: 'Open http://127.0.0.1:5173.', action: null, error: true },
+  analyser: { chip: 'Can\'t listen', msg: '', kind: 'action', title: 'This browser could not start the audio analyser.', step: 'Press Try again.', action: 'Try again', error: true },
+  ended: { chip: 'Listening stopped', msg: '', kind: 'action', title: 'Listening stopped.', step: 'Press Start listening to continue.', action: 'Start listening', error: true },
 };
+/** The insecure step names the address as a link (2.14). Same text as COPY.insecure.step. */
+const INSECURE_STEP_HTML = 'Open <a class="link" href="http://127.0.0.1:5173/">http://127.0.0.1:5173</a>.';
+const GATE_TITLE = 'Too quiet to hear.';
+const GATE_STEP = 'Move closer or turn the input up.';
+/** The gate hint is announced each time it appears, at most this often (2.14). */
+const GATE_SAY_MS = 5000;
 
 function viewState(s: LiveSnapshot): ViewState {
   if (s.status === 'error') return s.error ?? 'analyser';
@@ -77,13 +87,27 @@ const fx = (x: number, d: number) => x.toFixed(d).replace(/^-/, MINUS);
 const ARROW_LEFT = '<svg class="va-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12H5M11 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg>';
 const ARROW_RIGHT = '<svg class="va-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg>';
 const UNIT = '<span class="v-paper">c</span><span class="v-loud">CENTS</span>';
+/** Callout icons (2.14): a circle with "!" for action and warn, with "i" for info, both in ink, so the kind never
+ *  depends on colour alone. */
+const ICON_ALERT = '<svg class="msg-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v5" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="11.6" r="1.1" fill="currentColor"/></svg>';
+const ICON_INFO = '<svg class="msg-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="4.6" r="1.1" fill="currentColor"/><path d="M8 7v5" stroke="currentColor" stroke-width="1.75"/></svg>';
 
 const tolLeft = 50 - TOLERANCE_CENTS;
 const gatePct = Math.max(0, Math.min(100, ((SILENCE_DB - LEVEL_MIN_DB) / -LEVEL_MIN_DB) * 100));
 
 const kv = (label: string, id: string, empty: string, labelId = '') => `
       <div class="kv"><dt class="kv-label"${labelId ? ` id="${labelId}"` : ''}>${label}</dt><dd class="kv-body"><span class="kv-value" id="${id}">${empty}</span><span class="va-kv-note" id="${id}-note" hidden></span></dd></div>`;
+/** A Readings stat cell (3.6): mono label above the value, no rules between rows. */
+const stat = (label: string, id: string, empty: string, big: boolean) => `
+      <div class="va-stat${big ? ' va-stat-big' : ''}"><dt class="va-stat-label">${label}</dt><dd class="va-stat-body"><span class="va-stat-v" id="${id}" data-empty>${empty}</span><span class="va-kv-note" id="${id}-note" hidden></span></dd></div>`;
+const NO_VIB = `No vibrato found in the last ${VIB_WINDOW_S} s`;
+/** The Readings cell is small, so its empty value is short; the window is in the note line under it. */
+const NO_VIB_SHORT = 'None yet';
+const VIB_WINDOW_NOTE = `last ${VIB_WINDOW_S} s`;
 
+// DOM order at every width (3.6): page header (h1, status chip), hero, Readings, Spectrogram, How to read this,
+// Setup. The wide grid places them as before (voice.css). The toggle stays at the end of the hero in the DOM; under
+// 600 its bar is fixed to the bottom of the screen, in phone landscape it sits in the page header row.
 const html = `
 <div class="shell route va-route">
   <header class="page-header va-header">
@@ -91,31 +115,39 @@ const html = `
       <p class="eyebrow va-crumb"><a class="link" href="#/tools">Tools</a> / Voice analysis</p>
       <h1 id="va-title" tabindex="-1">Voice analysis</h1>
     </div>
+    <p class="va-status"><span class="dot" id="va-status-dot" aria-hidden="true"></span><span id="va-readout-status">Idle</span></p>
   </header>
 
   <div class="va-grid">
-    <section class="panel va-hero" id="va-hero" aria-labelledby="va-hero-title" data-has="none">
-      <div class="strip">
-        <h2 class="strip-title" id="va-hero-title">Note</h2>
-        <span class="chip-tilt"><span class="va-status"><span class="dot" id="va-status-dot" aria-hidden="true"></span><span id="va-readout-status">Idle</span></span></span>
-      </div>
+    <section class="va-hero" id="va-hero" aria-label="Note" data-has="none">
       <div class="va-hero-body">
-        <div class="va-note-slot">
-          <p class="va-note" id="va-note-line" data-empty>
-            <span class="va-glyphs" aria-hidden="true"><span class="va-last" id="va-readout-last" hidden>Last:</span><span class="va-letter" id="va-readout-note">No pitch yet</span><span class="va-ao"><span class="va-acc" id="va-readout-acc"></span><span class="va-oct" id="va-readout-oct"></span></span></span>
-            <span class="visually-hidden" id="va-note-spoken">No pitch yet</span>
-          </p>
-          <p class="va-msg" id="va-readout-msg"></p>
-          <div class="va-error" id="va-readout-error" hidden>
-            <p class="va-error-text" id="va-readout-error-text"></p>
-            <details class="disclosure va-error-more" id="va-readout-error-details" hidden><summary>Details</summary><pre class="va-error-raw" id="va-readout-error-raw"></pre></details>
+        <div class="va-note-row">
+          <div class="va-note-slot">
+            <p class="va-note" id="va-note-line" data-empty>
+              <span class="va-last" id="va-readout-last" aria-hidden="true" hidden>Last:</span>
+              <span class="va-glyphs" aria-hidden="true"><span class="va-letter" id="va-readout-note">No pitch yet</span><span class="va-ao"><span class="va-acc" id="va-readout-acc"></span><span class="va-oct" id="va-readout-oct"></span></span></span>
+              <span class="visually-hidden" id="va-note-spoken">No pitch yet</span>
+            </p>
+            <p class="va-msg" id="va-readout-msg"></p>
+            <div class="va-announce" id="va-readout-announce" role="status">
+              <span class="visually-hidden" id="va-say"></span>
+              <div class="msg" id="va-readout-error" data-kind="action" hidden>
+                <span class="msg-icon-slot" id="va-readout-error-icon">${ICON_ALERT}</span>
+                <div class="msg-text">
+                  <p class="msg-title" id="va-readout-error-text"></p>
+                  <p class="msg-step prose" id="va-readout-error-step"></p>
+                  <details class="disclosure" id="va-readout-error-details" hidden><summary aria-label="Error details">Details</summary><pre class="msg-raw" id="va-readout-error-raw"></pre></details>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="va-side">
+            <p class="va-chip"><span class="va-cents" id="va-readout-cents"></span><span class="va-unit">${UNIT}</span></p>
+            <p class="va-a4-ro" id="va-a4-readonly">A4 440 Hz</p>
           </div>
         </div>
 
-        <div class="va-cue-row">
-          <p class="va-dir" id="va-readout-dir"></p>
-          <p class="va-chip"><span class="va-cents" id="va-readout-cents"></span><span class="va-unit">${UNIT}</span></p>
-        </div>
+        <p class="va-dir" id="va-readout-dir"></p>
 
         <div class="va-meter" id="va-cents-meter" role="img" aria-label="Cents meter: No pitch">
           <div class="va-track">
@@ -125,38 +157,42 @@ const html = `
           </div>
         </div>
 
-        <div class="va-cap-row">
+        <div class="va-cap-slot">
           <p class="va-caption">Nearest note in equal temperament</p>
-          <div class="va-a4" role="group" aria-labelledby="va-a4-label">
-            <label class="va-a4-label" id="va-a4-label" for="va-a4">A4</label>
-            <button type="button" class="btn va-step" id="va-a4-dec" aria-label="Lower A4 by 1 hertz">${MINUS}</button>
-            <input class="va-a4-input" id="va-a4" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="va-a4-unit va-a4-error">
-            <span class="va-a4-unit" id="va-a4-unit">Hz</span>
-            <button type="button" class="btn va-step" id="va-a4-inc" aria-label="Raise A4 by 1 hertz">+</button>
-          </div>
+          <p class="va-hint" id="va-readout-gate-hint" hidden>${ICON_ALERT}<span><span class="va-hint-title">${GATE_TITLE}</span> <span class="va-hint-step">${GATE_STEP}</span></span></p>
         </div>
-        <p class="va-a4-error" id="va-a4-error" role="status"></p>
-
-        <div class="va-hint-slot"><p class="va-hint" id="va-readout-gate-hint" hidden>I can't hear you. Move closer or turn the input up.</p></div>
 
         <div class="va-level" id="va-level-meter" aria-hidden="true"><span class="va-level-fill" id="va-level-fill"></span><span class="va-level-gate" style="left:${gatePct}%"></span></div>
 
-        <button type="button" class="btn btn-primary va-toggle" id="va-live-toggle" data-state="idle">Start listening</button>
-        <p class="va-space-hint" id="va-space-hint">Space bar also starts and stops</p>
+        <div class="va-actionbar">
+          <button type="button" class="btn btn-primary va-toggle" id="va-live-toggle" data-state="idle"><span class="va-live-dot" aria-hidden="true"></span><span id="va-toggle-label">Start listening</span></button>
+          <p class="va-space-hint" id="va-space-hint">Space bar also starts and stops</p>
+        </div>
       </div>
-      <p class="visually-hidden" id="va-readout-announce" role="status"></p>
     </section>
 
-    <section class="va-spec" aria-labelledby="va-spec-title">
+    <section class="group va-readings" aria-labelledby="va-readings-title">
+      <h2 class="group-label va-readings-label" id="va-readings-title">Readings</h2>
+      <dl class="va-stats">${stat('Vibrato speed', 'va-m-vib-speed', NO_VIB_SHORT, true)}${stat('Vibrato width', 'va-m-vib-width', NO_VIB_SHORT, true)}${stat('Pitch', 'va-m-pitch', 'No pitch', false)}${stat('Off by', 'va-m-offby', 'No pitch', false)}
+      </dl>
+      <details class="disclosure va-details" id="va-details">
+        <summary aria-label="Reading details">Details</summary>
+        <dl class="kv-list">${kv('F0', 'va-d-f0', 'No pitch')}${kv('Deviation', 'va-d-dev', 'No pitch')}${kv('Vibrato extent, peak to peak', 'va-d-vib-p2p', NO_VIB)}${kv(`Energy ${fx(SF_BAND[0] / 1000, 1)} to ${fx(SF_BAND[1] / 1000, 1)} kHz vs ${fx(REF_BAND[0] / 1000, 2)} to ${REF_BAND[1] / 1000} kHz`, 'va-d-band', `No voiced frames in the last ${VIB_WINDOW_S} s`)}${kv('Input level', 'va-d-level', 'Not listening')}${kv('Voicing gate', 'va-d-gate', `${fx(SILENCE_DB, 0)} dBFS`)}
+        </dl>
+      </details>
+    </section>
+
+    <section class="group va-spec" aria-labelledby="va-spec-title">
+      <div class="group-head">
+        <h2 class="group-label" id="va-spec-title">Spectrogram</h2>
+        <p class="group-meta va-spec-meta"><span id="va-spec-span">0 to ${SPEC_TOP_HZ / 1000} kHz</span> <span class="va-spec-state" id="va-spec-state">Not listening</span></p>
+      </div>
       <div class="plot-frame">
-        <div class="panel va-spec-panel">
-          <div class="strip"><h2 class="strip-title" id="va-spec-title">Spectrogram</h2><span class="strip-meta" id="va-spec-span">0 to ${SPEC_TOP_HZ / 1000} kHz</span></div>
+        <div class="va-spec-panel">
           <div class="va-plot">
             <div class="va-axis" aria-hidden="true"><span>${SPEC_TOP_HZ / 1000} kHz</span><span>3</span><span>2</span><span>1</span><span>0</span></div>
             <div class="va-canvas-wrap">
               <canvas id="va-spectrogram" width="960" height="300" role="img" aria-label="Spectrogram 0 to 4 kHz with pitch marks. The readings are listed as text in the Readings panel."></canvas>
-              <div class="va-overlay" id="va-spec-overlay"><p id="va-spec-overlay-text">Not listening. The plot fills from the right when you start.</p></div>
-              <span class="va-spec-chip" id="va-spec-stopped" hidden>Stopped</span>
             </div>
           </div>
           <ul class="va-legend" role="list">
@@ -168,32 +204,33 @@ const html = `
       </div>
     </section>
 
-    <section class="panel va-readings" aria-labelledby="va-readings-title">
-      <div class="strip"><h2 class="strip-title" id="va-readings-title">Readings</h2></div>
-      <dl class="kv-list">${kv('Pitch', 'va-m-pitch', 'No pitch')}${kv('Off by', 'va-m-offby', 'No pitch')}${kv('Vibrato speed', 'va-m-vib-speed', `No vibrato found in the last ${VIB_WINDOW_S} s`)}${kv('Vibrato width', 'va-m-vib-width', `No vibrato found in the last ${VIB_WINDOW_S} s`)}
-      </dl>
-      <details class="disclosure va-details" id="va-details">
-        <summary>Details</summary>
-        <dl class="kv-list">${kv('F0', 'va-d-f0', 'No pitch')}${kv('Deviation', 'va-d-dev', 'No pitch')}${kv('Vibrato extent, peak to peak', 'va-d-vib-p2p', `No vibrato found in the last ${VIB_WINDOW_S} s`)}${kv(`Energy ${fx(SF_BAND[0] / 1000, 1)} to ${fx(SF_BAND[1] / 1000, 1)} kHz vs ${fx(REF_BAND[0] / 1000, 2)} to ${REF_BAND[1] / 1000} kHz`, 'va-d-band', `No voiced frames in the last ${VIB_WINDOW_S} s`)}${kv('Input level', 'va-d-level', 'Not listening')}${kv('Voicing gate', 'va-d-gate', `${fx(SILENCE_DB, 0)} dBFS`)}
-        </dl>
-      </details>
+    <section class="sec va-howto" aria-labelledby="va-howto-title">
+      <header class="sec-head"><h2 class="sec-title" id="va-howto-title">How to read this</h2></header>
+      <div class="sec-body">
+        <p class="prose">Cents are the distance from the nearest equal-tempered note at your A4. Singers often tune away from equal temperament, so a few cents is not a mistake.</p>
+        <p class="prose">If the octave looks wrong, compare the orange marks with the lowest strong band in the spectrogram. The live view sometimes jumps an octave; this is a known limit (VALIDATION.md section 4).</p>
+        <p class="va-docs"><a class="link link-hit" href="/MEASUREMENT.md">MEASUREMENT.md</a> and <a class="link link-hit" href="/VALIDATION.md">VALIDATION.md</a></p>
+        <p class="prose va-docs-note">Dev server only, opens raw text.</p>
+      </div>
     </section>
 
-    <details class="panel disclosure va-setup" id="va-setup">
+    <details class="disclosure va-setup" id="va-setup">
       <summary>Setup</summary>
+      <div class="va-a4-row">
+        <div class="va-a4" role="group" aria-labelledby="va-a4-label">
+          <label class="va-a4-label" id="va-a4-label" for="va-a4">A4</label>
+          <button type="button" class="va-step" id="va-a4-dec" aria-label="Lower A4 by 1 hertz"><span aria-hidden="true">${MINUS}</span></button>
+          <input class="va-a4-input" id="va-a4" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" spellcheck="false" aria-describedby="va-a4-unit va-a4-error">
+          <span class="va-a4-unit" id="va-a4-unit">Hz</span>
+          <button type="button" class="va-step" id="va-a4-inc" aria-label="Raise A4 by 1 hertz"><span aria-hidden="true">+</span></button>
+          <button type="button" class="btn btn-ghost va-a4-done" id="va-a4-done">Done</button>
+        </div>
+        <p class="va-a4-error" id="va-a4-error" role="status"></p>
+      </div>
       <dl class="kv-list">${kv('Input', 'va-s-input', 'Shown while listening')}${kv('Sample rate', 'va-s-rate', 'Shown while listening')}${kv('Base latency', 'va-s-latency', 'Shown while listening')}${kv('Analysis window', 'va-s-window', `${DEFAULT_YIN.bufferSize} samples`)}${kv('Display range', 'va-s-range', `0 to ${SPEC_TOP_HZ / 1000} kHz`)}
         <div class="kv"><dt class="kv-label" id="va-s-space-label">Space bar shortcut</dt><dd class="kv-body"><label class="va-switch"><input type="checkbox" role="switch" id="va-s-space" aria-labelledby="va-s-space-label" checked><span class="kv-value" id="va-s-space-text" aria-hidden="true">On</span></label></dd></div>
       </dl>
     </details>
-
-    <section class="panel va-howto" aria-labelledby="va-howto-title">
-      <div class="strip"><h2 class="strip-title" id="va-howto-title">How to read this</h2></div>
-      <div class="pbody">
-        <p class="prose">Cents are the distance from the nearest equal-tempered note at your A4. Singers often tune away from equal temperament, so a few cents is not a mistake.</p>
-        <p class="prose">If the octave looks wrong, compare the orange marks with the lowest strong band in the spectrogram. The live view sometimes jumps an octave; this is a known limit (VALIDATION.md section 4).</p>
-        <p class="prose"><a class="link" href="/MEASUREMENT.md">MEASUREMENT.md</a> and <a class="link" href="/VALIDATION.md">VALIDATION.md</a> (dev server only, opens raw text)</p>
-      </div>
-    </section>
   </div>
 </div>`;
 
@@ -214,17 +251,17 @@ export function voiceRoute(root: HTMLElement): Route {
     status: $('va-readout-status'), statusDot: $('va-status-dot'),
     noteLine: $('va-note-line'), last: $('va-readout-last'), note: $('va-readout-note'),
     acc: $('va-readout-acc'), oct: $('va-readout-oct'), spoken: $('va-note-spoken'),
-    msg: $('va-readout-msg'), error: $('va-readout-error'), errorText: $('va-readout-error-text'),
+    msg: $('va-readout-msg'), error: $('va-readout-error'), errorIcon: $('va-readout-error-icon'),
+    errorText: $('va-readout-error-text'), errorStep: $('va-readout-error-step'),
     errorDetails: $<HTMLDetailsElement>('va-readout-error-details'), errorRaw: $('va-readout-error-raw'),
     dir: $('va-readout-dir'), cents: $('va-readout-cents'),
     meter: $('va-cents-meter'), marker: $('va-cents-marker'),
     a4: $<HTMLInputElement>('va-a4'), a4Dec: $<HTMLButtonElement>('va-a4-dec'), a4Inc: $<HTMLButtonElement>('va-a4-inc'),
-    a4Error: $('va-a4-error'),
+    a4Done: $<HTMLButtonElement>('va-a4-done'), a4Error: $('va-a4-error'), a4ro: $('va-a4-readonly'),
     hint: $('va-readout-gate-hint'), levelFill: $('va-level-fill'),
-    toggle: $<HTMLButtonElement>('va-live-toggle'), spaceHint: $('va-space-hint'),
-    announce: $('va-readout-announce'),
-    canvas: $<HTMLCanvasElement>('va-spectrogram'), overlay: $('va-spec-overlay'), overlayText: $('va-spec-overlay-text'),
-    specStopped: $('va-spec-stopped'), specSpan: $('va-spec-span'),
+    toggle: $<HTMLButtonElement>('va-live-toggle'), toggleLabel: $('va-toggle-label'), spaceHint: $('va-space-hint'),
+    announce: $('va-say'),
+    canvas: $<HTMLCanvasElement>('va-spectrogram'), specSpan: $('va-spec-span'), specState: $('va-spec-state'),
     mPitch: $('va-m-pitch'), mOffby: $('va-m-offby'), mVibSpeed: $('va-m-vib-speed'), mVibWidth: $('va-m-vib-width'),
     mVibSpeedNote: $('va-m-vib-speed-note'), mVibWidthNote: $('va-m-vib-width-note'),
     dF0: $('va-d-f0'), dDev: $('va-d-dev'), dP2p: $('va-d-vib-p2p'), dBand: $('va-d-band'), dLevel: $('va-d-level'),
@@ -239,6 +276,21 @@ export function voiceRoute(root: HTMLElement): Route {
     if (e.dataset.key === key) return;
     e.dataset.key = key;
     e.innerHTML = markup;
+  };
+  /** A Readings value: a number part and a unit part, or (num null) one empty text. Spans are made once. */
+  const setStat = (e: HTMLElement, num: string | null, rest: string) => {
+    if (num === null) {
+      if (e.hasAttribute('data-empty')) { setText(e, rest); return; }
+      e.setAttribute('data-empty', '');
+      e.textContent = rest;
+      return;
+    }
+    if (e.hasAttribute('data-empty') || e.childElementCount !== 2) {
+      e.removeAttribute('data-empty');
+      e.innerHTML = '<span class="va-num"></span> <span class="va-stat-unit"></span>';
+    }
+    setText(e.firstElementChild as HTMLElement, num);
+    setText(e.lastElementChild as HTMLElement, rest);
   };
 
   // ------------------------------------------------ data from frames
@@ -272,31 +324,10 @@ export function voiceRoute(root: HTMLElement): Route {
   const rg = ring.getContext('2d');
   const g = el.canvas.getContext('2d');
   let ringX = 0; // next column to write; columns [ringX, W) are the oldest
+  let drawnAny = false; // a column has been drawn since the last clear (spectrogram meta: "Waiting for sound")
   const col = rg ? rg.createImageData(1, RING_H) : null;
 
-  type Rgba = [number, number, number, number];
-  function toRgba(c: string): Rgba {
-    if (!rg) return [0, 0, 0, 1];
-    rg.fillStyle = '#000';
-    rg.fillStyle = c;
-    const s = String(rg.fillStyle);
-    if (s[0] === '#') return [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16), 1];
-    const m = s.match(/[\d.]+/g);
-    return m ? [Number(m[0]), Number(m[1]), Number(m[2]), m[3] === undefined ? 1 : Number(m[3])] : [0, 0, 0, 1];
-  }
-  function readPalette() {
-    const cs = getComputedStyle(document.documentElement);
-    const v = (n: string, fb: string) => cs.getPropertyValue(n).trim() || fb;
-    const surface = toRgba(v('--surface-plot', '#FBFAF6'));
-    const energy = toRgba(v('--plot-energy', '#141413'));
-    const ramp = Array.from({ length: 256 }, (_, i): Rgba => {
-      const t = i / 255;
-      return [0, 1, 2].map((k) => Math.round(surface[k] + (energy[k] - surface[k]) * t)).concat(1) as Rgba;
-    });
-    const band = toRgba(v('--plot-band', 'rgba(228,64,27,0.35)'));
-    const sameAsSurface = [0, 1, 2].every((k) => band[k] === surface[k]);
-    return { surface, ramp, f0: toRgba(v('--signal', '#E4401B')), band, bandHalo: sameAsSurface ? toRgba(v('--ink', '#0A0A0A')) : surface };
-  }
+  const readPalette = () => readSpecPalette(rg);
   let pal = readPalette();
   document.addEventListener('themechange', () => { pal = readPalette(); }); // from the next column (6.9)
 
@@ -328,17 +359,8 @@ export function voiceRoute(root: HTMLElement): Route {
     rg.fillStyle = `rgb(${r},${gg},${b})`;
     rg.fillRect(0, 0, RING_W, RING_H);
     ringX = 0;
+    drawnAny = false;
     paint();
-  }
-
-  const rowOf = (hz: number) => Math.round(RING_H - 1 - (hz / SPEC_TOP_HZ) * (RING_H - 1));
-  function put(d: Uint8ClampedArray, y: number, c: Rgba) {
-    if (y < 0 || y >= RING_H) return;
-    const i = y * 4, a = c[3];
-    d[i] = Math.round(c[0] * a + d[i] * (1 - a));
-    d[i + 1] = Math.round(c[1] * a + d[i + 1] * (1 - a));
-    d[i + 2] = Math.round(c[2] * a + d[i + 2] * (1 - a));
-    d[i + 3] = 255;
   }
 
   /** Writes the queued frames into the ring. Returns true if anything was drawn. */
@@ -349,37 +371,21 @@ export function voiceRoute(root: HTMLElement): Route {
     if (cols.length > RING_W) cols = cols.slice(-RING_W);
     const N = DEFAULT_YIN.bufferSize, d = col.data;
     for (const f of cols) {
-      for (let y = 0; y < RING_H; y++) {
-        let c = pal.surface;
-        if (f.power) {
-          const hz = ((RING_H - 1 - y) / (RING_H - 1)) * SPEC_TOP_HZ;
-          const p = f.power[Math.round((hz * N) / fs)] ?? 0;
-          const db = 10 * Math.log10(p + 1e-12);
-          const v = Math.max(0, Math.min(1, (db + 20) / 80)); // -20..60 dB of raw FFT power, as on the legacy page
-          if (v > 0) c = pal.ramp[Math.round(v * 255)];
-        }
-        const i = y * 4;
-        d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
-      }
-      // Band lines get a 1px halo like the F0 mark so they read on mid-grey energy (1.4.11). In Loud the line
-      // colour is the plot colour, so the halo there is ink.
-      for (const hz of SF_BAND) { const y = rowOf(hz); put(d, y - 1, pal.bandHalo); put(d, y + 1, pal.bandHalo); put(d, y, pal.band); }
-      if (f.voiced && f.f0 > 0) {
-        // F0 mark with a 1px halo in the plot colour, so it reads on mid-grey energy (1.4)
-        const y = rowOf(f.f0);
-        put(d, y - 3, pal.surface); put(d, y + 3, pal.surface);
-        for (let k = -2; k <= 2; k++) put(d, y + k, pal.f0);
-      }
+      fillSpecColumn(d, 1, RING_H, 0, pal, f.power ?? null, N, fs);
+      if (f.voiced && f.f0 > 0) putF0Mark(d, 1, RING_H, 0, f.f0, pal); // F0 mark with a 1px halo in the plot colour (1.4)
       rg.putImageData(col, ringX, 0);
       ringX = (ringX + 1) % RING_W;
     }
+    drawnAny = true;
     return true;
   }
 
   // ------------------------------------------------ A4 stepper (2.8)
-  let a4 = savedA4();
+  let a4 = currentA4();
   let a4Invalid = false;
   el.a4.value = String(a4);
+  const syncA4ro = () => setText(el.a4ro, `A4 ${a4} Hz`);
+  syncA4ro();
   function parseA4(raw: string): number | null {
     const s = raw.trim().replace(',', '.');
     if (!/^\d+(\.\d+)?$/.test(s)) return null;
@@ -395,10 +401,10 @@ export function voiceRoute(root: HTMLElement): Route {
     const changed = v !== a4;
     a4 = v;
     el.a4.value = String(v);
+    syncA4ro();
     clearA4Error();
     if (!changed) return;
-    try { localStorage.setItem(A4_KEY, String(v)); } catch { /* keep it for this visit */ }
-    setField('a4', { status: 'info', value: `${v} Hz` });
+    setA4(v); // shared with Recording analysis for this visit, saved when storage allows
     say(`Reference A4 = ${v} Hz`);
     render();
   }
@@ -414,7 +420,14 @@ export function voiceRoute(root: HTMLElement): Route {
   }
   el.a4.addEventListener('change', validateA4);
   el.a4.addEventListener('blur', () => { if (a4Invalid || el.a4.value !== String(a4)) validateA4(); });
-  el.a4.addEventListener('keydown', (e) => { if (e.key === 'Enter') validateA4(); });
+  // Enter (hardware keyboards, Go or Next on Android keypads) commits and leaves the field, so the action bar returns.
+  el.a4.addEventListener('keydown', (e) => { if (e.key === 'Enter') { validateA4(); el.a4.blur(); } });
+  // Done: the iOS decimal keypad has no Done key. Shown while the A4 group has focus (CSS). mousedown is cancelled so
+  // the press does not blur the field first and hide the button under the finger; the click then commits and moves
+  // focus to Done itself, so no input has focus and the bar returns. An invalid value shows the field error and keeps
+  // the last valid A4 (2.8).
+  el.a4Done.addEventListener('mousedown', (e) => e.preventDefault());
+  el.a4Done.addEventListener('click', () => { validateA4(); el.a4Done.focus(); });
   const step = (d: number) => applyA4(Math.round(Math.min(A4_MAX, Math.max(A4_MIN, a4 + d)) * 10) / 10);
   el.a4Dec.addEventListener('click', () => step(-1));
   el.a4Inc.addEventListener('click', () => step(1));
@@ -450,6 +463,17 @@ export function voiceRoute(root: HTMLElement): Route {
     if (s === 'requesting' || s === 'stopping') return;
     if (viewState(live.snapshot()) === 'insecure') return;
     void live.start({ owner: 'voice' });
+  }
+  // Phone landscape draws the toggle at the right end of the title row; the row reserves its measured size, so the h1
+  // and chip wrap beside it when text is enlarged (voice.css, landscape block).
+  const route = root.querySelector<HTMLElement>('.va-route');
+  if (route && typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      const r = el.toggle.getBoundingClientRect();
+      if (!r.width) return;
+      route.style.setProperty('--va-toggle-w', `${Math.ceil(r.width)}px`);
+      route.style.setProperty('--va-toggle-h', `${Math.ceil(r.height)}px`);
+    }).observe(el.toggle);
   }
   el.toggle.addEventListener('click', () => {
     refocus = true; // the button is disabled while busy, which drops focus; give it back afterwards
@@ -524,9 +548,12 @@ export function voiceRoute(root: HTMLElement): Route {
         window: `${DEFAULT_YIN.bufferSize} samples (${fx((DEFAULT_YIN.bufferSize / fs) * 1000, 1)} ms)`,
       };
     }
+    // A state with a callout is announced once by the callout itself, which sits inside the status region
+    // (#va-readout-announce), so its text is on the page once (2.14, MSG-01, MSG-13). Other states say the chip.
     if (vs !== prevVs && prevVs !== null && vs !== 'idle' && vs !== 'stopping') {
       const c = COPY[vs];
-      say(c.msg ? `${c.chip}. ${c.msg}` : c.chip);
+      // "Listening" is announced once, by the header's #mic-indicator (main.ts), not here as well.
+      if (c.kind) { window.clearTimeout(annTimer); setText(el.announce, ''); } else if (vs !== 'listening') say(c.chip);
     }
     prevVs = vs;
     syncLoop();
@@ -538,6 +565,7 @@ export function voiceRoute(root: HTMLElement): Route {
   }
   live.subscribe(onState);
 
+  let gateSaidAt = -Infinity;
   let vibSeq = -1;
   let vibShown = false;
   let vibCache: ReturnType<typeof analyzeVibrato> = null;
@@ -557,15 +585,27 @@ export function voiceRoute(root: HTMLElement): Route {
     setText(el.status, active && stale ? 'No pitch' : copy.chip);
     el.statusDot.className = `dot${active ? (stale ? '' : ' dot-live') : copy.error ? ' dot-error' : ''}`;
 
-    // note block, message, error
-    setHidden(el.noteLine, copy.error);
-    setHidden(el.error, !copy.error);
-    setText(el.errorText, copy.error ? copy.msg : '');
+    // note slot: the note, or the idle instruction, or the one callout (2.14)
+    const callout = copy.kind !== null;
+    setHidden(el.noteLine, callout);
+    setHidden(el.error, !callout);
+    setAttr(el.hero, 'data-msg', callout ? copy.kind ?? '' : '');
+    if (callout) {
+      setAttr(el.error, 'data-kind', copy.kind ?? 'action');
+      setHtml(el.errorIcon, copy.kind ?? '', copy.kind === 'info' ? ICON_INFO : ICON_ALERT);
+      setText(el.errorText, copy.title);
+      if (vs === 'insecure') setHtml(el.errorStep, 'insecure', INSECURE_STEP_HTML);
+      else { delete el.errorStep.dataset.key; setText(el.errorStep, copy.step); }
+    } else {
+      setText(el.errorText, '');
+      delete el.errorStep.dataset.key;
+      setText(el.errorStep, '');
+    }
     const showDetails = vs === 'analyser' && !!snap.detail;
     setHidden(el.errorDetails, !showDetails);
     setText(el.errorRaw, showDetails ? snap.detail : '');
-    setText(el.msg, !copy.error && !reading ? copy.msg : '');
-    setHidden(el.msg, copy.error || !!reading || !copy.msg);
+    setText(el.msg, !callout && !reading ? copy.msg : '');
+    setHidden(el.msg, callout || !!reading || !copy.msg);
 
     let r: number | null = null;
     let centsNow = 0;
@@ -596,7 +636,7 @@ export function voiceRoute(root: HTMLElement): Route {
     setAttr(el.hero, 'data-dir', dir);
     if (dir === 'flat') setHtml(el.dir, 'flat', `${ARROW_LEFT}<span class="va-dir-word">Flat</span>`);
     else if (dir === 'sharp') setHtml(el.dir, 'sharp', `<span class="va-dir-word">Sharp</span>${ARROW_RIGHT}`);
-    else if (dir === 'within') setHtml(el.dir, 'within', `<span class="va-ok-dot" aria-hidden="true"></span><span class="va-dir-word">Within ±${TOLERANCE_CENTS}</span> <span class="va-dir-unit">${UNIT}</span>`);
+    else if (dir === 'within') setHtml(el.dir, 'within', `<span class="va-ok-dot" aria-hidden="true"></span><span class="va-dir-word">Within</span> <span class="va-dir-unit">±${TOLERANCE_CENTS} ${UNIT}</span>`);
     else setHtml(el.dir, 'none', '');
     setText(el.cents, r === null ? '' : centsLabel(centsNow));
 
@@ -614,6 +654,10 @@ export function voiceRoute(root: HTMLElement): Route {
 
     // gate hint and level
     const gate = vs === 'listening' && gateHintDue(newest?.t ?? null, belowSince, GATE_HINT_MS);
+    if (gate && el.hint.hidden && performance.now() - gateSaidAt >= GATE_SAY_MS) {
+      gateSaidAt = performance.now();
+      say(`${GATE_TITLE} ${GATE_STEP}`);
+    }
     setHidden(el.hint, !gate);
     const lvl = active && newest ? Math.max(0, Math.min(1, (newest.rmsDb - LEVEL_MIN_DB) / -LEVEL_MIN_DB)) : 0;
     const tf = `scaleX(${lvl.toFixed(3)})`;
@@ -622,27 +666,28 @@ export function voiceRoute(root: HTMLElement): Route {
     // toggle
     const busy = vs === 'requesting' || vs === 'stopping';
     setHidden(el.toggle, copy.action === null);
-    if (copy.action !== null) setText(el.toggle, copy.action);
+    if (copy.action !== null) setText(el.toggleLabel, copy.action);
     if (el.toggle.disabled !== busy) el.toggle.disabled = busy;
     setAttr(el.toggle, 'data-state', busy ? 'busy' : active ? 'live' : 'idle');
     setHidden(el.spaceHint, !spaceOn || copy.action === null);
 
-    // spectrogram overlay, chip and span
-    const overlay = active ? null : copy.error ? copy.msg : vs === 'stopped' ? null : 'Not listening. The plot fills from the right when you start.';
-    setHidden(el.overlay, overlay === null);
-    if (overlay !== null) setText(el.overlayText, overlay);
-    setHidden(el.specStopped, vs !== 'stopped');
+    // spectrogram meta: the span, then a state word, never a message and nothing over the plot (2.14)
+    const specState = active ? (drawnAny ? '' : 'Waiting for sound') : vs === 'stopped' ? 'Stopped' : 'Not listening';
+    setText(el.specState, specState);
+    setHidden(el.specState, !specState);
     setText(el.specSpan, fs && info ? `0 to ${SPEC_TOP_HZ / 1000} kHz, last ${fx((RING_W * DEFAULT_HOP) / fs, 1)} s` : `0 to ${SPEC_TOP_HZ / 1000} kHz`);
 
     // Readings and Details: the newest frame, and the last 2.5 s for vibrato and the band ratio
     const voicedNow = !!newest && newest.voiced && newest.f0 > 0;
     const nowNote = voicedNow ? nearestNote(newest.f0, a4) : null;
     setText(el.mPitch, nowNote && newest ? `${fx(newest.f0, 1)} Hz` : 'No pitch');
+    el.mPitch.toggleAttribute('data-empty', !nowNote);
     if (nowNote) {
       const n = Math.abs(Math.round(nowNote.cents) || 0);
       const glyph = noteGlyph(nowNote.name);
       setText(el.mOffby, n === 0 ? `0 cents from ${glyph}` : `${n} ${n === 1 ? 'cent' : 'cents'} ${nowNote.cents < 0 ? 'flat' : 'sharp'} of ${glyph}`);
     } else setText(el.mOffby, 'No pitch');
+    el.mOffby.toggleAttribute('data-empty', !nowNote);
     setText(el.dF0, nowNote && newest ? `${fx(newest.f0, 2)} Hz` : 'No pitch');
     setText(el.dDev, nowNote ? `${signedFixed(nowNote.cents, 1)} c from ${noteGlyph(nowNote.name)} (${fx(nowNote.targetHz, 2)} Hz)` : 'No pitch');
 
@@ -657,14 +702,14 @@ export function voiceRoute(root: HTMLElement): Route {
       bandCache = eSf > 0 && eRef > 0 ? 10 * Math.log10(eSf / eRef) : NaN;
     }
     const vib = vibCache, band = bandCache;
-    const noVib = `No vibrato found in the last ${VIB_WINDOW_S} s`;
-    setText(el.mVibSpeed, vib ? `${fx(vib.rateHz, 1)} per second` : noVib);
-    setText(el.mVibWidth, vib ? `±${fx(vib.extentCents, 0)} cents` : noVib);
-    setText(el.mVibSpeedNote, `last ${VIB_WINDOW_S} s`);
-    setText(el.mVibWidthNote, 'up and down from the middle');
-    setHidden(el.mVibSpeedNote, !vib);
-    setHidden(el.mVibWidthNote, !vib);
-    setText(el.dP2p, vib ? `${fx(vib.extentPeakToPeakCents, 1)} cents` : noVib);
+    // The number at --t-reading, the unit after it in --t-body-s (3.6). Text is still "{r} per second".
+    setStat(el.mVibSpeed, vib ? fx(vib.rateHz, 1) : null, vib ? 'per second' : NO_VIB_SHORT);
+    setStat(el.mVibWidth, vib ? `±${fx(vib.extentCents, 0)}` : null, vib ? 'cents' : NO_VIB_SHORT);
+    setText(el.mVibSpeedNote, VIB_WINDOW_NOTE);
+    setText(el.mVibWidthNote, vib ? 'up and down from the middle' : VIB_WINDOW_NOTE);
+    setHidden(el.mVibSpeedNote, false);
+    setHidden(el.mVibWidthNote, false);
+    setText(el.dP2p, vib ? `${fx(vib.extentPeakToPeakCents, 1)} cents` : NO_VIB);
     setText(el.dBand, Number.isFinite(band) ? `${signedFixed(band, 1)} dB, last ${VIB_WINDOW_S} s, voiced frames` : `No voiced frames in the last ${VIB_WINDOW_S} s`);
     setText(el.dLevel, active && newest && Number.isFinite(newest.rmsDb) ? `${fx(newest.rmsDb, 1)} dBFS` : 'Not listening');
 
@@ -724,6 +769,9 @@ export function voiceRoute(root: HTMLElement): Route {
     // enter() only prepares state; nothing it does keeps running if the navigation is superseded.
     async enter() {
       if (live.status === 'stopping') await live.stop();
+      // A4 is shared with Recording analysis, which may have changed it since this view was built.
+      const shared = currentA4();
+      if (shared !== a4) { a4 = shared; el.a4.value = String(a4); syncA4ro(); clearA4Error(); }
       const snap = live.snapshot();
       // 6.6: a session that Overview started (requesting or listening) is kept; anything else starts clean.
       // A failed start owned by 'voice' (from Overview's button) keeps its message.

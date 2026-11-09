@@ -16,7 +16,7 @@ export interface FieldUpdate {
 }
 
 export const FIELD_LABELS: Record<FieldName, string> = {
-  'mic-permission': 'Microphone permission',
+  'mic-permission': 'Permission to listen',
   'browser-audio': 'Browser audio',
   secure: 'Secure page',
   a4: 'Reference pitch (A4)',
@@ -82,6 +82,22 @@ export function savedA4(): number {
   }
 }
 
+/** A4 set during this visit, by any view. Null until one is set; then it wins over storage, so the value
+ *  survives this visit even when localStorage.setItem throws (private mode, quota). */
+let visitA4: number | null = null;
+
+/** The A4 every view uses: the value set this visit, else the saved one. */
+export function currentA4(): number {
+  return visitA4 ?? savedA4();
+}
+
+/** Sets A4 for the visit, saves it to the existing key when storage allows, and updates the a4 field rows. */
+export function setA4(v: number): void {
+  visitA4 = v;
+  try { localStorage.setItem(A4_KEY, String(v)); } catch { /* the visit value still holds */ }
+  setField('a4', { status: 'info', value: `${v} Hz` });
+}
+
 function micPermissionUpdate(state: PermissionState): FieldUpdate {
   if (state === 'granted') return { status: 'ok', value: 'Allowed' };
   if (state === 'denied') return { status: 'error', value: 'Blocked. Allow it in the browser’s site settings.' };
@@ -100,7 +116,7 @@ export function runPassiveChecks(): void {
   const secure = window.isSecureContext;
   setField('secure', secure
     ? { status: 'ok', value: 'Yes' }
-    : { status: 'error', value: 'No. The microphone needs http://127.0.0.1:5173.' });
+    : { status: 'error', value: 'No. Listening needs http://127.0.0.1:5173.' });
 
   // AudioWorklet only exists on secure pages, so on an insecure page its absence says nothing about the browser.
   const worklet = typeof AudioContext !== 'undefined' && 'audioWorklet' in AudioContext.prototype;
@@ -110,7 +126,7 @@ export function runPassiveChecks(): void {
       ? { status: 'ok', value: 'Available' }
       : { status: 'error', value: 'Not available in this browser' });
 
-  setField('a4', { status: 'info', value: `${savedA4()} Hz` });
+  setField('a4', { status: 'info', value: `${currentA4()} Hz` });
 
   // Results from the checks live in memory for this visit only; Methods writes them. A check that already ran
   // (Methods visited before Overview or Tools) keeps its result.

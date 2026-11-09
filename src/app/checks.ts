@@ -293,7 +293,7 @@ export async function runLoopback(opts: {
     if (live.session !== s) return micOutcome(live);
     if (untimed === LOOP_TONES) return { kind: 'warning', message: 'This browser did not report output timing, so latency could not be measured.' };
     const st = loopbackStats(delays);
-    if (!st) return { kind: 'warning', message: 'No tone was heard. Turn the speaker volume up a little and check that the mic is on.' };
+    if (!st) return { kind: 'warning', message: 'No tone was heard. Turn the speaker volume up a little and try again.' };
     const num = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : undefined);
     return {
       kind: 'done',
