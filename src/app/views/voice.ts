@@ -210,7 +210,7 @@ const html = `
         <p class="prose">Cents are the distance from the nearest equal-tempered note at your A4. Singers often tune away from equal temperament, so a few cents is not a mistake.</p>
         <p class="prose">Vibrato width is how far your pitch goes up and down from the middle, in cents. Vibrato speed is how many times a second it does that.</p>
         <p class="prose">If the octave looks wrong, compare the orange marks with the lowest strong band in the spectrogram. The live view sometimes jumps an octave; this is a known limit (VALIDATION.md section 4).</p>
-        <p class="va-docs"><a class="link link-hit" href="/MEASUREMENT.md">MEASUREMENT.md</a> and <a class="link link-hit" href="/VALIDATION.md">VALIDATION.md</a></p>
+        <ul class="va-docs"><li><a class="link link-hit" href="/MEASUREMENT.md">MEASUREMENT.md</a></li><li><a class="link link-hit" href="/VALIDATION.md">VALIDATION.md</a></li></ul>
         <p class="prose va-docs-note">Dev server only, opens raw text.</p>
       </div>
     </section>

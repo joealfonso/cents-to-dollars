@@ -521,7 +521,25 @@ New tokens: `--ink-2`, `--hover`, `--signal-text`, `--plot-energy`, `--plot-band
 
 ### 1.10 Visual weight (revision 2.3)
 
-Status: spec, not built. Paper only (1.2a). Applies at every width. 3.6 (mobile layout) builds on it. Where this section and 1.8, 2.3, 2.4, 2.5, 2.10, 2.11 or 2.12 disagree, this section wins; each of those points here.
+Status: spec, not built. Paper only (1.2a). Applies under 960px. From 960px, 1.10a sets a second, heavier standard on top of it. 3.6 (mobile layout) builds on it.
+
+#### 1.10a Two standards: compact is light, wide is structured (OWNER, 2026-11-09)
+
+Owner: "a design strategy that explicitly designs for both with different standards. We can have more explicit lines and borders on desktop due to the increased space available." Phone and desktop are designed separately, not one layout scaled. A rule written for one tier never leaks into the other.
+
+| | Under 960 (compact, medium) | 960 and up (wide) |
+|---|---|---|
+| Grouping | space first, one ink rule per tier-1 section (1.10) | space plus lines: everything in 1.10, and the lines below |
+| Section head | ink rule above, space below | ink rule above, hairline below the head, then 24px |
+| Side-by-side sections | n/a (one column) | a hairline column rule on the left edge of the right-hand section |
+| Items in a row (Overview features, About items) | no lines | hairline between columns, and between rows when they wrap |
+| Steps (Overview "How to use it") | no lines, the red numbers carry the rhythm | hairline between steps |
+| Supporting column (Overview "Good to know") | plain section | a panel: `--panel` surface, hairline box with the ink rule on top. The one grouping surface on the page |
+| `--rule` hairline colour | #D6D3CA | #C4BFB2, so hairlines read at reading distance |
+| Body text | 14/20 (phone sizes are fixed by the 3.6 height targets) | 16/26, lede 19/30 |
+| Exempt | | Voice (fixed hero budget), `#/file`, `#/legacy` |
+
+The 1.10 "two lines in a row" and "no container boxes" rules hold under 960 only. The no-box-in-a-box rule (WGT-01) holds at every width. The WGT rule budgets at 1280 are the wide-tier ceilings in the table after the rule-count table in 1.10 (measured 2026-11-09). The phone budgets are unchanged. The CSS lives in the "wide tier" blocks at the end of components.css and overview.css. Where this section and 1.8, 2.3, 2.4, 2.5, 2.10, 2.11 or 2.12 disagree, this section wins; each of those points here.
 
 **User and problem.** The singer from section 0, and Joseph checking setup. Owner feedback: "the style of nesting sections with borders also creates a very busy experience. We need a way to reduce the UI weight." The 375 screenshots show why. Every section is a 1px ink box with a mono strip and a second ink line under the strip, so each section costs three heavy lines before any content. On Voice, the A4 stepper, the meter, the level bar, the canvas and the canvas overlay are boxes inside the hero box or the spectrogram box, two levels deep. Lines carry all the hierarchy, so a heading, a control and a container all look equally loud, and nothing tells her what matters.
 
@@ -663,6 +681,17 @@ I re-read `design/reference/Clinical3Landing.dc.html`, `Clinical3Analysis.dc.htm
 | About | 7 (6 panels, Nav) | 1 (Nav) | 0 | 0 | about 14 | 13 or fewer |
 | Not found | 1 (Nav) | 1 (Nav) | 0 | 0 | 2 | 2 |
 
+**Wide-tier rule ceilings (1.10a, 2026-11-09).** From 960px the extra hairlines of 1.10a are allowed, so the Rules target above applies at 375 only. At 1280 the ceiling is the measured count below. Boxes, nested boxes and WGT-01 are unchanged at every width. Voice, `#/file` and `#/legacy` are exempt from the wide tier and keep their phone budget.
+
+| Screen | Rules, 375 (target) | Rules, 1280 (ceiling) |
+|---|---|---|
+| Overview | 8 | 17 |
+| Tools | 15 | 17 |
+| Voice | 12 | 12 (exempt) |
+| Methods | 10 | 14 |
+| About | 13 | 22 |
+| Not found | 2 | 2 |
+
 **Tools re-budget (revision 2.3a, owner and coordinator).** The targets above assumed four tool rows. M2 added a fifth, "Recording analysis", which adds one hairline. Measured on the build: 13 rules at 375 and 15 at 1280 (1280 also counts the column-head rule and the current nav item's 2px underline). The Tools target is 15, the measured maximum, with no other change.
 
 The Voice rule count goes up slightly while the box count goes down, because each removed box is replaced by at most one rule, and the hero gains its two edge rules.
@@ -685,7 +714,7 @@ Headless Chrome, Paper, `data-motion="off"`, after `document.fonts.ready`, at 37
 - **WGT-01** On every route and width, no box has an ancestor that is a box, with disclosures closed and with every disclosure open.
 - **WGT-02** On every route, the number of boxes that are neither controls nor data frames is 0.
 - **WGT-03** On every route, the total box count is at most the "Boxes target" in the table above.
-- **WGT-04** On every route, the rule count is at most the "Rules target" in the table above.
+- **WGT-04** At 375, on every route, the rule count is at most the "Rules target" in the table above. At 1280 it is at most the "Rules, 1280 (ceiling)" column of the wide-tier table (Voice keeps 12).
 - **WGT-05** No element with class `strip` or `panel` is rendered inside `main` on the app routes.
 - **WGT-06** Every `h2.sec-title` has a computed font family starting with "Newsreader" and a font size of at least 22px at 375 and 26px at 1280.
 - **WGT-07** Every `.sec` has a visible top border of 1px in `--ink` and no visible border on its other three sides.
@@ -1329,9 +1358,11 @@ Heights are design targets for the idle state at 375 wide (measured with a 375 �
 |---|---|---|---|
 | Overview | 2694 | **1450 or less** | −46% |
 | Tools | 1733 | **1550 or less** (re-budgeted for five tool rows, revision 2.3a; measured 1508) | −11% |
-| Voice analysis | 1862 | **1500 or less** | −19%, and the vibrato readings move from about 1060 to above the fold |
+| Voice analysis | 1862 | **1720 or less** (re-baselined, below; was 1500) | −8%, and the vibrato readings move from about 1060 to above the fold |
 | Methods | 1582 | **1450 or less** | −8% (it is mostly needed text) |
-| About | 2954 | **2700 or less** | −9%. Length is not the problem on a reading page; monotony is |
+| About | 2954 | **2750 or less** (re-baselined, below; was 2700) | −7%. Length is not the problem on a reading page; monotony is |
+
+Re-baselined 2026-11-09 after the readability pass (16px body, roomier spacing); the owner accepted longer pages. Only Voice and About moved: Voice because the two document links in "How to read this" now stack one per line (about 76px more, so their 44px hit areas never overlap), measured 1670 plus about 3%; About because it measured 2702. Overview (1415), Tools (1516) and Methods (1421) are within their targets, which stay.
 | Not found | not captured | **667 or less** (no scroll) | |
 
 In the wireframes, `=` is an ink rule, `-` a hairline, `#` the Voice hero surface, `[ ]` a control or data frame, and `~~ fold ~~` the bottom of a 375 × 667 viewport (the Voice wireframes use 375 × 560). y values are approximate.
@@ -1831,9 +1862,9 @@ Headless Chrome, Paper, device scale factor 2, `data-motion="off"`, after `docum
 
 - **MOB-01** `#/`: `document.documentElement.scrollHeight` is at most 1450.
 - **MOB-02** `#/tools`: scrollHeight is at most 1550 (re-budgeted for the fifth tool row, M2; measured 1508).
-- **MOB-03** `#/voice`: scrollHeight is at most 1500.
+- **MOB-03** `#/voice`: scrollHeight is at most 1720 (re-baselined 2026-11-09; measured 1670).
 - **MOB-04** `#/methods`: scrollHeight is at most 1450.
-- **MOB-05** `#/about`: scrollHeight is at most 2700.
+- **MOB-05** `#/about`: scrollHeight is at most 2750 (re-baselined 2026-11-09; measured 2702).
 - **MOB-06** An unknown hash: scrollHeight is at most 667.
 - **MOB-07** `#/voice` idle at scroll 0: the `#va-readout-note` box lies inside the viewport.
 - **MOB-08** `#/voice` after a voiced frame 20 c flat: the bottoms of `#va-readout-note`, `#va-readout-dir` and `#va-readout-cents` are at or above the bar top.

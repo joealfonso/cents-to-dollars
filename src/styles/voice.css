@@ -238,11 +238,14 @@
 .va-kv-note { font: var(--t-body-s); color: var(--muted); }
 .kv-body .va-kv-note { flex-basis: 100%; }
 .va-details { margin-top: var(--s-2); }
-/* The document links sit on a line of their own (44px hit areas, technique B); the note follows 12px below. */
-.va-docs { margin: 0; }
+/* The document links are a list, one per line (44px hit areas, technique B); the note follows 12px below. */
+.va-docs { margin: 0; padding: 0; list-style: none; }
+.va-docs li { display: flex; align-items: center; min-height: 48px; }
 .va-docs-note { font: var(--t-body-s); color: var(--muted); }
 @media (max-width: 599px) {
-  .va-readings { margin-top: var(--s-3); }
+  .va-readings { margin-top: var(--s-2); }
+  /* Keeps the "last 2.5 s" captions above the fixed bar at 375 x 560 and 320 x 568 (the fold, 3.6). */
+  .va-stat-big, .va-stat-big:nth-child(even) { padding-top: var(--s-1); padding-bottom: var(--s-1); }
   /* Still the group's heading for screen readers; the hairline is enough on a phone. */
   .va-readings-label {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;

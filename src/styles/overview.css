@@ -16,7 +16,8 @@
 .ov-feature { display: grid; align-content: start; gap: var(--s-1); }
 .ov-feature-title { margin: 0; font: var(--t-h3); }
 .ov-feature-desc { margin: 0; color: var(--ink-2); max-width: 40ch; }
-@media (max-width: 959px) { .ov-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Four across only when each column holds about 30 characters a line; below that, two. */
+@media (max-width: 1199px) { .ov-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--s-12); } }
 @media (max-width: 599px) { .ov-feature-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------------------------------------------------------------- band 2: how to use it, good to know */
@@ -55,3 +56,20 @@
 .ov-name { color: var(--muted); }
 .ov-name-title { font-weight: var(--t-body-strong); color: var(--ink-2); }
 @media (min-width: 960px) { .ov-side { padding-top: var(--s-3); } }
+
+/* ---------------------------------------------------------------- wide tier, 960px and up (DESIGN.md 1.10a) */
+@media (min-width: 960px) {
+  .ov-feature-grid { column-gap: 0; }
+  .ov-feature { padding: 0 var(--s-6); border-left: var(--divider-w) solid var(--rule); }
+  .ov-feature:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .ov-feature:nth-child(n+3) { border-top: var(--divider-w) solid var(--rule); padding-top: var(--item-gap); }
+  .ov-step + .ov-step { border-top: var(--divider-w) solid var(--rule); padding-top: var(--item-gap); }
+  .ov-steps { gap: var(--item-gap); }
+  /* The supporting column is a panel: a surface with a hairline box, the one grouping surface on the page. */
+  .ov-good { background: var(--panel); border: var(--divider-w) solid var(--rule); border-top: var(--divider-w) solid var(--ink); padding: 0 var(--s-6) var(--s-6); }
+}
+@media (min-width: 1200px) {
+  .ov-feature:nth-child(odd) { border-left: var(--divider-w) solid var(--rule); padding-left: var(--s-6); }
+  .ov-feature:first-child { border-left: 0; padding-left: 0; }
+  .ov-feature:nth-child(n+3) { border-top: 0; padding-top: 0; }
+}

@@ -6,9 +6,9 @@
   margin: 0;
   font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
 }
-.lede { margin: 0; max-width: 62ch; color: var(--ink-2); }
-.prose { margin: 0; max-width: 62ch; color: var(--ink-2); }
-.prose + .prose { margin-top: var(--s-3); }
+.lede { margin: 0; max-width: 58ch; font: var(--t-lede); color: var(--ink-2); text-wrap: pretty; }
+.prose { margin: 0; max-width: 66ch; color: var(--ink-2); text-wrap: pretty; }
+.prose + .prose { margin-top: var(--s-4); }
 strong { font-weight: var(--t-body-strong); }
 
 a.link { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
@@ -21,7 +21,7 @@ a.link:hover { color: var(--signal-text); }
   gap: var(--s-4) var(--s-8);
   padding: var(--page-head-pad);
 }
-.page-header .ph-text { display: grid; gap: var(--s-2); min-width: 0; }
+.page-header .ph-text { display: grid; gap: var(--s-4); min-width: 0; }
 .page-header h1 {
   margin: 0;
   font: var(--t-display-1); letter-spacing: var(--t-display-1-ls); text-transform: var(--t-display-1-case);
@@ -360,4 +360,26 @@ details.disclosure[open] > summary::before { opacity: 1; }
 @media (forced-colors: active) {
   .dot, .kv-dot { border: 1px solid CanvasText; }
   .btn { border-color: ButtonText; }
+}
+
+/* ---------------------------------------------------------------- wide tier, 960px and up (DESIGN.md 1.10a)
+   Two standards on purpose. Under 960 the page stays light: space groups, one rule per section (1.10).
+   From 960 there is room for structure, so lines say what space says on a phone: a hairline under each
+   section head, column rules between side-by-side sections and items, hairlines between steps, and a
+   panel for the supporting column. Voice (fixed hero budget), #/file and #/legacy keep their own rules. */
+@media (min-width: 960px) {
+  :root, :root[data-theme="editorial"] { --rule: #C4BFB2; --divider-c: var(--rule); }
+  :where(main > :not([data-route="legacy"], [data-route="file"], [data-route="voice"])) .sec-head {
+    border-bottom: var(--divider-w) solid var(--rule); margin-bottom: var(--s-6);
+  }
+  /* Column rules: the right-hand section of a pair gets a hairline on its left edge. */
+  :where(main > :not([data-route="legacy"], [data-route="file"], [data-route="voice"])) :is(
+    .sec-grid > .col-5:not(.ov-good), .sec-grid > .col-6:nth-child(even), .about-grid > .sec:nth-child(even):not(:nth-child(-n+2))
+  ) { border-left: var(--divider-w) solid var(--rule); padding-left: var(--s-8); margin-left: calc(-1 * var(--s-8) / 2); }
+  :where(main > :not([data-route="legacy"], [data-route="file"], [data-route="voice"])) .sec-grid { column-gap: var(--s-10); }
+  /* Items in a row are divided by hairlines, not only by gaps. */
+  .about-list { column-gap: 0; }
+  .about-list > .about-item:nth-child(even) { border-left: var(--divider-w) solid var(--rule); padding-left: var(--s-8); }
+  .about-list > .about-item:nth-child(odd) { padding-right: var(--s-8); }
+  .about-list > .about-item:nth-child(n+3) { border-top: var(--divider-w) solid var(--rule); padding-top: var(--item-gap); }
 }
