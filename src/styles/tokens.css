@@ -6,13 +6,19 @@
   --bg: #F2F0EA;
   --panel: #FBFAF6;
   --ink: #141413;
-  --muted: #6B6A64;
+  --ink-2: #3B3A36;
+  --muted: #686761;
   --rule: #D6D3CA;
-  --signal: #E4401B; /* only: F0, formant band, active nav marker, "Sample data" tag */
+  --hover: #ECE9E0;
+  --signal: #E4401B; /* graphics only: F0 marks, live dot, focus ring. Never text (3.65:1). */
+  --signal-text: #C2360F; /* signal role as text, or a fill behind text */
+  --on-ink: #F2F0EA;
+  --plot-energy: #141413;
+  --plot-band: rgba(194, 54, 15, 0.85); /* about 4:1 on the plot surface */
   --ok: #2F6B4F;
   --accent-2: #2F6B4F;
   --surface-plot: #FBFAF6;
-  --font-display: "Newsreader", Georgia, serif;
+  --font-display: "Newsreader Variable", "Newsreader", Georgia, serif;
   --font-ui: "Geist", system-ui, sans-serif;
   --font-label: "Geist Mono", ui-monospace, monospace;
   --size-title: 40px;
@@ -22,15 +28,42 @@
   --radius: 0;
   --shadow: none;
   --tilt: 0deg;
+  /* motion */
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-enter: 440ms;
+  --dur-slow: 680ms;
+  --dur-wave: 1000ms;
+  --dur-sweep: 1400ms;
+  --dur-done: 900ms;
+  --stagger: 70ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: var(--ease-standard);
+  --ease-spring-soft: cubic-bezier(.34, 1.4, .64, 1);
+  --move-enter: 8px;
+  --btn-hover-shift: 0px;
+  --btn-press-shift: 1px;
+  --state-working: var(--ink);
+  --state-done: var(--ok);
+  --state-error: #B3261E;
+  --state-bar-h: 2px;
+  --focus: var(--signal);
 }
 
 :root[data-theme="loud"] {
   --bg: #FFD60A;
   --panel: #FFFFFF;
   --ink: #0A0A0A;
+  --ink-2: #0A0A0A;
   --muted: #0A0A0A;
   --rule: #0A0A0A;
+  --hover: #FFD60A;
   --signal: #FF5BA7;
+  --signal-text: #0A0A0A;
+  --on-ink: #FFD60A;
+  --plot-energy: #FFD60A;
+  --plot-band: #5B7CFF;
   --ok: #2EE59D;
   --accent-2: #5B7CFF;
   --surface-plot: #5B7CFF;
@@ -44,4 +77,59 @@
   --radius: 0;
   --shadow: 10px 10px 0 #0A0A0A;
   --tilt: 1deg;
+  /* motion */
+  --dur-fast: 85ms;
+  --dur-base: 160ms;
+  --dur-enter: 320ms;
+  --dur-slow: 500ms;
+  --dur-wave: 760ms;
+  --dur-sweep: 900ms;
+  --dur-done: 700ms;
+  --stagger: 40ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-spring-soft: cubic-bezier(.34, 1.56, .64, 1);
+  --move-enter: 12px;
+  --btn-hover-shift: -2px;
+  --btn-press-shift: 2px;
+  --state-working: var(--ink);
+  --state-done: var(--ink);
+  --state-error: var(--ink);
+  --state-bar-h: var(--border-w);
+  --focus: var(--ink);
+}
+
+/* Motion switches. Same specificity as the theme blocks and later in the file, so they win. */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  :root[data-theme="editorial"],
+  :root[data-theme="loud"] {
+    --move-enter: 0px;
+    --btn-hover-shift: 0px;
+    --btn-press-shift: 0px;
+    --stagger: 0ms;
+    --dur-fast: 100ms;
+    --dur-base: 120ms;
+    --dur-enter: 120ms;
+    --dur-slow: 120ms;
+    --dur-wave: 0ms;
+    --dur-done: 120ms;
+  }
+}
+
+/* For automated runs (browser self-test, screenshots). The harness sets it; nothing in main.ts does. */
+html[data-motion="off"],
+html[data-motion="off"][data-theme] {
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-enter: 0ms;
+  --dur-slow: 0ms;
+  --dur-wave: 0ms;
+  --dur-sweep: 0ms;
+  --dur-done: 0ms;
+  --stagger: 0ms;
+  --move-enter: 0px;
+  --btn-hover-shift: 0px;
+  --btn-press-shift: 0px;
 }
