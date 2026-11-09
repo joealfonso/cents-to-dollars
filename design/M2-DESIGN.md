@@ -244,7 +244,7 @@ Messages appear in the panel that holds the figures in Done, so the page does no
 
 **Limits (spec 4.5).** `MAX_DURATION_S` and `MAX_FILE_BYTES` are set from the measurement spike, which is task 1 of M2.1, under the Q2 budgets. The values of revision 1 are dropped. This design never types a limit. Every limit in the copy below is formatted from the constant at runtime, so changing the constant after the spike changes no screen design. The UI cannot ship before the spike, because the spike comes first in M2.1. If a constant is still unset in a dev build, the limits line is left out rather than showing a placeholder number.
 
-**Q1 decides one row.** Under Option A the "Sample rate not supported" row applies to other and unknown rates. Under Option B that row does not exist: those files go through Decoding and Analysing as usual, and the file strip carries the Resampled line (3.2). The engineer builds only the chosen option (spec 4.3). Both are designed here, so the decision changes no layout.
+**Q1 DECIDED 2026-11-08: Option B.** Build the Option B rows only. The Option A rows below stay for the record and are not built. Under Option A the "Sample rate not supported" row applies to other and unknown rates. Under Option B that row does not exist: those files go through Decoding and Analysing as usual, and the file strip carries the Resampled line (3.2). The engineer builds only the chosen option (spec 4.3). Both are designed here, so the decision changes no layout.
 
 | State | Trigger | Shows | Actions | Announced (`#fa-status`) |
 |---|---|---|---|---|
@@ -568,7 +568,7 @@ The engineer can add IDs. These are the ones tests and the a11y-auditor will ref
 
 | Q | Where it shows |
 |---|---|
-| Q1 rates | Option A: the "Sample rate not supported" file state (3.3) and the exercise "Rate not supported" state (5.1). Option B: the Resampled note lines in the file strip (3.2), the result strip (2.4) and Setup. Both are designed, and only the chosen one is built |
+| Q1 rates (DECIDED, Option B) | Not built, Option A: the "Sample rate not supported" file state (3.3) and the exercise "Rate not supported" state (5.1). Option B: the Resampled note lines in the file strip (3.2), the result strip (2.4) and Setup. Both are designed, and only the chosen one is built |
 | Q2 budgets | the constants come from the spike (spec 4.5). They appear in the drop zone limits line, Too large, Too long and the exercise take limit, always formatted from the constant |
 | Q3 browser results | the lossy and resampling notes say "unverified" until V-07 and V-08 have verified numbers (spec 2.1). The N and B tags change no screen otherwise. No M2 screen shows a pass verdict |
 | Q4 encoder | same lossy note |
@@ -613,7 +613,7 @@ The engineer can add IDs. These are the ones tests and the a11y-auditor will ref
   - "File rate not confirmed" is now in Notes on this file, with a marker on the strip (spec 4.3 calls it "the label").
   - The spectrogram averaging note is now in the technical caption behind a disclosure (spec 4.2.7: "stated in the caption").
   - "No sustained note found" is kept as the heading, with an added line that says what happened. E-08 and E-22 still match.
-- **D21.** How to change the sample rate or export setting on her phone's voice memo app, for the Option A refusal line (3.3). It differs by phone and app. Needs her phone model and app (and Q1 = Option A).
+- **D21.** MOOT, because Q1 chose Option B and the refusal is not built. How to change the sample rate or export setting on her phone's voice memo app, for the Option A refusal line (3.3). It differs by phone and app. Needs her phone model and app (and Q1 = Option A).
 
 (There is no D7. A draft question was settled in 4.2.)
 
@@ -649,3 +649,5 @@ Also carried from DESIGN.md: OPEN 1 (reduced motion and fades), which applies to
 4. M2.3a fallback. Sustain on files only is the existing "Measure a held note" panel on `#/file`. In M2.3a, exercise routes do not exist and Tools row 06 is Not built yet. E-11 is split into E-11a and E-11b.
 5. N and B tags change no screen. Unverified B results show as "unverified" in the lossy and resampling notes, never as passed.
 6. Criterion numbers and spec section references updated to revision 2. Sections 5.4 to 5.6 are renumbered 5.5 to 5.7.
+
+Revision 3.1 (2026-11-08): Q1 decided, Option B. Option A states (file "Sample rate not supported", exercise "Rate not supported", `fa-rate-error`, `ex-rate-error`) are not built. D21 is moot.
