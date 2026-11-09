@@ -1569,7 +1569,7 @@ The note, the cue, the cents chip, the meter, the read-only A4 value, both vibra
 - **Level bar** 4px, no border (1.10). Still `aria-hidden`.
 - **Space hint** hidden under 600; at 600 and up it stays under the toggle.
 
-**Readings as a stat grid.** Two columns, a vertical hairline between them, no horizontal rules. Cell: mono label (`--t-label`, `--muted`) above the value. DOM order changes to Vibrato speed, Vibrato width, Pitch, Off by, at every width: vibrato is the reading the hero does not already show. **Vibrato speed and width numbers use `--t-reading` (Newsreader 28/32)** with the unit after them in `--t-body-s` ("{r}" then "per second", "±{e}" then "cents"), so she can read them from the stand. Pitch and Off by stay `--t-body` weight 500; they are for checking up close. Empty text such as "No vibrato found in the last 2.5 s" is `--t-body-s`, two lines in a 163px cell, which fits the 52px value-and-note space. The notes "last 2.5 s" and "up and down from the middle" stay under each value in `--t-body-s`. The Details disclosure follows the grid.
+**Readings as a stat grid.** Two columns, a vertical hairline between them, no horizontal rules. Cell: mono label (`--t-label`, `--muted`) above the value. DOM order changes to Vibrato speed, Vibrato width, Pitch, Off by, at every width: vibrato is the reading the hero does not already show. **Vibrato speed and width numbers use `--t-reading` (Newsreader 28/32)** with the unit after them in `--t-body-s` ("{r}" then "per second", "±{e}" then "cents"), so she can read them from the stand. Pitch and Off by stay `--t-body` weight 500; they are for checking up close. Empty text such as "No vibrato found in the last 2.5 s" is `--t-body-s`, two lines in a 163px cell, which fits the 52px value-and-note space. The notes "last 2.5 s" and "up and down from the middle" stay under each value in `--t-body-s`. The Details disclosure follows the grid. **The type in this paragraph is superseded by "Readings type hierarchy" below (2026-11-09).**
 
 **Spectrogram.** Tier-2 label "Spectrogram" with meta "0 to 4 kHz, last {span} s" (computed, 2.10) followed by the state word from 2.14 ("Not listening", "Waiting for sound", "Stopped") in `--muted`. Plot area 200px tall at compact, the only box. **No overlay of any kind on the plot** (2.14). Legend and caption below, unchanged.
 
@@ -1667,6 +1667,109 @@ Landscape, listening, 667 x 320
      (at 844 x 320 and wider, the vibrato pair sits to the right of
       the hero in the first row)
 ```
+
+#### Readings type hierarchy (2026-11-09)
+
+**Problem.** The owner: "typography needs to be improved. there isn't a hierarchy." In the empty state, which is what she sees before she sings and between phrases, each Readings cell shows three levels at one level. `.va-stat-v[data-empty]` drops the value to `--t-body-s` `--muted`, the same as the note under it (`.va-kv-note`), and the 11px mono label is only a little different. So nothing on the grid reads first. The same rule also makes the grid jump: a vibrato value grows from a 20px line to a 32px line when the first number arrives, and the width note grows from one line to two ("up and down from the middle" is about 175px at 13px, and the cell is about 158px at 375). The rows below move by up to 32px at the moment she starts singing.
+
+**User.** The primary user (section 0) reads Voice from a music stand about 2 m away, mid-phrase. From the stand she needs the two vibrato numbers. Up close, she checks Pitch and Off by, and the label and note tell her what a number is and over what window.
+
+**Read order.** 1, the vibrato values (or, empty, the words that stand where they go). 2, the label above, which names the value. 3, the note under it, which qualifies it. Pitch and Off by come after the vibrato pair: the hero already shows the note and the cents at 120px and 40px, so these two are for checking, not for reading from the stand.
+
+**Decision (FINAL unless noted).** Same at every width: none of these tokens has a compact value except `--t-display-2` (26/32 wide, 22/28 under 600).
+
+| Level | Vibrato cells (`.va-stat-big`) | Pitch, Off by |
+|---|---|---|
+| Label | `--t-label` 11/16 mono, uppercase, `--t-label-ls`, `--muted` (unchanged) | same |
+| Label to value | `--s-1`, 4px (unchanged) | same |
+| Value, filled | number `--t-reading` (Newsreader 350 28/32), tabular figures, `--ink`; unit after it `--t-body-s`, `--ink` (unchanged) | `--t-body` 14/20, weight `--t-body-strong` (500), `--ink` |
+| Value, empty | `--t-display-2` (26/32, compact 22/28), `--t-display-2-ls`, `--muted`, in the same 32px line box | `--t-body` 14/20, weight 400, `--muted`, same line box |
+| Value line height, both states | at least 32px (the `--t-reading` line) | at least two lines (`2lh`, 40px) |
+| Value to note | 0; the 32px line box gives the space | no note |
+| Note | `--t-body-s` 13/20, `--muted`, one line, "last 2.5 s" in both cells and both states | none |
+
+Cell heights (padding 8 top and bottom, unchanged): vibrato row 16 + 4 + 32 + 20 = 72, the budget in the 375 table above, empty and filled. Pitch and Off by row 16 + 4 + 40 = 60, empty and filled.
+
+**Reasons.**
+- *The empty value keeps the value's place and family, not the note's.* The empty words stand where the number will be, so they belong to the value level: Newsreader, about the same size, in `--muted`. `--t-display-2` is the token 1.5 already names for empty readout text (the hero's "No pitch yet" uses it), so the hero's empty note, in ink on the surface, stays equal to or larger than the Readings placeholder. At 375 that is 22px muted against 28px ink numbers, close enough that the cell does not change shape, different enough that a placeholder never looks like a reading.
+- *Fixed line boxes.* The value line is at least 32px in vibrato cells and two lines in Pitch and Off by, so neither the empty-to-filled change nor a value that wraps moves the rows below. "13 cents sharp of A♯4" is about 150px at 14px and wraps at 320 to 375 while "0 cents from A4" does not, so Off by changed height at frame rate.
+- *The note is one line, always.* The width note becomes "last 2.5 s", the same as speed. "Up and down from the middle" took two lines and only appeared once there was a number, which is the 20px jump. The explanation of ± moves to How to read this (copy below). Both values cover the same window, so the note is the same.
+- *Pitch and Off by stay at body size.* They repeat what the hero shows larger, and at `--t-reading` Off by would wrap to two 32px lines in a 158px cell. They get a real value level instead: ink and weight 500 against a muted mono label, and the empty text keeps the value's size (it was 13px, now 14px) and drops only the colour and weight.
+
+**Rejected.**
+- *Empty value at `--t-reading` itself, only muted.* Simplest and stable, but at compact a 28px "None yet" outranks the hero's 22px "No pitch yet" in the empty state, and the hero must lead.
+- *Keep the empty value small and reserve the height with `min-height` only.* Stable, but it keeps the problem the owner named: the empty value and the note stay the same size and colour.
+- *Pitch and Off by at `--t-reading`.* Off by wraps and jitters, it duplicates the hero at a size meant for the stand, and it spends the fold margin (if anything grows, these two leave the fold first, per the budget above). Splitting Off by into a big number and small words, like the vibrato cells, is possible later (open question 2).
+- *Reserve two note lines in the vibrato cells instead of shortening the copy.* Costs 20 of the 30px fold margin at 375 × 560.
+- *Note in `--t-caption` (Newsreader italic, `--ink-2`).* It would be darker than the label, so the qualifier would outrank the name.
+
+**CSS (voice.css, replaces the stat-grid type rules; order matters, the later rules win on equal specificity).**
+
+| Selector | Declarations |
+|---|---|
+| `.va-stat-label` | unchanged: `font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted)` |
+| `.va-stat-body` | unchanged: `margin: var(--s-1) 0 0` |
+| `.va-stat-v` | `font: var(--t-body); font-weight: var(--t-body-strong); color: var(--ink); overflow-wrap: anywhere; min-height: 2lh` |
+| `.va-stat-v[data-empty]` | `font-weight: 400; color: var(--muted)` (no font change, so the size stays 14/20) |
+| `.va-stat-big .va-stat-v` | `font: var(--t-reading); font-variant-numeric: tabular-nums; min-height: 32px` (the `--t-reading` line height; overrides the `2lh` above) |
+| `.va-stat-big .va-stat-v[data-empty]` | `font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); color: var(--muted)` |
+| `.va-num` | `font: inherit; font-variant-numeric: tabular-nums` (the value element now carries `--t-reading`, so the line box is the number's) |
+| `.va-stat-unit` | unchanged: `font: var(--t-body-s)` |
+| `.va-stat .va-kv-note` | `margin: 0; font: var(--t-body-s); color: var(--muted)` |
+
+**Markup and copy (voice.ts).**
+- `stat()`: in the two vibrato cells the note is rendered from the start, not `hidden`, with the text `last 2.5 s` (`VIB_WINDOW_NOTE`), so the first paint already has the note line. Pitch and Off by keep their hidden, empty note.
+- `render()`: `el.mVibWidthNote` is always `VIB_WINDOW_NOTE`.
+- How to read this gets one sentence after the cents paragraph: "Vibrato width is how far your pitch goes up and down from the middle, in cents. Vibrato speed is how many times a second it does that." (Owner confirmed the copy, 2026-11-09.)
+
+**Details (Voice) and Readings at cursor (#/file): the same problem, smaller.** Both use `.kv` rows: label `--t-body` `--muted`, value weight 500 `--ink`, note `--t-body-s` `--muted`. Filled, the value already stands out by ink and weight, and the label and note sit apart (label left, note under the value), so the three levels do not collapse. **But placeholders render as values**: "No pitch", "Not listening", "Shown while listening", "No voiced frames in the last 2.5 s", "No pitch at this time", "No window covers this time" and "Not measured" are ink, weight 500, like a measurement. 2.14 says placeholders are `--muted`. Both lists are read up close, so no size change.
+- components.css: `.kv-value[data-empty] { font-weight: 400; color: var(--muted); }` (shared by Voice, #/file and Methods).
+- voice.ts: `kv()` takes a flag for whether its initial text is a placeholder and sets `data-empty` then (yes for F0, Deviation, Vibrato extent, Energy, Input level, Input, Sample rate, Base latency; no for Voicing gate, Analysis window, Display range, which are real values). `render()` toggles `data-empty` wherever it writes one of those placeholder texts.
+- file.ts: the same toggle on `fa-r-note`, `fa-r-pitch`, `fa-r-offby`, `fa-r-vib`, `fa-d-f0`, `fa-d-dev`, `fa-d-level` when it writes a placeholder. #/file's layout is M2-DESIGN.md's; this rule is the only change, and it should be mirrored there once the other edits to that file land.
+
+**Contrast (WCAG 1.4.3, computed from sRGB relative luminance as in 1.4).** Readings and Details sit on `--bg`; `--panel` is listed in case either is ever placed on the hero surface.
+
+| Text | on `--bg` `#F2F0EA` | on `--panel` `#FBFAF6` | Needs |
+|---|---|---|---|
+| `--muted` `#686761`: labels, notes, empty values (11, 13, 14, 22 and 26px) | 4.98 | 5.43 | 4.5, pass |
+| `--ink` `#141413`: values and units | 16.18 | 17.65 | 4.5, pass |
+| `--ink-2` `#3B3A36` (not used here; checked as the alternative note colour) | 9.99 | 10.90 | 4.5, pass |
+
+Loud (dormant, 1.2a): `--muted` is ink there, so empty and filled differ by size and words only. No new token: `--t-reading` is set on `:root`, so Loud gets it with its own `--font-display`.
+
+**States.**
+
+| State | Vibrato cells | Pitch, Off by |
+|---|---|---|
+| Idle, before she sings | "None yet" empty value, note "last 2.5 s" | "No pitch" empty value |
+| Requesting, denied, no device, busy, insecure, analyser, ended (2.14) | same as idle; the callout is in the hero, never here | same |
+| Listening, no voiced frames or between phrases | empty value | empty value |
+| Listening, pitch but no vibrato in the window | empty value | filled |
+| Listening, vibrato | filled: number at 28px, unit, note | filled |
+| Stopped | keeps the last values, filled treatment (no stale dimming here, unchanged) | same |
+| Loading | none: values arrive per frame | none |
+| Tracker wrong (octave jump, 4) | shown as measured, same treatment; no separate uncertainty style in Readings, the hero and How to read this carry it | same |
+| 200% text | lines wrap; `min-height`, never `height`, so nothing clips | same |
+| Forced colours | muted and ink both become CanvasText; empty still reads from the words and the smaller size | same |
+
+Never animated (1.7a): no transition on any value, empty or filled.
+
+**Acceptance criteria (one assertion each).**
+- **RTH-01** `#/voice` at 375 and 1280: `#va-m-vib-speed` and `#va-m-vib-width` have the same `getBoundingClientRect().height` empty and with a vibrato reading.
+- **RTH-02** `#/voice` at 320, 375 and 1280: the Readings grid's height is the same empty and filled.
+- **RTH-03** `#/voice` empty: the computed `font-family` of `#va-m-vib-speed` starts with "Newsreader", and its `color` is `--muted`.
+- **RTH-04** `#/voice` empty: the computed `font-size` of `#va-m-vib-speed` is larger than that of `#va-m-vib-speed-note`.
+- **RTH-05** `#/voice` at 375 empty: the computed `font-size` of `#va-m-vib-speed` is not larger than that of `#va-readout-note`.
+- **RTH-06** `#/voice` on first paint: `#va-m-vib-speed-note` and `#va-m-vib-width-note` are visible and read "last 2.5 s".
+- **RTH-07** `#/voice` empty: `#va-m-pitch` has a computed `font-size` of 14px, weight 400, colour `--muted`.
+- **RTH-08** `#/voice` and `#/file`: every `.kv-value` whose text is a placeholder listed above has `data-empty`, and none with a measured value has it.
+
+**Open questions.**
+1. Copy: the width note becomes "last 2.5 s" and the ± explanation moves to How to read this. Confirmed by the owner, 2026-11-09.
+2. If the owner wants all four values large for consistency, the path is Off by as a number at `--t-reading` and "cents flat of A♯4" in `--t-body-s`. Not specified; it duplicates the hero's chip.
+3. String widths above are estimated from average glyph widths, not measured. Check "None yet", "±100 cents" and "5.6 per second" in one line at 320 in the browser.
+4. "None yet" after she has sung a straight tone reads as if vibrato were expected. Not a type question; noted for the next copy pass.
+5. #/file: the vibrato note in Readings at cursor appears and disappears as the cursor moves, so the panel's Details row shifts by 20px while she scrubs. Up close and not live, so not specified here.
 
 #### Breakpoints
 

@@ -228,11 +228,13 @@
 .va-stat:nth-child(even) { padding: var(--s-2) 0 var(--s-2) var(--s-3); border-left: var(--divider-w) solid var(--rule); }
 .va-stat-label { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); }
 .va-stat-body { margin: var(--s-1) 0 0; display: flex; flex-direction: column; min-width: 0; }
-.va-stat-v { font: var(--t-body); font-weight: var(--t-body-strong); overflow-wrap: anywhere; }
-.va-stat-big .va-stat-v { font-variant-numeric: tabular-nums; }
-.va-num { font: var(--t-reading); font-variant-numeric: tabular-nums; }
+.va-stat-v { font: var(--t-body); font-weight: var(--t-body-strong); color: var(--ink); overflow-wrap: anywhere; min-height: 2lh; }
+.va-stat-v[data-empty] { font-weight: 400; color: var(--muted); }
+.va-stat-big .va-stat-v { font: var(--t-reading); font-variant-numeric: tabular-nums; min-height: 32px; }
+.va-stat-big .va-stat-v[data-empty] { font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); color: var(--muted); }
+.va-num { font: inherit; font-variant-numeric: tabular-nums; }
 .va-stat-unit { font: var(--t-body-s); }
-.va-stat-v[data-empty] { font: var(--t-body-s); font-weight: 400; color: var(--muted); }
+.va-stat .va-kv-note { margin: 0; font: var(--t-body-s); color: var(--muted); }
 .va-kv-note { font: var(--t-body-s); color: var(--muted); }
 .kv-body .va-kv-note { flex-basis: 100%; }
 .va-details { margin-top: var(--s-2); }

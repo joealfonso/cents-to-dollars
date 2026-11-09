@@ -109,6 +109,7 @@ a.link:hover { color: var(--signal-text); }
 .kv-label { color: var(--muted); }
 .kv-body { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-2); min-width: 0; }
 .kv-value { font-weight: var(--t-body-strong); overflow-wrap: anywhere; }
+.kv-value[data-empty] { font-weight: 400; color: var(--muted); }
 .kv-action { margin-left: auto; }
 .kv-action:empty { display: none; }
 .kv .kv-dot { align-self: center; }

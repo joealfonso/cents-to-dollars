@@ -95,11 +95,11 @@ const ICON_INFO = '<svg class="msg-icon" viewBox="0 0 16 16" aria-hidden="true" 
 const tolLeft = 50 - TOLERANCE_CENTS;
 const gatePct = Math.max(0, Math.min(100, ((SILENCE_DB - LEVEL_MIN_DB) / -LEVEL_MIN_DB) * 100));
 
-const kv = (label: string, id: string, empty: string, labelId = '') => `
-      <div class="kv"><dt class="kv-label"${labelId ? ` id="${labelId}"` : ''}>${label}</dt><dd class="kv-body"><span class="kv-value" id="${id}">${empty}</span><span class="va-kv-note" id="${id}-note" hidden></span></dd></div>`;
+const kv = (label: string, id: string, empty: string, placeholder = false, labelId = '') => `
+      <div class="kv"><dt class="kv-label"${labelId ? ` id="${labelId}"` : ''}>${label}</dt><dd class="kv-body"><span class="kv-value" id="${id}"${placeholder ? ' data-empty' : ''}>${empty}</span><span class="va-kv-note" id="${id}-note" hidden></span></dd></div>`;
 /** A Readings stat cell (3.6): mono label above the value, no rules between rows. */
 const stat = (label: string, id: string, empty: string, big: boolean) => `
-      <div class="va-stat${big ? ' va-stat-big' : ''}"><dt class="va-stat-label">${label}</dt><dd class="va-stat-body"><span class="va-stat-v" id="${id}" data-empty>${empty}</span><span class="va-kv-note" id="${id}-note" hidden></span></dd></div>`;
+      <div class="va-stat${big ? ' va-stat-big' : ''}"><dt class="va-stat-label">${label}</dt><dd class="va-stat-body"><span class="va-stat-v" id="${id}" data-empty>${empty}</span><span class="va-kv-note" id="${id}-note"${big ? '' : ' hidden'}>${big ? VIB_WINDOW_NOTE : ''}</span></dd></div>`;
 const NO_VIB = `No vibrato found in the last ${VIB_WINDOW_S} s`;
 /** The Readings cell is small, so its empty value is short; the window is in the note line under it. */
 const NO_VIB_SHORT = 'None yet';
@@ -177,7 +177,7 @@ const html = `
       </dl>
       <details class="disclosure va-details" id="va-details">
         <summary aria-label="Reading details">Details</summary>
-        <dl class="kv-list">${kv('F0', 'va-d-f0', 'No pitch')}${kv('Deviation', 'va-d-dev', 'No pitch')}${kv('Vibrato extent, peak to peak', 'va-d-vib-p2p', NO_VIB)}${kv(`Energy ${fx(SF_BAND[0] / 1000, 1)} to ${fx(SF_BAND[1] / 1000, 1)} kHz vs ${fx(REF_BAND[0] / 1000, 2)} to ${REF_BAND[1] / 1000} kHz`, 'va-d-band', `No voiced frames in the last ${VIB_WINDOW_S} s`)}${kv('Input level', 'va-d-level', 'Not listening')}${kv('Voicing gate', 'va-d-gate', `${fx(SILENCE_DB, 0)} dBFS`)}
+        <dl class="kv-list">${kv('F0', 'va-d-f0', 'No pitch', true)}${kv('Deviation', 'va-d-dev', 'No pitch', true)}${kv('Vibrato extent, peak to peak', 'va-d-vib-p2p', NO_VIB, true)}${kv(`Energy ${fx(SF_BAND[0] / 1000, 1)} to ${fx(SF_BAND[1] / 1000, 1)} kHz vs ${fx(REF_BAND[0] / 1000, 2)} to ${REF_BAND[1] / 1000} kHz`, 'va-d-band', `No voiced frames in the last ${VIB_WINDOW_S} s`, true)}${kv('Input level', 'va-d-level', 'Not listening', true)}${kv('Voicing gate', 'va-d-gate', `${fx(SILENCE_DB, 0)} dBFS`)}
         </dl>
       </details>
     </section>
@@ -208,6 +208,7 @@ const html = `
       <header class="sec-head"><h2 class="sec-title" id="va-howto-title">How to read this</h2></header>
       <div class="sec-body">
         <p class="prose">Cents are the distance from the nearest equal-tempered note at your A4. Singers often tune away from equal temperament, so a few cents is not a mistake.</p>
+        <p class="prose">Vibrato width is how far your pitch goes up and down from the middle, in cents. Vibrato speed is how many times a second it does that.</p>
         <p class="prose">If the octave looks wrong, compare the orange marks with the lowest strong band in the spectrogram. The live view sometimes jumps an octave; this is a known limit (VALIDATION.md section 4).</p>
         <p class="va-docs"><a class="link link-hit" href="/MEASUREMENT.md">MEASUREMENT.md</a> and <a class="link link-hit" href="/VALIDATION.md">VALIDATION.md</a></p>
         <p class="prose va-docs-note">Dev server only, opens raw text.</p>
@@ -227,7 +228,7 @@ const html = `
         </div>
         <p class="va-a4-error" id="va-a4-error" role="status"></p>
       </div>
-      <dl class="kv-list">${kv('Input', 'va-s-input', 'Shown while listening')}${kv('Sample rate', 'va-s-rate', 'Shown while listening')}${kv('Base latency', 'va-s-latency', 'Shown while listening')}${kv('Analysis window', 'va-s-window', `${DEFAULT_YIN.bufferSize} samples`)}${kv('Display range', 'va-s-range', `0 to ${SPEC_TOP_HZ / 1000} kHz`)}
+      <dl class="kv-list">${kv('Input', 'va-s-input', 'Shown while listening', true)}${kv('Sample rate', 'va-s-rate', 'Shown while listening', true)}${kv('Base latency', 'va-s-latency', 'Shown while listening', true)}${kv('Analysis window', 'va-s-window', `${DEFAULT_YIN.bufferSize} samples`)}${kv('Display range', 'va-s-range', `0 to ${SPEC_TOP_HZ / 1000} kHz`)}
         <div class="kv"><dt class="kv-label" id="va-s-space-label">Space bar shortcut</dt><dd class="kv-body"><label class="va-switch"><input type="checkbox" role="switch" id="va-s-space" aria-labelledby="va-s-space-label" checked><span class="kv-value" id="va-s-space-text" aria-hidden="true">On</span></label></dd></div>
       </dl>
     </details>
@@ -689,7 +690,9 @@ export function voiceRoute(root: HTMLElement): Route {
     } else setText(el.mOffby, 'No pitch');
     el.mOffby.toggleAttribute('data-empty', !nowNote);
     setText(el.dF0, nowNote && newest ? `${fx(newest.f0, 2)} Hz` : 'No pitch');
+    el.dF0.toggleAttribute('data-empty', !(nowNote && newest));
     setText(el.dDev, nowNote ? `${signedFixed(nowNote.cents, 1)} c from ${noteGlyph(nowNote.name)} (${fx(nowNote.targetHz, 2)} Hz)` : 'No pitch');
+    el.dDev.toggleAttribute('data-empty', !nowNote);
 
     // Vibrato and the band ratio change only when a frame arrives; skip the work on frames with nothing new.
     if (vibSeq !== frameSeq || vibShown !== showReading) {
@@ -706,17 +709,24 @@ export function voiceRoute(root: HTMLElement): Route {
     setStat(el.mVibSpeed, vib ? fx(vib.rateHz, 1) : null, vib ? 'per second' : NO_VIB_SHORT);
     setStat(el.mVibWidth, vib ? `±${fx(vib.extentCents, 0)}` : null, vib ? 'cents' : NO_VIB_SHORT);
     setText(el.mVibSpeedNote, VIB_WINDOW_NOTE);
-    setText(el.mVibWidthNote, vib ? 'up and down from the middle' : VIB_WINDOW_NOTE);
+    setText(el.mVibWidthNote, VIB_WINDOW_NOTE);
     setHidden(el.mVibSpeedNote, false);
     setHidden(el.mVibWidthNote, false);
     setText(el.dP2p, vib ? `${fx(vib.extentPeakToPeakCents, 1)} cents` : NO_VIB);
+    el.dP2p.toggleAttribute('data-empty', !vib);
     setText(el.dBand, Number.isFinite(band) ? `${signedFixed(band, 1)} dB, last ${VIB_WINDOW_S} s, voiced frames` : `No voiced frames in the last ${VIB_WINDOW_S} s`);
-    setText(el.dLevel, active && newest && Number.isFinite(newest.rmsDb) ? `${fx(newest.rmsDb, 1)} dBFS` : 'Not listening');
+    el.dBand.toggleAttribute('data-empty', !Number.isFinite(band));
+    const levelOk = !!(active && newest && Number.isFinite(newest.rmsDb));
+    setText(el.dLevel, levelOk && newest ? `${fx(newest.rmsDb, 1)} dBFS` : 'Not listening');
+    el.dLevel.toggleAttribute('data-empty', !levelOk);
 
     // Setup
     setText(el.sInput, info?.input ?? 'Shown while listening');
+    el.sInput.toggleAttribute('data-empty', !info?.input);
     setText(el.sRate, info?.rate ?? 'Shown while listening');
+    el.sRate.toggleAttribute('data-empty', !info?.rate);
     setText(el.sLatency, info?.latency ?? 'Shown while listening');
+    el.sLatency.toggleAttribute('data-empty', !info?.latency);
     setText(el.sWindow, info?.window ?? `${DEFAULT_YIN.bufferSize} samples`);
   }
 
