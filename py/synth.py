@@ -122,7 +122,78 @@ def main() -> None:
     entries.append(dict(id="latency_440", set="latency", file="latency/latency_440.wav", sr=48000, dur=1.5,
                         f0=440.0, rate=0.0, extent=0.0, harmonics=None, snr_db=None, fade_s=0.0, onset_sample=n_sil))
 
-    (OUT / "manifest.json").write_text(json.dumps({"generator": "py/synth.py", "amp": AMP, "entries": entries}, indent=1))
+    # ---- M2.1 sets (specs/M2.md 4.7, V-01 and V-03). Added after every M1 set, so the shared rng stream,
+    # and therefore every M1 fixture, is unchanged.
+    def add_custom(set_name: str, sr: int, x: np.ndarray, subtype: str, container: str = "WAV", **meta):
+        idx = sum(1 for e in entries if e["set"] == set_name)
+        fid = f"{set_name}_{idx:03d}"
+        rel = f"{set_name}/{fid}.wav"
+        (OUT / set_name).mkdir(exist_ok=True)
+        sf.write(OUT / rel, x, sr, subtype=subtype, format=container)
+        channels = 1 if x.ndim == 1 else x.shape[1]
+        entries.append(dict(id=fid, set=set_name, file=rel, sr=sr, dur=len(x) / sr, subtype=subtype, container=container,
+                            channels=channels, fade_s=FADE_S, **meta))
+        return fid
+
+    # V-01 format variants: three tones and one vibrato case, at 44.1 and 48 kHz, in every WAV encoding the
+    # parser reads. Every channel carries the same F0. "stereo": left a sine, right a harmonic tone (different
+    # waveform and level). "wavex3": WAVE_FORMAT_EXTENSIBLE, 3 channels (sine, harmonic tone, sine at 0.3 x).
+    fmt_cases = [dict(f0=196.0, rate=0.0, extent=0.0, dur=1.0), dict(f0=440.0, rate=0.0, extent=0.0, dur=1.0),
+                 dict(f0=987.77, rate=0.0, extent=0.0, dur=1.0), dict(f0=440.0, rate=5.5, extent=50.0, dur=3.0)]
+    fmt_variants = [("pcm16", "PCM_16", "WAV", 1), ("pcm24", "PCM_24", "WAV", 1), ("pcm32", "PCM_32", "WAV", 1),
+                    ("float", "FLOAT", "WAV", 1), ("double", "DOUBLE", "WAV", 1), ("stereo", "FLOAT", "WAV", 2),
+                    ("wavex3", "PCM_24", "WAVEX", 3)]
+    v01 = [next(e["id"] for e in entries if e["set"] == s) for s in
+           ("tone_sine_48k", "tone_sine_44k", "tone_harm_48k", "tone_noise20_48k", "tone_high_48k", "vib_sine_48k", "vib_harm_48k")]
+    for sr, tag in ((44100, "44k"), (48000, "48k")):
+        for name, subtype, container, nch in fmt_variants:
+            for c in fmt_cases:
+                sine = render(sr, c["dur"], c["f0"], c["rate"], c["extent"]).astype(np.float64)
+                if nch == 1:
+                    x = sine
+                else:
+                    other = render(sr, c["dur"], c["f0"], c["rate"], c["extent"], harmonics=harm).astype(np.float64)
+                    cols = [sine, 0.8 * other] + ([0.3 * sine] if nch == 3 else [])
+                    x = np.stack(cols, axis=1)
+                contents = ["sine", "harmonic 1/k x 0.8", "sine x 0.3"][:nch]
+                v01.append(add_custom(f"fmt_{name}_{tag}", sr, x, subtype, container, f0=c["f0"], rate=c["rate"],
+                                      extent=c["extent"], harmonics=None, snr_db=None, channel_contents=contents))
+
+    # V-03 vibrato over time. vib_long: 8 s, 5.5 Hz, plus or minus 50 c.
+    for f0 in (220.0, 440.0):
+        add("vib_long_48k", 48000, 8.0, f0, 5.5, 50.0)
+    # vib_change: 4 s at 5.0 Hz +-40 c, then 4 s at 6.5 Hz +-80 c. The vibrato phase is the running integral of
+    # the rate, so it is continuous; at 4 s it is 2 pi x 20 (sine 0), so the frequency is continuous too.
+    segs = [dict(t0=0.0, t1=4.0, rate=5.0, extent=40.0), dict(t0=4.0, t1=8.0, rate=6.5, extent=80.0)]
+    for f0 in (220.0, 440.0):
+        sr, dur = 48000, 8.0
+        n = int(round(sr * dur))
+        t = np.arange(n) / sr
+        r = np.where(t < 4.0, 5.0, 6.5)
+        ext = np.where(t < 4.0, 40.0, 80.0)
+        vphase = 2 * np.pi * np.concatenate([[0.0], np.cumsum(r[:-1]) / sr])
+        f = f0 * 2.0 ** ((ext / 1200.0) * np.sin(vphase))
+        phase = 2 * np.pi * np.concatenate([[0.0], np.cumsum(f[:-1]) / sr])
+        x = AMP * np.sin(phase)
+        nf = int(FADE_S * sr)
+        ramp = 0.5 - 0.5 * np.cos(np.linspace(0, np.pi, nf))
+        x[:nf] *= ramp
+        x[-nf:] *= ramp[::-1]
+        add_custom("vib_change_48k", sr, x.astype(np.float32), "FLOAT", f0=f0, rate=None, extent=None, harmonics=None,
+                   snr_db=None, segments=segs)
+    # No vibrato, long enough for vibrato spans (F-26): steady sines and one harmonic tone, 8 s.
+    add("steady_long_48k", 48000, 8.0, 220.0)
+    add("steady_long_48k", 48000, 8.0, 440.0)
+    add("steady_long_48k", 48000, 8.0, 440.0, harmonics=harm)
+    # V-03 other rates (F-09, V-07): steady tones and vibrato corners at 22.05, 32, 88.2 and 96 kHz.
+    for sr, tag in ((22050, "22k"), (32000, "32k"), (88200, "88k"), (96000, "96k")):
+        for f in (130.0, 220.0, 440.0, 880.0, 1050.0):
+            add(f"rate_{tag}", sr, 1.0, f)
+        for rate in (4.5, 7.5):
+            for ext in (30.0, 100.0):
+                add(f"rate_{tag}", sr, 3.0, 440.0, rate, ext)
+
+    (OUT / "manifest.json").write_text(json.dumps({"generator": "py/synth.py", "amp": AMP, "v01_parity": v01, "entries": entries}, indent=1))
     by_set = {}
     for e in entries:
         by_set[e["set"]] = by_set.get(e["set"], 0) + 1

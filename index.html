@@ -1,57 +1,226 @@
 <!doctype html>
-<html lang="en" data-theme="editorial">
+<html lang="en" data-theme="editorial" data-live="off">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>M1 measurement test page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cents to Dollars</title>
 <link rel="stylesheet" href="/src/styles/tokens.css">
-<style>
-  body { margin: 0; padding: 16px 24px; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, sans-serif; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  h2 { font-size: 15px; margin: 24px 0 8px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
-  p.note { color: var(--muted); margin: 4px 0 12px; max-width: 760px; }
-  button { font: inherit; padding: 6px 12px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
-  label { margin-right: 12px; }
-  input[type=number] { width: 90px; font: inherit; }
-  .readout { font: 13px/1.6 ui-monospace, monospace; white-space: pre; background: var(--panel); border: 1px solid var(--rule); padding: 8px; min-height: 2em; overflow-x: auto; }
-  canvas { display: block; width: 100%; max-width: 960px; height: 300px; border: 1px solid var(--ink); background: #fff; }
-  footer { margin-top: 32px; padding-top: 8px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
-</style>
+<link rel="stylesheet" href="/src/styles/theme.css">
+<link rel="stylesheet" href="/src/styles/app.css">
+<link rel="stylesheet" href="/src/styles/components.css">
+<link rel="stylesheet" href="/src/styles/voice.css">
+<link rel="stylesheet" href="/src/styles/legacy.css">
 </head>
 <body>
-<h1>M1 measurement core: test page</h1>
-<p class="note">Bare harness for the pitch tracker and spectrogram. No designed UI. All numbers on this page come from real measurement; nothing is shown before a measurement exists.</p>
+<a class="skip" id="skip-link" href="#main">Skip to content</a>
+<div class="page">
+<header class="app-header">
+  <div class="shell header-inner">
+    <a class="brand" href="#/"><span class="brand-full">Cents to Dollars</span><span class="brand-short" aria-hidden="true">¢2$</span></a>
+    <button type="button" id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="site-nav"><span class="nav-toggle-label">Nav</span><svg class="nav-toggle-icon" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <nav class="nav" id="site-nav" aria-label="Main">
+      <ul>
+        <li><a href="#/" data-nav="overview">Overview</a></li>
+        <li><a href="#/tools" data-nav="tools">Tools</a></li>
+        <li><span class="nav-off">Sessions <span class="tag-notbuilt"><span class="tag-long">Not built yet</span></span></span></li>
+        <li><a href="#/methods" data-nav="methods">Methods</a></li>
+        <li><a href="#/about" data-nav="about">About</a></li>
+      </ul>
+    </nav>
+    <div class="mic-indicator" id="mic-indicator" role="status"><span class="dot dot-live" aria-hidden="true"></span><span class="mic-text"></span></div>
+  </div>
+</header>
 
-<h2>Live input</h2>
-<p class="note">Browser echo cancellation, noise suppression and auto gain are requested off, because they change the signal.</p>
-<div>
-  <label>A4 reference (Hz) <input id="a4" type="number" value="440" step="0.1" min="400" max="480"></label>
-  <button id="live-start" type="button">Start microphone</button>
-  <button id="live-stop" type="button" disabled>Stop</button>
+<main id="main" tabindex="-1">
+  <section data-route="overview" hidden></section>
+  <section data-route="tools" hidden></section>
+  <section data-route="voice" hidden></section>
+  <section data-route="file" hidden></section>
+  <section data-route="methods" hidden></section>
+  <section data-route="about" hidden></section>
+  <section data-route="notfound" hidden></section>
+
+  <!-- Legacy M1 test page (temporary, removed after Phase C). Markup moved unchanged from the old <main>,
+       original IDs kept. Its script (src/testpage/main.ts) loads on the first visit to #/legacy. -->
+  <section data-route="legacy" aria-labelledby="h-intro" hidden>
+  <div class="wrap">
+  <div class="legacy-bar"><span class="mic-pill"><span id="live-dot" aria-hidden="true"></span><span id="mic-pill-text">Not listening</span></span></div>
+  <section class="intro" aria-labelledby="h-intro">
+    <p class="eyebrow" style="--i:1">Singing practice</p>
+    <h1 id="h-intro" class="words" aria-label="See the note you're singing"><span class="w"><span style="--w:0">See</span></span> <span class="w"><span style="--w:1">the</span></span> <span class="w"><span style="--w:2">note</span></span> <span class="w"><span style="--w:3">you're</span></span> <span class="w"><span style="--w:4">singing</span></span></h1>
+    <p class="lede" style="--i:3">Sing near your laptop or phone. You'll see the nearest note, how far
+      <span class="term-wrap"><button type="button" class="term" aria-describedby="tip-cents">sharp or flat</button><span class="tip" role="tooltip" id="tip-cents">Measured in <strong>cents</strong>. 100 cents is one half step, like C to C♯ on a piano. A few cents either way is normal: singers often tune by ear, not to the piano.</span></span>
+      you are, and your vibrato. It all runs in this browser. Nothing is recorded or uploaded.</p>
+    <div class="setup-cta" style="--i:4">
+      <button id="setup-toggle" type="button" aria-expanded="false" aria-controls="setup" aria-describedby="setup-hint"><svg class="btn-icon" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 1v2.2M7 10.8V13M1 7h2.2M10.8 7H13M2.8 2.8l1.5 1.5M9.7 9.7l1.5 1.5M2.8 11.2l1.5-1.5M9.7 4.3l1.5-1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span>Check your setup</span><svg class="btn-icon chev" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 5.5 7 9l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <span class="setup-hint" id="setup-hint">Optional. Run once for a new laptop, phone or room, before you sing.</span>
+    </div>
+  </section>
+
+  <section id="setup" class="setup" aria-labelledby="h-checks" hidden>
+    <div class="section-head enter" style="--i:0">
+      <p class="eyebrow">Optional, before you sing</p>
+      <h2 id="h-checks">Check your setup</h2>
+      <p>Run these once on a new laptop, phone or room. You don't need them to sing.</p>
+    </div>
+
+    <div class="cards">
+      <article class="panel card enter" style="--i:1" aria-labelledby="h-cal">
+        <div class="panel-head"><h3 id="h-cal">Pitch accuracy</h3><span class="step">01</span></div>
+        <div class="panel-body">
+          <p class="what">Play a steady test tone of a known pitch near your laptop or phone. The app listens for 5 seconds and tells you how far its reading is from the real pitch.</p>
+          <p class="needs">You need: a tone generator app or a tuning fork app, playing near your laptop or phone.</p>
+          <div class="card-actions">
+            <label class="field">
+              <span class="field-label">Test tone pitch</span>
+              <span class="input-unit"><input id="cal-hz" type="number" value="440" step="0.01" min="60" max="2000" inputmode="decimal" aria-describedby="cal-hz-hint"><span>Hz</span></span>
+              <span class="field-hint" id="cal-hz-hint">60 to 2000 Hz</span>
+            </label>
+            <button id="cal-run" type="button"><span>Listen for 5 seconds</span></button>
+          </div>
+          <div id="cal-readout" class="readout">Not run yet.</div>
+          <details class="more"><summary>How it works<span class="visually-hidden">: pitch accuracy check</span></summary><div class="more-body"><p>The app takes the median of every pitch reading over 5 seconds and compares it with the frequency you entered, in cents. "Steadiness" is the 95th percentile of how far single readings sit from that median. It needs at least 50 readings.</p></div></details>
+        </div>
+      </article>
+
+      <article class="panel card enter" style="--i:2" aria-labelledby="h-loop">
+        <div class="panel-head"><h3 id="h-loop">Screen delay</h3><span class="step">02</span></div>
+        <div class="panel-body">
+          <p class="what">Plays 10 short beeps through your speakers and times how long each one takes to show up on screen.</p>
+          <p class="needs">You need: speakers on (not headphones) and the laptop or phone able to hear them. Turn the volume down first.</p>
+          <div class="card-actions">
+            <button id="loop-run" type="button"><span>Play 10 beeps</span></button>
+          </div>
+          <div id="loop-readout" class="readout">Not run yet.</div>
+          <details class="more"><summary>How it works<span class="visually-hidden">: screen delay check</span></summary><div class="more-body"><p>Each beep is a 440 Hz tone, 0.4 seconds long. The time runs from when the sound leaves the audio output to when the matching pitch is drawn on screen, so it includes the speaker, the room, your laptop's or phone's sound input and the analysis, up to the moment the pitch is drawn.</p></div></details>
+        </div>
+      </article>
+
+      <article class="panel card enter" style="--i:3" aria-labelledby="h-self">
+        <div class="panel-head"><h3 id="h-self">Built-in accuracy test</h3><span class="step">03</span></div>
+        <div class="panel-body">
+          <p class="what">Runs test recordings with known pitches through the same analyser and reports how close it got. It doesn't listen.</p>
+          <p class="needs">You need: the dev server running, with the test files in place.</p>
+          <div class="card-actions">
+            <button id="self-run" type="button"><span>Run the test</span></button>
+          </div>
+          <div id="self-readout" class="readout">Not run yet.</div>
+          <details class="more"><summary>How it works<span class="visually-hidden">: built-in accuracy test</span></summary><div class="more-body"><p>The synthetic fixtures (steady sine tones at 48 and 44.1 kHz, and sine tones with vibrato) are rendered through the real AudioWorklet in an OfflineAudioContext and scored against the known pitch. "Octave mistakes" counts readings more than 600 cents off.</p></div></details>
+        </div>
+      </article>
+    </div>
+    <div class="setup-foot enter" style="--i:4"><button type="button" class="setup-close" aria-controls="setup"><span>Done, hide the checks</span></button></div>
+  </section>
+
+  <section class="panel live-panel" aria-labelledby="h-live">
+    <svg class="tune-line" viewBox="0 0 1000 14" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 7.00 L4 9.83 L8 11.78 L12 12.32 L16 11.31 L20 9.08 L24 6.30 L28 3.78 L32 2.24 L36 2.10 L40 3.38 L44 5.68 L48 8.31 L52 10.51 L56 11.65 L60 11.43 L64 9.93 L68 7.63 L72 5.19 L76 3.32 L80 2.55 L84 3.09 L88 4.73 L92 7.00 L96 9.22 L100 10.75 L104 11.17 L108 10.38 L112 8.63 L116 6.45 L120 4.47 L124 3.26 L128 3.16 L132 4.16 L136 5.96 L140 8.03 L144 9.75 L148 10.65 L152 10.47 L156 9.30 L160 7.49 L164 5.58 L168 4.11 L172 3.51 L176 3.93 L180 5.22 L184 7.00 L188 8.74 L192 9.95 L196 10.28 L200 9.65 L204 8.28 L208 6.57 L212 5.01 L216 4.06 L220 3.98 L224 4.77 L228 6.19 L232 7.81 L236 9.16 L240 9.86 L244 9.73 L248 8.81 L252 7.39 L256 5.88 L260 4.73 L264 4.26 L268 4.59 L272 5.60 L276 7.00 L280 8.37 L284 9.31 L288 9.57 L292 9.08 L296 8.01 L300 6.66 L304 5.44 L308 4.70 L312 4.63 L316 5.25 L320 6.36 L324 7.63 L328 8.70 L332 9.25 L336 9.14 L340 8.42 L344 7.30 L348 6.12 L352 5.22 L356 4.85 L360 5.11 L364 5.90 L368 7.00 L372 8.07 L376 8.82 L380 9.02 L384 8.64 L388 7.79 L392 6.73 L396 5.78 L400 5.19 L404 5.14 L408 5.63 L412 6.50 L416 7.50 L420 8.33 L424 8.76 L428 8.68 L432 8.11 L436 7.24 L440 6.31 L444 5.60 L448 5.31 L452 5.51 L456 6.14 L460 7.00 L464 7.84 L468 8.43 L472 8.58 L476 8.28 L480 7.62 L484 6.79 L488 6.04 L492 5.58 L496 5.54 L500 5.92 L504 6.61 L508 7.39 L512 8.04 L516 8.39 L520 8.32 L524 7.87 L528 7.19 L532 6.46 L536 5.90 L540 5.68 L544 5.83 L548 6.32 L552 7.00 L556 7.66 L560 8.12 L564 8.24 L568 8.01 L572 7.49 L576 6.84 L580 6.25 L584 5.89 L588 5.85 L592 6.15 L596 6.69 L600 7.31 L604 7.82 L608 8.09 L612 8.04 L616 7.69 L620 7.15 L624 6.58 L628 6.14 L632 5.96 L636 6.08 L640 6.47 L644 7.00 L648 7.52 L652 7.88 L656 7.98 L660 7.79 L664 7.38 L668 6.87 L672 6.41 L676 6.13 L680 6.10 L684 6.34 L688 6.76 L692 7.24 L696 7.64 L700 7.85 L704 7.81 L708 7.54 L712 7.12 L716 6.67 L720 6.32 L724 6.18 L728 6.28 L732 6.58 L736 7.00 L740 7.41 L744 7.69 L748 7.77 L752 7.62 L756 7.30 L760 6.90 L764 6.54 L768 6.31 L772 6.29 L776 6.48 L780 6.81 L784 7.19 L788 7.51 L792 7.67 L796 7.64 L800 7.42 L804 7.09 L808 6.74 L812 6.47 L816 6.36 L820 6.44 L824 6.67 L828 7.00 L832 7.32 L836 7.54 L840 7.60 L844 7.49 L848 7.24 L852 6.92 L856 6.64 L860 6.46 L864 6.45 L868 6.59 L872 6.85 L876 7.15 L880 7.40 L884 7.53 L888 7.50 L892 7.33 L896 7.07 L900 6.79 L904 6.58 L908 6.50 L912 6.56 L916 6.74 L920 7.00 L924 7.25 L928 7.42 L932 7.47 L936 7.38 L940 7.18 L944 6.94 L948 6.71 L952 6.58 L956 6.56 L960 6.68 L964 6.88 L968 7.12 L972 7.31 L976 7.41 L980 7.39 L984 7.26 L988 7.06 L992 6.84 L996 6.67 L1000 6.61"/></svg>
+    <div class="panel-head enter" style="--i:5">
+      <h2 id="h-live">Live pitch</h2>
+      <span class="label" id="live-state-label">Not listening</span>
+    </div>
+    <div class="panel-body">
+      <div class="live-grid">
+        <div class="note-block">
+          <span class="label">Nearest note</span>
+          <div class="note" id="note-name" data-empty>No pitch yet</div>
+          <p class="offset" id="note-offset"></p>
+          <p class="offset-hint" id="note-hint">Press Start and sing a steady note.</p>
+          <div class="meter" id="cents-meter">
+            <div class="meter-track" role="img" id="cents-meter-track" aria-label="Flat to sharp meter. No pitch yet.">
+              <div class="meter-marker" id="cents-marker" hidden></div>
+            </div>
+            <div class="meter-scale" aria-hidden="true"><span>50 c flat</span><span>On the note</span><span>50 c sharp</span></div>
+          </div>
+        </div>
+
+        <dl class="stats">
+          <div>
+            <dt><span class="term-wrap"><button type="button" class="term" aria-describedby="tip-pitch">Pitch</button><span class="tip" role="tooltip" id="tip-pitch">The frequency of the note you're singing, in hertz (vibrations per second). A4 is usually 440 Hz.</span></span></dt>
+            <dd id="stat-pitch" data-empty>No pitch yet</dd>
+          </div>
+          <div>
+            <dt><span class="term-wrap"><button type="button" class="term" aria-describedby="tip-vspeed">Vibrato speed</button><span class="tip" role="tooltip" id="tip-vspeed">How many times per second your pitch swings up and down. Measured over the last 2.5 seconds of singing.</span></span></dt>
+            <dd id="stat-vib-speed" data-empty>No vibrato yet</dd>
+          </div>
+          <div>
+            <dt><span class="term-wrap"><button type="button" class="term" aria-describedby="tip-vwidth">Vibrato width</button><span class="tip" role="tooltip" id="tip-vwidth">How far your pitch swings above and below its middle, in cents. 100 cents is one half step.</span></span></dt>
+            <dd id="stat-vib-width" data-empty>No vibrato yet</dd>
+          </div>
+          <div>
+            <dt><span class="term-wrap"><button type="button" class="term" aria-describedby="tip-ring">Ring</button><span class="tip" role="tooltip" id="tip-ring">How much of your sound sits in the 2.5 to 3.5 kHz range, compared with the 0.05 to 2 kHz range, in decibels. This range is often linked to the "ring" of a trained classical voice (the singer's formant). Higher means more energy there. Measured over the last 2.5 seconds.</span></span></dt>
+            <dd id="stat-ring" data-empty>No reading yet</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="controls">
+        <button id="live-toggle" class="primary toggle" type="button" data-state="idle">
+          <span class="tg-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16">
+              <g class="ic-mic"><rect x="2" y="6" width="2" height="4" rx="1" fill="currentColor"/><rect x="5.5" y="3.5" width="2" height="9" rx="1" fill="currentColor"/><rect x="9" y="1.5" width="2" height="13" rx="1" fill="currentColor"/><rect x="12.5" y="5" width="2" height="6" rx="1" fill="currentColor"/></g>
+              <circle class="ic-busy" cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="20 40"/>
+              <rect class="ic-stop" x="3.5" y="3.5" width="9" height="9" rx="1.5" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="tg-labels">
+            <span class="tg-l" data-for="idle">Start listening</span>
+            <span class="tg-l" data-for="busy">Waiting…</span>
+            <span class="tg-l" data-for="live">Stop listening</span>
+            <span class="tg-l" data-for="stopping">Stopping…</span>
+          </span>
+        </button>
+        <span class="spacer"></span>
+        <label class="field">
+          <span class="field-label">Tuning reference (A4)</span>
+          <span class="input-unit"><input id="a4" type="number" value="440" step="0.1" min="400" max="480" inputmode="decimal" aria-describedby="a4-error tip-a4"><span>Hz</span></span>
+        </label>
+        <span class="term-wrap"><button type="button" class="term" aria-label="About the tuning reference" aria-describedby="tip-a4"><span class="term-i" aria-hidden="true">?</span></button><span class="tip" role="tooltip" id="tip-a4">The pitch the A above middle C is tuned to. 440 Hz is standard. Some orchestras and pianos use 442 or 443. Notes and cents are worked out from this.</span></span>
+      </div>
+      <p id="a4-error" class="field-error" role="status"></p>
+      <span id="live-status" class="visually-hidden" role="status"></span>
+      <span id="readout-announce" class="visually-hidden" role="status"></span>
+
+      <figure class="plot">
+        <div class="plot-head">
+          <h3 id="h-plot">What the app hears</h3>
+          <span class="term-wrap label"><button type="button" class="term" aria-describedby="tip-plot">How to read this</button><span class="tip" role="tooltip" id="tip-plot">Time runs left to right, with the newest sound at the right edge. Height is pitch, from 0 at the bottom to 4 kHz at the top. Darker means louder. The orange marks show the pitch the app measured. If a mark jumps far above or below the lowest dark band, the app has probably picked the wrong octave for that moment.</span></span>
+        </div>
+        <div class="plot-frame">
+          <div class="plot-axis" aria-hidden="true"><span>4 kHz</span><span>3</span><span>2</span><span>1</span><span>0</span></div>
+          <div class="canvas-wrap" id="spec-wrap">
+            <canvas id="spectrogram" role="img" width="960" height="300" aria-label="Spectrogram, 0 to 4 kHz, with the measured pitch marked. The readings are listed as text above."></canvas>
+            <p class="plot-empty">The picture fills in from the right once the app is listening.</p>
+          </div>
+        </div>
+        <ul class="legend">
+          <li><span class="sw sw-f0" aria-hidden="true"></span>Your pitch</li>
+          <li><span class="sw sw-band" aria-hidden="true"></span>Ring range (2.5 and 3.5 kHz)</li>
+          <li><span class="sw sw-energy" aria-hidden="true"></span>Quiet to loud</li>
+        </ul>
+      </figure>
+
+      <details class="more">
+        <summary>Show technical details <span class="sum-sub">for checking the measurement</span></summary>
+        <div class="more-body">
+          <p>The browser's echo cancellation, noise suppression and automatic gain are switched off, because they change the signal. The live view uses plain YIN pitch tracking with no lookahead, so it can briefly jump an octave.</p>
+          <div id="live-readout" class="readout mono">No measurement yet.</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <span id="check-announce" class="visually-hidden" role="status"></span>
+  </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <div class="shell">
+    <span>For practice and study. Not a diagnostic or medical device.</span>
+    <span>Audio stays in this browser and is not saved.</span>
+  </div>
+</footer>
 </div>
-<div id="live-readout" class="readout" aria-live="polite">No measurement yet.</div>
-<canvas id="spectrogram" width="960" height="300" aria-label="Spectrogram 0 to 4 kHz with F0 overlay"></canvas>
-
-<h2>Calibration</h2>
-<p class="note">Play a steady reference sine of known frequency into the microphone chain, then measure for 5 seconds. Reports the median measured F0 and the offset in cents.</p>
-<div>
-  <label>Reference sine (Hz) <input id="cal-hz" type="number" value="440" step="0.01"></label>
-  <button id="cal-run" type="button">Measure 5 s</button>
-</div>
-<div id="cal-readout" class="readout">No measurement yet.</div>
-
-<h2>Loopback latency</h2>
-<p class="note">Plays ten 440 Hz bursts through the speakers and listens on the microphone. Reports time from sound leaving the output to the pitch being drawn on screen. Needs speakers on and the microphone able to hear them.</p>
-<button id="loop-run" type="button">Run loopback test</button>
-<div id="loop-readout" class="readout">No measurement yet.</div>
-
-<h2>Self-test (offline, real AudioWorklet)</h2>
-<p class="note">Runs the synthetic fixtures through the same AudioWorklet in an OfflineAudioContext and scores against the known truth.</p>
-<button id="self-run" type="button">Run self-test</button>
-<div id="self-readout" class="readout">Not run.</div>
-
-<footer>For practice and study. Not a diagnostic or medical device.</footer>
-<script type="module" src="/src/testpage/main.ts"></script>
+<script type="module" src="/src/app/main.ts"></script>
 </body>
 </html>

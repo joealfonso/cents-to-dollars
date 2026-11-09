@@ -14,7 +14,7 @@ VOC = ROOT / "results/vocadito"
 ANN = ROOT / "datasets/vocadito/Annotations/F0"
 MATCH_TOL_S = 0.003  # tracker frame to Praat frame, as in score.py
 ANN_TOL_S = 0.006  # frame to nearest annotation sample
-VARIANTS = ("ts", "tslive", "tsyin")
+VARIANTS = ("ts", "tsyin")  # whole take (YIN + continuity), live (plain YIN)
 SPLITS = {
     "dev": lambda n: n <= 20,
     "test": lambda n: n > 20,

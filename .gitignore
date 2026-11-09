@@ -11,8 +11,16 @@ results/pyin/
 results/praat/
 results/vocadito/
 results/raw/
+results/take/
 results/*.log
 data/raw/
 results/tsyin/
 results/tslive/
 .claude/.cc-writes/
+results/_archive/tslive/
+results/_archive/vocadito/
+.playwright-browsers/
+results/playwright/
+
+# M2.1 measurement spike fixtures (tools/spike_m2_fixtures.ts)
+fixtures/spike/

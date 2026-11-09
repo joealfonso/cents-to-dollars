@@ -1,0 +1,80 @@
+/* Methods (#/methods, DESIGN.md 2.12, 3.4). Layout and the result block only: panels, strips, rows, buttons
+   and disclosures use the shared classes in components.css, so both themes apply unchanged.
+   The working bar is static: the mic is on during calibration and loopback, and no animation runs while
+   live capture is on (design/motion-testpage.md rule 3). */
+
+/* Layout: .sec-grid (components.css), Calibration and Loopback side by side from 960, the rest full width. */
+
+/* ---------------------------------------------------------------- result block (2.12, 1.10)
+   Each check is a tier-1 section. While it has a state, the 3px state bar replaces its 1px top rule. */
+.m-check { position: relative; }
+.m-check[data-state] { border-top-color: transparent; }
+.m-check[data-state]::before {
+  content: ""; position: absolute; top: calc(-1 * var(--divider-w)); left: 0; right: 0;
+  height: var(--state-bar-h); pointer-events: none;
+}
+.m-check[data-state="working"]::before { background: var(--state-working); opacity: 0.5; }
+.m-check[data-state="done"]::before { background: var(--state-done); }
+.m-check[data-state="error"]::before { background: var(--state-error); }
+
+/* Deep links scroll to the title and clear the header (3.6). Its focus ring follows the modality rule in app.css. */
+.m-check .sec-title { scroll-margin-top: var(--s-4); }
+.m-status { text-align: right; }
+
+.m-req, .m-method { margin: 0; max-width: 62ch; font: var(--t-body-s); color: var(--muted); }
+.m-field { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0; }
+.m-field label { font-weight: var(--t-body-strong); }
+.m-input {
+  width: 9ch; min-height: var(--hit); padding: 0 var(--s-2); text-align: right;
+  font: var(--t-body); font-variant-numeric: tabular-nums;
+  color: var(--ink); background: var(--panel); border: var(--border-w) solid var(--ink); border-radius: var(--radius);
+}
+.m-input[aria-invalid="true"] { border-color: var(--state-error); box-shadow: inset 0 0 0 1px var(--state-error); }
+:root[data-theme="loud"] .m-input[aria-invalid="true"] { border-color: var(--ink); border-style: dashed; }
+.m-unit { color: var(--muted); }
+.m-error { margin: 0; color: var(--state-error); font-weight: var(--t-body-strong); }
+:root[data-theme="loud"] .m-error { color: var(--ink); }
+
+.m-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); margin: 0; }
+.m-reason { font: var(--t-body-s); color: var(--muted); }
+.m-progress, .m-detail { margin: 0; font-variant-numeric: tabular-nums; }
+/* Live regions stay rendered when empty so the first message is announced; they are only hidden from view. */
+.m-progress:empty, .m-error:empty {
+  position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.m-detail:empty { display: none; }
+.m-detail { color: var(--muted); }
+.m-results:empty { display: none; }
+.m-results > * + * { margin-top: var(--s-3); }
+/* A live region: kept rendered when empty (clipped, not display: none) so its first message is announced. */
+.m-msg-slot:empty { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* One link per line, 24px apart, so the links' 44px hit areas (technique B) never meet. */
+/* Each link on a line of its own with its description in the next column, and 24px between items, so the links' 44px hit areas
+   (technique B) are never covered by text or by each other. */
+.m-docs-list { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s-6); max-width: 62ch; color: var(--ink-2); }
+.m-docs-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-3); align-items: start; }
+.m-results .kv-value { font-variant-numeric: tabular-nums; }
+.m-kv-note { font: var(--t-body-s); color: var(--muted); }
+.m-nothreshold { margin: 0; font-weight: var(--t-body-strong); }
+.m-method { padding: 0 0 var(--s-3); }
+
+/* ---------------------------------------------------------------- self-test table */
+/* Sizes to its panel, not the viewport: below 600px of panel width each set becomes one block. */
+.m-table-wrap { container-type: inline-size; }
+.m-table { width: 100%; border-collapse: collapse; }
+.m-table th, .m-table td { padding: var(--s-3) var(--s-3) var(--s-3) 0; text-align: left; vertical-align: baseline; border-bottom: var(--divider-w) solid var(--divider-c); }
+.m-table thead th { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); }
+.m-table tbody th { font-weight: var(--t-body-strong); }
+.m-table td { font-variant-numeric: tabular-nums; }
+.m-table .ck { display: none; }
+.m-verdict { font-weight: var(--t-body-strong); white-space: nowrap; }
+.m-verdict[data-verdict="fail"] { color: var(--state-error); }
+:root[data-theme="loud"] .m-verdict[data-verdict="fail"] { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; }
+@container (max-width: 599px) {
+  .m-table thead { display: none; }
+  .m-table, .m-table tbody, .m-table tr, .m-table th, .m-table td { display: block; }
+  .m-table tr { padding: var(--s-3) 0; border-bottom: var(--divider-w) solid var(--divider-c); }
+  .m-table th, .m-table td { padding: var(--s-1) 0; border-bottom: 0; }
+  .m-table .ck { display: inline; color: var(--muted); }
+  .m-table .ck::after { content: ": "; }
+}

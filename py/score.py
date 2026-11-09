@@ -20,8 +20,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "results"
 MAN = json.loads((ROOT / "fixtures/synthetic/manifest.json").read_text())
-METHODS = {"ts": "browser tracker, whole take (YIN + continuity)", "tslive": "browser tracker, live (YIN + continuity, 8-frame lag)",
-           "tsyin": "plain YIN (M1 tracker)", "pyin": "pYIN (librosa)", "praat": "Praat ac (Parselmouth)"}
+METHODS = {"ts": "whole take (YIN + continuity)", "tsyin": "live (plain YIN)", "pyin": "pYIN (librosa)", "praat": "Praat ac (Parselmouth)"}
 EDGE_S = 0.07  # frames this close to either end (inside the 20 ms fades plus margin) are excluded
 OCTAVE_CENTS = 600.0  # an estimate more than half an octave from truth counts as an octave error
 GROSS_CENTS = 50.0
@@ -151,7 +150,6 @@ def score_spectrum() -> dict:
 def score_latency(m: str = "ts") -> dict:
     e = next(x for x in MAN["entries"] if x["set"] == "latency")
     fr = frames(m, e["id"])
-    lag = fr.get("lagFrames") or 0
     sr, onset = e["sr"], e["onset_sample"]
     hop, N = fr["hop"], 2048
     out = {}
@@ -159,10 +157,9 @@ def score_latency(m: str = "ts") -> dict:
         for i, f in enumerate(fr["f0"]):
             start = i * hop
             if f > 0 and abs(1200 * np.log2(f / e["f0"])) <= tol and start + N > onset:
-                out[f"first_within_{int(tol)}c_ms"] = float((start + N + lag * hop - onset) / sr * 1000)
+                out[f"first_within_{int(tol)}c_ms"] = float((start + N - onset) / sr * 1000)
                 break
-    out["note"] = "time from tone onset until the first estimate within tolerance is final (buffer end plus lookahead frames)"
-    out["lag_frames"] = lag
+    out["note"] = "time from tone onset until the first estimate within tolerance is final (end of the analysis buffer; live is plain YIN, no lookahead)"
     out["hop_ms"] = hop / sr * 1000
     out["buffer_ms"] = N / sr * 1000
     return out
@@ -222,6 +219,68 @@ def praat_agreement(base: Path, a: str = "ts", b: str = "praat", tol_s: float = 
                 worst=sorted([p for p in per if p["within10"] is not None], key=lambda p: p["within10"])[:5])
 
 
+def score_vibrato_windows() -> dict:
+    """M2.1 vibrato over time (specs/M2.md 4.6 F-24 to F-26) on results/take/*.json from `run_ts.ts take`.
+    F-24 vib_long_48k: every span inside [EDGE_S, dur - EDGE_S] meets the M1 vibrato thresholds.
+    F-25 vib_change_48k: every span inside one half (and inside the edge margin) meets them against that half's
+    values; spans that straddle the change or an edge margin are counted but not scored.
+    F-26 steady_long_48k: every span reports none found. A span with no vibrato found fails F-24 and F-25."""
+    take = RES / "take"
+    out = {}
+
+    def check(e, w, rate, extent):
+        if w["rateHz"] is None:
+            return dict(id=e["id"], t0=w["t0"], t1=w["t1"], rate=rate, extent=extent, found=False)
+        re_, ee = w["rateHz"] - rate, (w["extentCents"] - extent) / extent
+        ok = abs(re_) <= THRESH["vib_rate"] and abs(ee) <= THRESH["vib_extent_rel"]
+        return dict(id=e["id"], t0=w["t0"], t1=w["t1"], rate=rate, extent=extent, found=True, rate_est=w["rateHz"],
+                    extent_est=w["extentCents"], rate_err=re_, extent_rel_err=ee, ok=ok)
+
+    for crit, set_name in (("F-24", "vib_long_48k"), ("F-25", "vib_change_48k"), ("F-26", "steady_long_48k")):
+        entries = [e for e in MAN["entries"] if e["set"] == set_name]
+        rows, unscored, missing, total = [], 0, [], 0
+        for e in entries:
+            p = take / f"{e['id']}.json"
+            if not p.exists():
+                missing.append(e["id"])
+                continue
+            j = json.loads(p.read_text())
+            if "error" in j:  # run_ts.ts take recorded a failure for this file
+                missing.append(e["id"])
+                continue
+            dur = j["durationS"]
+            for w in j["vibrato"]:
+                total += 1
+                if crit == "F-26":
+                    rows.append(dict(id=e["id"], t0=w["t0"], t1=w["t1"], found=w["rateHz"] is not None, rate_est=w["rateHz"],
+                                     extent_est=w["extentCents"], ok=w["rateHz"] is None))
+                    continue
+                segs = e.get("segments") or [dict(t0=0.0, t1=dur, rate=e["rate"], extent=e["extent"])]
+                seg = next((s for s in segs if w["t0"] >= max(s["t0"], EDGE_S) - 1e-9 and w["t1"] <= min(s["t1"], dur - EDGE_S) + 1e-9), None)
+                if seg is None:
+                    unscored += 1
+                    continue
+                r = check(e, w, seg["rate"], seg["extent"])
+                r["ok"] = r.get("ok", False)
+                rows.append(r)
+        found = [r for r in rows if r["found"]]
+        fails = [r for r in rows if not r["ok"]]
+        summ = dict(set=set_name, files=len(entries) - len(missing), missing=missing, spans_total=total, spans_scored=len(rows),
+                    spans_not_scored=unscored, spans_found=len(found), spans_failing=len(fails),
+                    verdict="pass" if rows and not fails and not missing else "fail")
+        if crit != "F-26" and found:
+            summ.update(rate_err_max=float(max(abs(r["rate_err"]) for r in found)),
+                        extent_rel_err_max=float(max(abs(r["extent_rel_err"]) for r in found)),
+                        rate_err_median=float(np.median([abs(r["rate_err"]) for r in found])),
+                        extent_rel_err_median=float(np.median([abs(r["extent_rel_err"]) for r in found])))
+        out[crit] = dict(summary=summ, failing=fails)
+    out["span_s"] = 2.5
+    out["step_s"] = 0.5
+    out["edge_s"] = EDGE_S
+    out["thresholds"] = dict(rate_hz=THRESH["vib_rate"], extent_rel=THRESH["vib_extent_rel"])
+    return out
+
+
 def fmt(x, nd=2):
     return "n/a" if x is None else (f"{x:.{nd}f}" if isinstance(x, float) else str(x))
 
@@ -233,12 +292,28 @@ def main() -> None:
     S["vibrato"] = {s: score_vibrato(s) for s in ("vib_sine_48k", "vib_harm_48k")}
     S["sf"] = score_sf()
     S["spectrum"] = score_spectrum()
-    S["latency"] = {m: score_latency(m) for m in ("tsyin", "tslive")}
+    S["latency"] = {"live": score_latency("tsyin")}
     voc = RES / "vocadito"
     S["vocadito_mir_eval"] = melody_eval(voc, ROOT / "datasets/vocadito/Annotations/F0")
-    S["vocadito_praat_agreement"] = {m: praat_agreement(voc, m) for m in ("ts", "tslive", "tsyin")}
+    S["vocadito_praat_agreement"] = {m: praat_agreement(voc, m) for m in ("ts", "tsyin")}
     S["vocadito_pyin_vs_praat"] = praat_agreement(voc, "pyin", "praat")
-    S["raw_praat_agreement"] = {m: praat_agreement(RES / "raw", m) for m in ("ts", "tslive", "tsyin")} if (RES / "raw").exists() else None
+    S["raw_praat_agreement"] = {m: praat_agreement(RES / "raw", m) for m in ("ts", "tsyin")} if (RES / "raw").exists() else None
+    # Criterion 3 (Praat agreement >= praat_frac within praat_within cents), explicit per path.
+    paths = {"whole_take": ("ts", "whole take (YIN + continuity)"), "live": ("tsyin", "live (plain YIN)")}
+    S["criterion3"] = {}
+    for name, (m, label) in paths.items():
+        row = dict(label=label, method=m, threshold=THRESH["praat_frac"], within_cents=THRESH["praat_within"])
+        for src, agree in (("vocadito", S["vocadito_praat_agreement"].get(m)), ("raw", (S["raw_praat_agreement"] or {}).get(m))):
+            if agree:
+                row[src] = dict(within10=agree["within10"], joint_voiced_frames=agree["joint_voiced_frames"],
+                                verdict="pass" if agree["within10"] >= THRESH["praat_frac"] else "fail")
+        S["criterion3"][name] = row
+    # M2.1 (specs/M2.md 4.7): Node parity from tools/m2_parity.ts, vibrato spans from run_ts.ts take.
+    par = RES / "m2_parity.json"
+    parity = json.loads(par.read_text()) if par.exists() else None
+    if parity is not None:
+        parity = {k: v for k, v in parity.items() if k != "perFile"}  # per-file rows stay in results/m2_parity.json
+    S["m2"] = dict(parity=parity, vibrato_windows=score_vibrato_windows())
     (RES / "summary.json").write_text(json.dumps(S, indent=1))
 
     L = []
@@ -256,6 +331,26 @@ def main() -> None:
         for m, r in d.items():
             s = r["summary"]
             L.append(f"| {sname} | {METHODS[m]} | {s['cases']} | {s['detected']} | {s['rate_err_median']:.4f} | {s['rate_err_max']:.4f} | {100*s['extent_rel_err_median']:.2f}% | {100*s['extent_rel_err_max']:.2f}% | {100*s['extent_signed_mean']:+.2f}% | {s['failing']} |")
+    L.append("\n## Criterion 3: Praat agreement, within 10 c on >= 95% of jointly voiced frames (Vocadito stand-in)\n")
+    L.append("| Path | Within 10 c | Joint voiced frames | Verdict |")
+    L.append("|---|---|---|---|")
+    for r in S["criterion3"].values():
+        v = r.get("vocadito")
+        if v:
+            L.append(f"| {r['label']} | {100*v['within10']:.2f}% | {v['joint_voiced_frames']} | {v['verdict']} |")
+    L.append("\n## M2.1 parity (F-01 to F-03) and vibrato spans (F-24 to F-26)\n")
+    L.append("| Criterion | Detail | Verdict |")
+    L.append("|---|---|---|")
+    par = S["m2"]["parity"]
+    if par:
+        L.append(f"| F-01 | {par['f01']['files']} files, {par['f01']['sampleMismatches']} sample mismatches | {par['f01']['verdict']} |")
+        L.append(f"| F-02 | {par['f02']['frames']} frames, {par['f02']['startMismatches']} start and {par['f02']['voicedMismatches']} voiced mismatches | {par['f02']['verdict']} |")
+        L.append(f"| F-03 | {par['f03']['voicedFrames']} voiced frames, {par['f03']['framesOutsideTol']} outside {par['toleranceCents']} c, max {par['f03']['maxAbsCents']:.3g} c | {par['f03']['verdict']} |")
+    else:
+        L.append("| F-01 to F-03 | results/m2_parity.json missing | fail |")
+    for crit in ("F-24", "F-25", "F-26"):
+        s_ = S["m2"]["vibrato_windows"][crit]["summary"]
+        L.append(f"| {crit} | {s_['set']}: {s_['spans_scored']} spans scored, {s_['spans_failing']} failing | {s_['verdict']} |")
     (RES / "tables.md").write_text("\n".join(L) + "\n")
     print("\n".join(L))
 

@@ -1,0 +1,10 @@
+// Shared take pipeline (specs/M2.1-API.md). DOM-free and Node-free.
+export { parseWav, readWavInfo, type ParsedWav, type WavInfo } from './wav.ts';
+export { readMp3Rate, readM4aRate, sniffContainer, type M4aRate, type Container } from './headers.ts';
+export { mixToMono } from './mix.ts';
+export {
+  analyseTake, takeTransferables, vibratoSpans, VIB_WINDOW_S, VIB_STEP_S, SPECTRUM_MAX_HZ,
+  type TakeStatus, type VibratoWindow, type TakeResult, type AnalyseOptions,
+} from './analyse.ts';
+export { TakeError, type TakeErrorCode } from './errors.ts';
+export { centsSeries } from './cents.ts';

@@ -1,0 +1,385 @@
+/* Shared components (DESIGN.md 2.2 to 2.7, 2.11). One structure in both themes; per-theme treatments are
+   only the rows of the 1.8 table, written as :root[data-theme="loud"] overrides. */
+
+/* ---------------------------------------------------------------- text */
+.eyebrow, .label {
+  margin: 0;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
+}
+.lede { margin: 0; max-width: 58ch; font: var(--t-lede); color: var(--ink-2); text-wrap: pretty; }
+.prose { margin: 0; max-width: 66ch; color: var(--ink-2); text-wrap: pretty; }
+.prose + .prose { margin-top: var(--s-4); }
+strong { font-weight: var(--t-body-strong); }
+
+a.link { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a.link:hover { color: var(--signal-text); }
+:root[data-theme="loud"] a.link { text-decoration-thickness: 2px; font-weight: var(--t-body-strong); }
+
+/* ---------------------------------------------------------------- page header (2.2) */
+.page-header {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: var(--s-4) var(--s-8);
+  padding: var(--page-head-pad);
+}
+.page-header .ph-text { display: grid; gap: var(--s-4); min-width: 0; }
+.page-header h1 {
+  margin: 0;
+  font: var(--t-display-1); letter-spacing: var(--t-display-1-ls); text-transform: var(--t-display-1-case);
+  overflow-wrap: anywhere;
+}
+.page-header .ph-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-6); }
+@media (max-width: 599px) {
+  .page-header .ph-action { width: 100%; }
+  .page-header .ph-action .btn-primary { width: 100%; }
+}
+
+/* ---------------------------------------------------------------- layout grids */
+.grid-12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--gap-panel); align-items: start; }
+.col-7 { grid-column: span 7; }
+.col-5 { grid-column: span 5; }
+.col-12 { grid-column: span 12; }
+@media (max-width: 959px) {
+  .grid-12 > * { grid-column: 1 / -1; }
+  /* Everything spans the full row here, so the 11 column gaps would only widen the grid past a 320px screen. */
+  .grid-12 { column-gap: 0; }
+}
+
+/* ---------------------------------------------------------------- panel (2.3) */
+.panel {
+  background: var(--panel);
+  border: var(--border-w) solid var(--ink);
+  box-shadow: var(--shadow-panel);
+  min-width: 0;
+}
+.strip {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--strip-pad);
+  border-bottom: var(--border-w) solid var(--ink);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase;
+}
+.strip h2, .strip .strip-title { margin: 0; font: inherit; letter-spacing: inherit; }
+.strip .strip-meta { color: var(--muted); }
+:root[data-theme="loud"] .strip { background: var(--ink); color: var(--on-ink); border-bottom-width: 0; }
+:root[data-theme="loud"] .strip .strip-meta { color: var(--on-ink); }
+.pbody { padding: var(--row-pad); }
+.pbody > * + * { margin-top: var(--s-3); }
+.panel h2.panel-title { margin: 0; font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); }
+
+/* ---------------------------------------------------------------- sections and groups (1.10)
+   Lines mark structure once: a tier-1 section is a 1px ink rule on its top edge, then a Newsreader title, and space
+   instead of a box. A tier-2 group is a hairline and a mono label. Nothing here is a box. */
+.sec { min-width: 0; margin-top: var(--sec-gap); border-top: var(--divider-w) solid var(--ink); }
+.sec-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--s-1) var(--s-4);
+  padding: var(--sec-head-pad);
+}
+.sec-title { margin: 0; font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); overflow-wrap: anywhere; }
+.sec-meta, .group-label, .group-meta {
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
+}
+.sec-meta { display: inline-flex; align-items: center; gap: var(--s-2); }
+/* Two classes, so page rules that zero a paragraph's margin (methods.css .m-field, .m-action) do not undo it. */
+.sec .sec-body > * + * { margin-top: var(--s-3); }
+.group { min-width: 0; margin-top: var(--group-gap); border-top: var(--divider-w) solid var(--rule); }
+.group-label { margin: 0; padding-top: var(--s-2); }
+.group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s-3); padding-top: var(--s-2); }
+.group-head .group-label { padding-top: 0; }
+/* The page grid for sections: one column under 960, the 12 columns of 3.1, 3.3 and 3.4 from 960. Sections in it
+   use the grid gap, not their own top margin, so side-by-side sections line up. */
+.sec-grid { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--sec-gap); margin-top: var(--sec-gap); align-items: start; }
+.sec-grid > .sec { margin-top: 0; }
+@media (min-width: 960px) {
+  .sec-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--s-12); }
+  .sec-grid > * { grid-column: span 12; }
+  .sec-grid > .col-7 { grid-column: span 7; }
+  .sec-grid > .col-5 { grid-column: span 5; }
+  .sec-grid > .col-6 { grid-column: span 6; }
+}
+
+/* ---------------------------------------------------------------- key-value rows (2.4) */
+.kv-list { margin: 0; }
+.list-label { padding: var(--strip-pad); border-top: var(--divider-w) solid var(--divider-c); }
+.kv {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--s-1) var(--s-4);
+  align-items: baseline;
+  padding: var(--row-pad);
+  border-bottom: var(--divider-w) solid var(--divider-c);
+}
+.kv:last-child { border-bottom: 0; }
+.kv-label { color: var(--muted); }
+.kv-body { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-2); min-width: 0; }
+.kv-value { font-weight: var(--t-body-strong); overflow-wrap: anywhere; }
+.kv-value[data-empty] { font-weight: 400; color: var(--muted); }
+.kv-action { margin-left: auto; }
+.kv-action:empty { display: none; }
+.kv .kv-dot { align-self: center; }
+@media (max-width: 599px) { .kv { grid-template-columns: 1fr; } .kv-action { margin-left: 0; } }
+/* App routes (1.10, 3.6): hairline rows with no inline padding, so values align with the page gutter. Label 2fr and
+   value 3fr while the list is at least 280px wide (a container query, so it holds at 320), else stacked. Scoped away
+   from #/legacy and from #/file (M2), which keep their panels. */
+:where(main > :not([data-route="legacy"], [data-route="file"])) .kv-list { container-type: inline-size; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) .kv {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); padding: var(--row-pad-y) 0;
+}
+:where(main > :not([data-route="legacy"], [data-route="file"])) .kv-action { margin-left: 0; flex-basis: 100%; }
+@container (max-width: 279px) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) .kv { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------------------------------------------------------------- status dot (2.6) */
+/* The ring is an inset shadow, not a border: a dot is a glyph, not a box (1.10 counts borders). Forced colours drop
+   shadows, so that block below gives every dot a real 1px border. */
+.dot, .kv-dot {
+  display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%;
+  border: 0; box-shadow: inset 0 0 0 1px var(--muted); background: transparent;
+}
+.dot-live { background: var(--signal); box-shadow: none; }
+.dot-ok, .kv[data-status="ok"] .kv-dot { background: var(--ok); box-shadow: none; }
+.kv[data-status="info"] .kv-dot { visibility: hidden; }
+.dot-error, .kv[data-status="error"] .kv-dot {
+  width: 12px; height: 12px; border-radius: 0; box-shadow: inset 0 0 0 1px var(--state-error);
+  position: relative;
+}
+.dot-error::after, .kv[data-status="error"] .kv-dot::after {
+  content: "!"; position: absolute; inset: 0; display: grid; place-items: center;
+  font: 600 9px/1 var(--font-ui); color: var(--state-error);
+}
+.kv[data-status="error"] .kv-value { color: var(--state-error); }
+:root[data-theme="loud"] .dot, :root[data-theme="loud"] .kv-dot { width: 12px; height: 12px; border: 2px solid var(--ink); }
+:root[data-theme="loud"] .dot-error, :root[data-theme="loud"] .kv[data-status="error"] .kv-dot { width: 16px; height: 16px; }
+
+/* ---------------------------------------------------------------- not-built tag (1.8) */
+.tag-notbuilt {
+  display: inline-flex; align-items: center;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
+}
+:root[data-theme="loud"] .tag-notbuilt { border: 2px dashed var(--ink); padding: 0 var(--s-2); }
+.nav .tag-notbuilt { font-size: 10px; }
+:root[data-theme="loud"] .nav .tag-notbuilt { font-size: 11px; }
+
+/* ---------------------------------------------------------------- list rows (2.5) */
+.rows { margin: 0; padding: 0; list-style: none; }
+.row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-4); align-items: baseline;
+  padding: var(--row-pad);
+  border-bottom: var(--divider-w) solid var(--divider-c);
+}
+.row:last-child { border-bottom: 0; }
+.row-title { font-weight: var(--t-body-strong); }
+.row-desc { grid-column: 1; font: var(--t-body-s); color: var(--muted); }
+.row[data-built="false"] { color: var(--muted); }
+.row .row-status { grid-row: 1; grid-column: 2; display: inline-flex; align-items: center; gap: var(--s-2); }
+@media (max-width: 599px) { .row { grid-template-columns: 1fr; } .row .row-status { grid-row: auto; grid-column: 1; } }
+
+/* ---------------------------------------------------------------- index table (2.5, Tools) */
+/* The table sizes to its panel, not the viewport: below 600px of panel width the rows stack. */
+.itable { display: block; container-type: inline-size; }
+.itable [role="row"] {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5em minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 0.8fr) minmax(max-content, 0.9fr);
+  gap: var(--s-4); align-items: center;
+  padding: var(--row-pad-y) var(--s-3);
+  border-bottom: var(--divider-w) solid var(--divider-c);
+}
+.itable [role="row"] > * { min-width: 0; overflow-wrap: anywhere; }
+.itable [role="row"]:last-child { border-bottom: 0; }
+.itable .ihead { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); padding-top: var(--s-2); padding-bottom: var(--s-2); }
+.itable .ino { font: var(--t-mono); color: var(--muted); }
+.itable .iname { font-weight: var(--t-body-strong); }
+.itable .idesc { font: var(--t-body-s); color: var(--muted); }
+.itable .istatus { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.itable .ck { display: none; } /* cell labels for the stacked layout */
+/* A row that is a link: the name link stretches over the row (3.6 technique C). The name is underlined at rest and
+   the row ends with an arrow, so the row looks tappable without hover (1.10). */
+.itable .irow-link { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.itable .istat { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.itable .irow-arrow { font-family: var(--font-ui); }
+.itable .irow-link::after { content: ""; position: absolute; inset: 0; }
+.itable .irow-link:focus-visible { outline: none; }
+.itable [role="row"]:has(.irow-link:hover) { background: var(--hover); }
+.itable [role="row"]:has(.irow-link:focus-visible) { outline: var(--focus-w) solid var(--focus); outline-offset: calc(-1 * var(--focus-w)); }
+.itable [data-selected] { background: var(--hover); box-shadow: inset 3px 0 0 var(--signal); }
+:root[data-theme="loud"] .itable [data-selected] { box-shadow: inset 8px 0 0 var(--signal); }
+.itable [data-built="false"] { color: var(--muted); }
+/* Tools detail (3.6): the button right after the description, then the key-value list. */
+.tools-open { margin: 0; }
+@media (max-width: 599px) { .tools-open .btn-primary { width: 100%; } }
+.tools-kv { margin-top: var(--s-4); }
+@container (max-width: 599px) {
+  .itable .ihead { display: none; }
+  /* 3.6: number, name and status on line 1, the description on line 2, "Input: ..." on line 3 */
+  .itable [role="row"] {
+    grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "no name stat" "desc desc desc" "input input input";
+    gap: var(--s-1) var(--s-3); align-items: baseline; min-height: 64px;
+    /* The name link sits on line 1 and the whole row is its hit area (technique C). 14px above it keeps 21px of row
+       above the link's centre. */
+    padding-top: 14px; padding-bottom: 8px;
+  }
+  .itable .ino { grid-area: no; }
+  .itable .iname { grid-area: name; }
+  .itable .istat { grid-area: stat; }
+  .itable .idesc { grid-area: desc; font: var(--t-body); color: var(--ink-2); }
+  .itable .iinput { grid-area: input; font: var(--t-body-s); color: var(--muted); }
+  .itable [data-built="false"] .idesc { color: var(--muted); }
+  .itable .ck { display: inline; color: var(--muted); }
+  .itable .ck::after { content: ": "; }
+}
+
+/* ---------------------------------------------------------------- buttons (2.7) and button-styled links */
+.btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-3);
+  min-height: var(--control-h); padding: 0 var(--s-4);
+  font: var(--t-body); font-weight: var(--t-body-strong);
+  border: var(--border-w) solid var(--ink); border-radius: var(--radius);
+  background: var(--panel); color: var(--ink);
+  text-decoration: none; cursor: pointer;
+  /* Fill and colour are feedback (1.7a): they arrive at once and leave over --dur-micro-out. The transform is
+     the dormant Loud shift (small). */
+  transition: background-color var(--dur-micro-out) var(--ease-standard), color var(--dur-micro-out) var(--ease-standard),
+    transform var(--dur-small-in) var(--ease-standard), box-shadow var(--dur-micro-out) var(--ease-standard);
+}
+.btn-primary { background: var(--ink); color: var(--on-ink); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (hover: hover) {
+  .btn:hover:not(:disabled) { transition: transform var(--dur-small-in) var(--ease-standard); }
+  .btn-ghost:hover:not(:disabled) { background: var(--ink); color: var(--on-ink); }
+  .btn-primary:hover:not(:disabled) { background: var(--signal-text); border-color: var(--signal-text); }
+}
+:root[data-theme="loud"] .btn { box-shadow: var(--shadow-button); text-transform: uppercase; }
+:root[data-theme="loud"] .btn-primary:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); transform: translate(var(--btn-hover-shift), var(--btn-hover-shift)); }
+:root[data-theme="loud"] .btn:active:not(:disabled) { transform: translate(var(--btn-press-shift), var(--btn-press-shift)); box-shadow: 2px 2px 0 var(--ink); }
+.btn .arrow { font-family: var(--font-ui); }
+
+/* Ghost buttons (2.7, 1.10): border only. Visual 40px tall at every width; the hit area is 44 through a ::before
+   that reaches 2px above and below the border box (3.6 technique C; the inset counts from the padding box, so it
+   adds the border width). The primary button is 44 tall at compact, so it only gets
+   the extender at 600 and up, where it is 40. */
+:where(main > :not([data-route="legacy"], [data-route="file"])) .btn-ghost { background: transparent; min-height: 40px; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) .btn-ghost::before { content: ""; position: absolute; inset: calc(-2px - var(--border-w)) 0; }
+@media (min-width: 600px) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) .btn-primary::before { content: ""; position: absolute; inset: calc(-2px - var(--border-w)) 0; }
+}
+
+/* ---------------------------------------------------------------- system message callout (2.14)
+   One callout per state, in the flow next to its action: a 3px left rule, an icon, a title (what happened) and a
+   step (how to fix it). No fill, no other border, never red text, never uppercase, never animated. */
+.msg {
+  display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: var(--s-2); align-items: start;
+  max-width: 46ch; margin: 0; padding-left: var(--s-3);
+  border-left: 3px solid var(--signal);
+}
+.msg[data-kind="info"] { border-left-color: var(--muted); }
+.msg-icon { width: 16px; height: 16px; margin-top: 2px; color: var(--ink); }
+.msg-text { display: grid; gap: var(--s-1); min-width: 0; }
+.msg-title { margin: 0; font: var(--t-body); font-weight: var(--t-body-strong); color: var(--ink); }
+.msg-step { margin: 0; font: var(--t-body); color: var(--ink-2); max-width: none; }
+.msg-step:empty { display: none; }
+.msg details.disclosure { margin-top: var(--s-1); }
+.msg-raw { margin: 0; padding: 0 0 var(--s-2); font: var(--t-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (forced-colors: active) { .msg { border-left-color: CanvasText; } }
+
+/* ---------------------------------------------------------------- disclosure (2.11) */
+details.disclosure > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  min-height: var(--control-h); padding: var(--strip-pad);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase;
+}
+details.disclosure > summary::-webkit-details-marker { display: none; }
+details.disclosure > summary::after {
+  content: ""; width: 7px; height: 7px; flex: none; margin-right: var(--s-1);
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg); transition: transform var(--dur-micro-out) var(--ease-standard);
+}
+details.disclosure[open] > summary::after { transform: rotate(-135deg); transition-duration: var(--dur-micro-in); }
+/* The rule under an open summary fades with the slide instead of snapping. It is drawn by ::before in the
+   border-w gap that margin-bottom opens below the summary, so the closed and open sizes match the old
+   border-bottom exactly. A border (not a background) so forced-colors mode still shows it. Open: the rule
+   fades in fast. Close: it fades out over the slide. Pages tint it with --disclosure-rule. The transitions
+   live in the @supports block below, so browsers that cannot slide the content swap the rule instantly too. */
+details.disclosure > summary { position: relative; }
+details.disclosure > summary::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; pointer-events: none;
+  border-top: var(--border-w) solid var(--disclosure-rule, var(--ink));
+  opacity: 0;
+}
+details.disclosure[open] > summary { margin-bottom: var(--border-w); }
+details.disclosure[open] > summary::before { opacity: 1; }
+:root[data-theme="loud"] details.disclosure > summary { background: var(--ink); color: var(--on-ink); }
+/* App routes (1.10, 3.6): no box and no strip. The disclosure is a full-width row with a hairline on top, a
+   sentence-case Geist 14/20 weight 500 label, at least 44px tall, and a 12px chevron (2px stroke) on the right.
+   The open body has no rule under the summary. */
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure { border-top: var(--divider-w) solid var(--rule); }
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary {
+  min-height: var(--hit); padding: 0;
+  font: var(--t-body); font-weight: var(--t-body-strong); letter-spacing: 0; text-transform: none;
+}
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary::before { display: none; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure[open] > summary { margin-bottom: 0; }
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary::after {
+  width: 12px; height: 12px; margin-right: 0; border: 0; background: currentColor; transform: none;
+  -webkit-mask: var(--chevron) center / 12px 12px no-repeat; mask: var(--chevron) center / 12px 12px no-repeat;
+}
+:where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure[open] > summary::after { transform: rotate(180deg); }
+:root { --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.25 6 8.25l4-4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'/%3E%3C/svg%3E"); }
+@media (hover: hover) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary:hover { color: var(--signal-text); transition: none; }
+}
+@media (forced-colors: active) {
+  :where(main > :not([data-route="legacy"], [data-route="file"])) details.disclosure > summary::after { forced-color-adjust: none; background: CanvasText; }
+}
+/* Open and close by sliding height and fading, where the browser can animate height to auto. Elsewhere
+   (including Safari without interpolate-size) it opens instantly as before. Large class (1.7a pattern B): open
+   reveals the height over --dur-reveal-in on --ease-settle and fades in over --dur-medium-in; close collapses
+   over --dur-reveal-out on --ease-standard and fades out over --dur-small-out on --ease-accelerate. While live
+   the --dur-reveal-* tokens are 0ms, so the height snaps. Reduced motion and data-motion="off" take every
+   duration to 0 through the tokens. */
+@supports selector(::details-content) and (interpolate-size: allow-keywords) {
+  details.disclosure { interpolate-size: allow-keywords; }
+  details.disclosure::details-content {
+    height: 0; overflow: clip; opacity: 0;
+    transition: height var(--dur-reveal-out) var(--ease-standard), opacity var(--dur-small-out) var(--ease-accelerate),
+      content-visibility var(--dur-reveal-out) allow-discrete;
+  }
+  details.disclosure[open]::details-content {
+    height: auto; opacity: 1;
+    transition: height var(--dur-reveal-in) var(--ease-settle), opacity var(--dur-medium-in) var(--ease-standard),
+      content-visibility var(--dur-reveal-in) allow-discrete;
+  }
+  details.disclosure > summary { transition: margin-bottom var(--dur-reveal-out) var(--ease-standard); }
+  details.disclosure[open] > summary { transition: margin-bottom var(--dur-reveal-in) var(--ease-settle); }
+  details.disclosure > summary::before { transition: opacity var(--dur-reveal-out) var(--ease-standard); }
+  details.disclosure[open] > summary::before { transition: opacity var(--dur-micro-in) var(--ease-standard); }
+}
+.summary-meta { color: var(--muted); margin-left: auto; }
+:root[data-theme="loud"] .summary-meta { color: var(--on-ink); }
+
+/* ---------------------------------------------------------------- forced colours (1.2) */
+@media (forced-colors: active) {
+  .dot, .kv-dot { border: 1px solid CanvasText; }
+  .btn { border-color: ButtonText; }
+}
+
+/* ---------------------------------------------------------------- wide tier, 960px and up (DESIGN.md 1.10a)
+   Two standards on purpose. Under 960 the page stays light: space groups, one rule per section (1.10).
+   From 960 there is room for structure, so lines say what space says on a phone: a hairline under each
+   section head, column rules between side-by-side sections and items, hairlines between steps, and a
+   panel for the supporting column. Voice (fixed hero budget), #/file and #/legacy keep their own rules. */
+@media (min-width: 960px) {
+  :root, :root[data-theme="editorial"] { --rule: #C4BFB2; --divider-c: var(--rule); }
+  :where(main > :not([data-route="legacy"], [data-route="file"], [data-route="voice"])) .sec-head {
+    border-bottom: var(--divider-w) solid var(--rule); margin-bottom: var(--s-6);
+  }
+  /* Column rules: the right-hand section of a pair gets a hairline on its left edge. */
+  :where(main > :not([data-route="legacy"], [data-route="file"], [data-route="voice"])) :is(
+    .sec-grid > .col-5:not(.ov-good), .sec-grid > .col-6:nth-child(even), .about-grid > .sec:nth-child(even):not(:nth-child(-n+2))
+  ) { border-left: var(--divider-w) solid var(--rule); padding-left: var(--s-8); margin-left: calc(-1 * var(--s-8) / 2); }
+  :where(main > :not([data-route="legacy"], [data-route="file"], [data-route="voice"])) .sec-grid { column-gap: var(--s-10); }
+  /* Items in a row are divided by hairlines, not only by gaps. */
+  .about-list { column-gap: 0; }
+  .about-list > .about-item:nth-child(even) { border-left: var(--divider-w) solid var(--rule); padding-left: var(--s-8); }
+  .about-list > .about-item:nth-child(odd) { padding-right: var(--s-8); }
+  .about-list > .about-item:nth-child(n+3) { border-top: var(--divider-w) solid var(--rule); padding-top: var(--item-gap); }
+}

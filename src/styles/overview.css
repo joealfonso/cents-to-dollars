@@ -1,0 +1,75 @@
+/* Overview (#/). Layout and rhythm only (DESIGN.md 3.1, 1.10, 3.6). No boxes and no lines inside lists: the page
+   reads in three bands told apart by ruled section heads and space. What it shows (four items, one to four across),
+   how to use it (numbered steps, open at 600 and up) beside good to know, then setup and roadmap (quiet disclosure
+   rows and a short link list). */
+
+/* ---------------------------------------------------------------- page header */
+/* "Setup checks" sits on its own line under the primary button; the link has a 44px hit area (technique B) and the
+   paragraph keeps its line height. */
+.ov-setup { margin: 0; }
+
+/* ---------------------------------------------------------------- band 1: what it shows you */
+.ov-feature-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--item-gap) var(--s-8);
+  margin: 0; padding: 0; list-style: none;
+}
+.ov-feature { display: grid; align-content: start; gap: var(--s-1); }
+.ov-feature-title { margin: 0; font: var(--t-h3); }
+.ov-feature-desc { margin: 0; color: var(--ink-2); max-width: 40ch; }
+/* Four across only when each column holds about 30 characters a line; below that, two. */
+@media (max-width: 1199px) { .ov-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--s-12); } }
+@media (max-width: 599px) { .ov-feature-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------------------------------------------------------------- band 2: how to use it, good to know */
+/* The disclosure carries its own hairline; under 960 it follows band 1 at the group gap, not a full section gap. */
+.ov-use { row-gap: var(--sec-gap); }
+.ov-how { align-self: start; }
+@media (max-width: 959px) { .ov-use { margin-top: var(--group-gap); } }
+.ov-steps { margin: 0; padding: var(--s-2) 0 var(--s-2); list-style: none; display: grid; gap: var(--item-gap); }
+.ov-step { display: grid; grid-template-columns: 2.5ch minmax(0, 1fr); column-gap: var(--s-4); row-gap: var(--s-1); }
+/* The red number column carries the rhythm, so the steps need no dividers. */
+.ov-step-no {
+  grid-row: 1 / span 2; align-self: start;
+  font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); color: var(--signal-text);
+}
+.ov-step-title { font: var(--t-h3); padding-top: 4px; }
+.ov-step-desc { grid-column: 2; color: var(--ink-2); }
+
+.ov-notes { margin: 0; display: grid; gap: var(--item-gap); }
+.ov-note { display: grid; gap: var(--s-1); }
+.ov-note dt { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--ink); }
+.ov-note dd { margin: 0; color: var(--ink-2); max-width: 52ch; }
+.ov-more { margin: var(--item-gap) 0 0; }
+
+/* ---------------------------------------------------------------- band 3: setup and roadmap */
+/* A tier-2 label with no rule of its own: the disclosure rows under it carry the hairlines. */
+.ov-ref { margin-top: var(--sec-gap); }
+.ov-ref-label { padding: 0 0 var(--s-2); }
+.ov-ref-grid { margin-top: 0; row-gap: var(--group-gap); }
+.ov-side { display: grid; gap: var(--s-2); align-content: start; min-width: 0; }
+.ov-side-title { margin: 0; font: var(--t-h3); }
+.ov-links, .ov-names { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s-3); }
+/* 12px between the link and its description, so the link's 44px hit area (technique B) is not covered by the text. */
+.ov-link { display: grid; gap: var(--s-3); justify-items: start; }
+.ov-link-desc, .ov-name-desc { font: var(--t-body-s); color: var(--muted); }
+.ov-names { padding: var(--s-1) 0 var(--s-3); }
+.ov-name { color: var(--muted); }
+.ov-name-title { font-weight: var(--t-body-strong); color: var(--ink-2); }
+@media (min-width: 960px) { .ov-side { padding-top: var(--s-3); } }
+
+/* ---------------------------------------------------------------- wide tier, 960px and up (DESIGN.md 1.10a) */
+@media (min-width: 960px) {
+  .ov-feature-grid { column-gap: 0; }
+  .ov-feature { padding: 0 var(--s-6); border-left: var(--divider-w) solid var(--rule); }
+  .ov-feature:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .ov-feature:nth-child(n+3) { border-top: var(--divider-w) solid var(--rule); padding-top: var(--item-gap); }
+  .ov-step + .ov-step { border-top: var(--divider-w) solid var(--rule); padding-top: var(--item-gap); }
+  .ov-steps { gap: var(--item-gap); }
+  /* The supporting column is a panel: a surface with a hairline box, the one grouping surface on the page. */
+  .ov-good { background: var(--panel); border: var(--divider-w) solid var(--rule); border-top: var(--divider-w) solid var(--ink); padding: 0 var(--s-6) var(--s-6); }
+}
+@media (min-width: 1200px) {
+  .ov-feature:nth-child(odd) { border-left: var(--divider-w) solid var(--rule); padding-left: var(--s-6); }
+  .ov-feature:first-child { border-left: 0; padding-left: 0; }
+  .ov-feature:nth-child(n+3) { border-top: 0; padding-top: 0; }
+}

@@ -1,0 +1,272 @@
+/* App shell: base, skip link, header, nav, Nav button, mic indicator, main, footer (DESIGN.md 2.1, 2.1a, 2.13).
+   Values come from tokens.css. Components are in components.css, the legacy page in legacy.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--t-body);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+/* Tilts and shadows can create scrollable overflow (1.7). */
+.page { overflow-x: clip; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Safe-area insets (3.6; index.html has viewport-fit=cover): the gutter never sits under a notch or rounded corner. */
+:root { --edge-l: max(var(--gutter), env(safe-area-inset-left)); --edge-r: max(var(--gutter), env(safe-area-inset-right)); }
+.shell { width: 100%; max-width: var(--content-max); margin: 0 auto; padding: 0 var(--edge-r) 0 var(--edge-l); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* Dual text variants (1.2): the inactive one is display: none, so it is also out of the accessibility tree. */
+:root[data-theme="loud"] .v-paper,
+:root:not([data-theme="loud"]) .v-loud { display: none; }
+
+/* ---------------------------------------------------------------- focus (1.7) */
+a, button, input, summary, [tabindex] { outline: var(--focus-w) solid transparent; outline-offset: var(--focus-offset); }
+:focus-visible { outline: var(--focus-w) solid var(--focus); outline-offset: var(--focus-offset); }
+/* Programmatic focus targets (3.6 "Route focus"): the router focuses the route h1, and About chips and Methods deep
+   links focus a section heading. No ring unless the keyboard caused it: modality.ts sets html[data-modality]. */
+:is(h1, h2)[tabindex="-1"]:focus { outline-color: transparent; }
+html[data-modality="keyboard"] :is(h1, h2)[tabindex="-1"]:focus { outline-color: var(--focus); }
+
+/* ---------------------------------------------------------------- skip link */
+.skip {
+  position: absolute; left: var(--s-4); top: -200px; z-index: 30;
+  background: var(--ink); color: var(--on-ink); padding: var(--s-2) var(--s-3);
+  font: var(--t-body); font-weight: var(--t-body-strong); text-decoration: none;
+  display: inline-flex; align-items: center; min-height: var(--hit);
+}
+.skip:focus { top: var(--s-3); }
+
+/* ---------------------------------------------------------------- header */
+.app-header { border-bottom: var(--border-w) solid var(--ink); background: var(--bg); }
+.header-inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "brand nav mic";
+  align-items: center;
+  column-gap: var(--s-8);
+  min-height: 56px;
+}
+.brand {
+  grid-area: brand;
+  font: var(--t-display-3); letter-spacing: var(--t-display-3-ls); text-transform: var(--t-display-1-case);
+  color: var(--ink); text-decoration: none; padding: var(--s-3) 0; white-space: nowrap;
+}
+/* The short "¢2$" shows under 600px only; the full name stays in the accessible name at every width. */
+.brand-short { display: none; }
+
+.nav { grid-area: nav; position: relative; }
+.nav ul { display: flex; flex-wrap: wrap; gap: 0 var(--s-6); margin: 0; padding: 0; list-style: none; }
+.nav a, .nav .nav-off {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  min-height: 56px; padding: 0;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase;
+  color: var(--ink-2); text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.nav a:hover { color: var(--ink); }
+/* Paper: signal underline and 6px square (1.8) */
+.nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--signal); }
+.nav a[aria-current="page"]::before { content: ""; width: 6px; height: 6px; background: var(--signal); flex: none; }
+.nav .nav-off { cursor: default; }
+/* Loud: ink block, on-ink text */
+:root[data-theme="loud"] .nav a { padding: 0 var(--s-3); min-height: var(--control-h); border-bottom: 0; color: var(--ink); }
+:root[data-theme="loud"] .nav a:hover { background: var(--panel); }
+:root[data-theme="loud"] .nav a[aria-current="page"] { background: var(--ink); color: var(--on-ink); }
+:root[data-theme="loud"] .nav a[aria-current="page"]::before { display: none; }
+:root[data-theme="loud"] .nav .nav-off { padding: 0 var(--s-3); min-height: var(--control-h); }
+/* Loud header budget (DESIGN.md 3.3): 14px Archivo Black labels and 12px item padding wrap the five-item nav
+   to several rows. A 12px nav label, 8px item padding and a tighter column gap keep it on one row at 1280. */
+:root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { font-size: 12px; line-height: 16px; letter-spacing: 0.02em; padding: 0 var(--s-2); }
+:root[data-theme="loud"] .nav ul { gap: 0 var(--s-1); }
+:root[data-theme="loud"] .nav .tag-notbuilt { padding: 0 var(--s-1); }
+:root[data-theme="loud"] .header-inner { column-gap: var(--s-4); }
+
+/* Mic indicator: the text is filled while html[data-live="on"] (header.ts). */
+.mic-indicator {
+  grid-area: mic; display: inline-flex; align-items: center; gap: var(--s-2);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--ink);
+}
+.mic-indicator .dot { display: none; }
+html[data-live="on"] .mic-indicator .dot { display: inline-block; }
+
+/* Nav button, #nav-toggle (2.1a, labelled "Nav" by owner request): shown only under 600px, see the compact block. */
+.nav-toggle { display: none; }
+
+/* Medium (600 to 959px): brand and mic on row 1, the full nav on row 2 (2.1a). The nav wraps if text is
+   enlarged; it never scrolls. */
+@media (min-width: 600px) and (max-width: 959px) {
+  .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand mic" "nav nav";
+    column-gap: var(--s-4);
+  }
+  .brand { white-space: normal; min-width: 0; }
+  .nav a, .nav .nav-off { min-height: var(--control-h); }
+  :root[data-theme="loud"] .nav { padding-bottom: var(--s-2); }
+  :root[data-theme="loud"] .brand { font-size: 20px; line-height: 24px; }
+  :root[data-theme="loud"] .nav ul { gap: 0; }
+  :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { padding: 0 6px; }
+  /* Loud: the nav stays on one row at 600 (two rows at most in the header), and scrolls if it must. */
+  :root[data-theme="loud"] .nav ul { flex-wrap: nowrap; overflow-x: auto; scroll-padding-inline: calc(var(--focus-w) + var(--focus-offset));
+    padding: calc(var(--focus-w) + var(--focus-offset)); margin: calc(-1 * (var(--focus-w) + var(--focus-offset))); }
+  :root[data-theme="loud"] .nav li { flex: none; }
+  :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { white-space: nowrap; }
+}
+
+/* Loud, 960 to 1279px: brand and mic on row 1 and the nav on row 2, same as medium, until the
+   five-item nav fits beside them. */
+@media (min-width: 960px) and (max-width: 1279px) {
+  :root[data-theme="loud"] .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand mic" "nav nav";
+  }
+  :root[data-theme="loud"] .nav { padding-bottom: var(--s-2); }
+}
+
+/* Compact (under 600px, 2.1a): one row of brand, mic and the Nav button. The nav is an in-flow panel under that row,
+   shown while #nav-toggle has aria-expanded="true" (nav.ts). Phone landscape (3.6) uses the compact header at any
+   width, because a second nav row would cost about 48px of a 320px screen; nav.ts uses the same query. */
+@media (max-width: 599px), (orientation: landscape) and (max-height: 500px) {
+  /* Flex, not a fixed grid, so enlarged text can wrap (WCAG 1.4.4, 1.4.10): the brand keeps its min-content width and
+     the mic status and Nav button drop to a second row when the first is full. The nav panel is always its own
+     full-width row. At 1x the closed header is one 56px row. */
+  .header-inner {
+    display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start;
+    column-gap: var(--s-3); row-gap: 0; min-height: 0;
+  }
+  .brand {
+    order: 1; display: inline-flex; align-items: center; flex: none; margin-right: auto;
+    min-height: 56px; min-width: var(--hit); padding: var(--s-2) 0; white-space: normal; overflow-wrap: normal; word-break: normal;
+    font-size: 20px; line-height: 24px;
+  }
+  .brand-full {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+  .brand-short { display: inline; }
+  .mic-indicator { order: 2; min-height: 44px; }
+
+  .nav-toggle {
+    order: 3; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+    min-width: 44px; min-height: 44px; margin: 0; padding: 0 var(--s-3);
+    font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase;
+    color: var(--ink); background: transparent; border: var(--border-w) solid var(--ink); border-radius: 0;
+    cursor: pointer;
+  }
+  /* Tap affordance (1.10): a 1px ink outline at rest and no fill; open fills ink. Feedback (1.7a): hover fill arrives
+     at once and leaves over --dur-micro-out; the open fill is instant. Hover only where there is hover, so a tap
+     never leaves a stuck fill. */
+  .nav-toggle { transition: background-color var(--dur-micro-out) var(--ease-standard), color var(--dur-micro-out) var(--ease-standard); }
+  @media (hover: hover) { .nav-toggle:hover { background: var(--hover); transition: none; } }
+  .nav-toggle[aria-expanded="true"] { background: var(--ink); color: var(--on-ink); transition: none; }
+  /* Chevron (micro): turns over --dur-micro-in when opening, --dur-micro-out when closing. */
+  .nav-toggle-icon { flex: none; transition: transform var(--dur-micro-out) var(--ease-standard); }
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon { transform: rotate(180deg); transition-duration: var(--dur-micro-in); }
+
+  /* Panel (1.7a pattern A, large): full-bleed rows, 1px rule dividers, above the header's ink bottom border.
+     Closed, it stays rendered at zero height, hidden once the exit ends, so it is out of the tab order and the
+     accessibility tree (nav.ts also sets inert from the first frame of a close). Open reveals the height over
+     --dur-reveal-in on --ease-settle and the list fades and slides down from --move-large. The close plays the
+     reverse, faster, with pointer-events off from its first frame. A link tap closes it instantly
+     (data-close="instant", nav.ts). While live, --dur-reveal-* are 0ms, so the height snaps and the list still moves. */
+  .nav {
+    order: 4; flex: 0 0 calc(100% + var(--edge-l) + var(--edge-r));
+    display: grid; grid-template-rows: 0fr; overflow: clip;
+    visibility: hidden; pointer-events: none;
+    margin: 0 calc(-1 * var(--edge-r)) 0 calc(-1 * var(--edge-l));
+    transition: grid-template-rows var(--dur-reveal-out) var(--ease-standard), visibility var(--dur-reveal-out);
+  }
+  .nav ul {
+    display: block; min-height: 0;
+    opacity: 0; transform: translateY(calc(-1 * var(--move-large)));
+    transition: opacity var(--dur-small-out) var(--ease-accelerate), transform var(--dur-large-out) var(--ease-accelerate);
+  }
+  #nav-toggle[aria-expanded="true"] ~ #site-nav {
+    grid-template-rows: 1fr; visibility: visible; pointer-events: auto;
+    transition: grid-template-rows var(--dur-reveal-in) var(--ease-settle);
+  }
+  #nav-toggle[aria-expanded="true"] ~ #site-nav ul {
+    opacity: 1; transform: none;
+    transition: opacity var(--dur-medium-in) var(--ease-standard), transform var(--dur-large-in) var(--ease-settle);
+  }
+  #site-nav[data-close="instant"], #site-nav[data-close="instant"] ul { transition: none; }
+  /* Every row carries its top divider, so the first one is clipped with the list and a closed panel is 0px tall. */
+  .nav li { border-top: var(--divider-w) solid var(--rule); }
+  .nav a, .nav .nav-off {
+    display: flex; width: 100%; min-height: 48px; padding: 0 var(--edge-r) 0 var(--edge-l); border-bottom: 0;
+    font-size: 13px; line-height: 20px; letter-spacing: 0.05em;
+  }
+  .nav a { color: var(--ink); }
+  @media (hover: hover) { .nav a:hover { background: var(--hover); } }
+  .nav a:focus-visible { outline-offset: -4px; }
+  /* The ink line from links.css would read as a divider across a full-width row. */
+  .nav a::after { display: none; }
+  /* Current page: the square plus a signal underline under the label text only. */
+  .nav a[aria-current="page"] { text-decoration: underline var(--signal) 2px; text-underline-offset: 4px; }
+  .nav .nav-off { justify-content: space-between; color: var(--muted); }
+
+  /* components.css sets 10px; the panel uses the 12px label size. */
+  .nav .nav-off .tag-notbuilt, :root[data-theme="loud"] .nav .nav-off .tag-notbuilt { font-size: 12px; }
+  :root[data-theme="loud"] .nav ul { gap: 0 var(--s-1); }
+  :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { padding: 0 var(--s-2); min-height: 44px; }
+  /* Loud header budget at 375 (88 to 112): the brand stays on one line and the switch labels get smaller. */
+  :root[data-theme="loud"] .brand { font-size: 16px; line-height: 20px; }
+  /* Off: take no space, but keep the role="status" region rendered so its text is announced when it appears. */
+  html:not([data-live="on"]) .mic-indicator { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+/* Reduced motion: the tokens take the panel to 0ms (theme.css); the chevron turn is also off in its own rule (1.7a). */
+@media (max-width: 599px) and (prefers-reduced-motion: reduce), (orientation: landscape) and (max-height: 500px) and (prefers-reduced-motion: reduce) {
+  .nav-toggle-icon { transition: none; }
+}
+
+/* ---------------------------------------------------------------- main and footer */
+main { flex: 1 0 auto; outline: none; }
+.route { padding-top: var(--route-pad-top); padding-bottom: var(--route-pad-bottom); }
+
+/* Screen change (router.ts render, 1.7a rows 4 to 6): only <main> animates. The old screen leaves at once (she
+   asked to leave it, 1.7a principle 8), so the two never overlap. The new one arrives as a large element: it rises
+   from --move-large over --dur-large-in on --ease-settle and fades in over --dur-medium-in on --ease-decelerate, so
+   it shows from the first frames. Header and footer swap in place, so the nav never flickers. router.ts skips the
+   transition under prefers-reduced-motion, data-motion="off" and while live, so those get an instant swap. */
+main { view-transition-name: route; }
+.app-footer { view-transition-name: footer; }
+/* Root swaps in place. Without its fade, the default plus-lighter blend would add the two snapshots and flash
+   the header bright, so the blend goes back to normal. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+/* The footer glides to its new position while <main> changes height, instead of jumping. */
+::view-transition-group(route), ::view-transition-group(footer) { animation-duration: var(--dur-large-in); animation-timing-function: var(--ease-settle); }
+::view-transition-image-pair(route) { overflow: clip; }
+::view-transition-old(route) { animation: none; opacity: 0; }
+::view-transition-new(route) { animation: route-rise var(--dur-large-in) var(--ease-settle) both, route-fade var(--dur-medium-in) var(--ease-decelerate) both; }
+@keyframes route-rise { from { transform: translateY(var(--move-large)); } }
+@keyframes route-fade { from { opacity: 0; } }
+
+.app-footer { border-top: var(--divider-w) solid var(--divider-c); }
+.app-footer .shell {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2) var(--s-6);
+  padding-top: var(--s-4); padding-bottom: calc(var(--s-6) + env(safe-area-inset-bottom));
+  font: var(--t-body-s); color: var(--muted);
+}
+/* Compact footer (3.6): one paragraph (the two sentences run on, with the space between the spans), 12px above and
+   16px below plus the inset. */
+@media (max-width: 599px) {
+  .app-footer .shell { display: block; padding-top: var(--s-3); padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom)); }
+}
+
+@media (forced-colors: active) {
+  :focus-visible { outline-color: CanvasText; }
+  .nav a[aria-current="page"]::before { forced-color-adjust: none; background: CanvasText; }
+  .nav-toggle[aria-expanded="true"] { border: 2px solid CanvasText; }
+}
+
+/* Automation hook (moved from the legacy inline style): */
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation: none !important; transition-duration: 0ms !important; }
