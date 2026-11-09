@@ -5,23 +5,33 @@ import type { Route } from '../router.ts';
 import { fieldRow, getField, repaintFields, runPassiveChecks } from '../fields.ts';
 import { DEFAULT_YIN } from '../../dsp/yin.ts';
 
-interface Tool { no: string; name: string; desc: string; input: string; href?: string }
+interface Tool { no: string; name: string; desc: string; input: string; href?: string; ready?: 'va' | 'fa' }
 
 const TOOLS: Tool[] = [
-  { no: '01', name: 'Voice analysis', desc: 'Note, cents sharp or flat, vibrato and spectrogram from the microphone', input: 'Microphone', href: '#/voice' },
+  { no: '01', name: 'Voice analysis', desc: 'Note, cents sharp or flat, vibrato and spectrogram from the microphone', input: 'Microphone', href: '#/voice', ready: 'va' },
   { no: '02', name: 'Aural skills', desc: 'Interval recognition and pitch matching', input: 'Audio output' },
   { no: '03', name: 'Source separation', desc: 'Isolate the voice from the accompaniment', input: 'Audio file' },
   { no: '04', name: 'Repertoire register', desc: 'Works, language, key and study status', input: 'None' },
+  { no: '05', name: 'Recording analysis', desc: 'Pitch, cents, vibrato and spectrogram of an audio file', input: 'Audio file', href: '#/file', ready: 'fa' },
 ];
+
+const COUNT_WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+/** "Two tools are ready. The others are planned and not built yet." The count comes from the table. */
+function readyLede(): string {
+  const n = TOOLS.filter((t) => t.href).length;
+  const others = TOOLS.length > n ? ' The others are planned and not built yet.' : '';
+  return `${COUNT_WORDS[n] ?? n} ${n === 1 ? 'tool is' : 'tools are'} ready.${others}`;
+}
 
 function row(t: Tool): string {
   const built = !!t.href;
   const name = built
     ? `<a class="irow-link" href="${t.href}">${t.name}</a>`
     : t.name;
-  // Voice analysis readiness comes from the secure-page and browser-audio checks (voiceStatus below).
+  // Readiness per row (M2-DESIGN.md 1.4): Voice analysis from the secure-page and browser-audio checks
+  // (voiceStatus below), Recording analysis from Worker and decodeAudioData (fileStatus below).
   const status = built
-    ? `<span class="dot" aria-hidden="true" data-va-dot></span><span data-va-status>Checking…</span>`
+    ? `<span class="dot" aria-hidden="true" data-${t.ready}-dot></span><span data-${t.ready}-status>Checking…</span>`
     : `<span class="dot" aria-hidden="true"></span><span class="tag-notbuilt">Not built yet</span>`;
   return `
   <div role="row" data-built="${built}"${t.no === '01' ? ' data-selected' : ''}>
@@ -39,7 +49,7 @@ const html = `
     <div class="ph-text">
       <p class="eyebrow">Tools</p>
       <h1 id="tools-title" tabindex="-1">Tools</h1>
-      <p class="lede">Voice analysis is ready. The other tools are planned and not built yet.</p>
+      <p class="lede">${readyLede()}</p>
     </div>
   </header>
 
@@ -88,10 +98,16 @@ function voiceStatus(): { ok: boolean; text: string } {
   return { ok: true, text: 'Ready' };
 }
 
-function paintVoiceStatus(root: HTMLElement) {
-  const s = voiceStatus();
-  for (const el of root.querySelectorAll<HTMLElement>('[data-va-status]')) el.textContent = s.text;
-  for (const el of root.querySelectorAll<HTMLElement>('[data-va-dot]')) {
+/** Ready when the browser has Worker and decodeAudioData (M2-DESIGN.md 1.4, row 05). */
+function fileStatus(): { ok: boolean; text: string } {
+  const ok = typeof Worker === 'function'
+    && typeof OfflineAudioContext === 'function' && typeof OfflineAudioContext.prototype.decodeAudioData === 'function';
+  return ok ? { ok, text: 'Ready' } : { ok, text: 'Not available in this browser' };
+}
+
+function paintStatus(root: HTMLElement, key: 'va' | 'fa', s: { ok: boolean; text: string }) {
+  for (const el of root.querySelectorAll<HTMLElement>(`[data-${key}-status]`)) el.textContent = s.text;
+  for (const el of root.querySelectorAll<HTMLElement>(`[data-${key}-dot]`)) {
     el.classList.toggle('dot-ok', s.ok);
     el.classList.toggle('dot-error', !s.ok && s.text !== 'Checking…');
   }
@@ -106,7 +122,8 @@ export function toolsRoute(root: HTMLElement): Route {
     enter() {
       runPassiveChecks();
       repaintFields(root);
-      paintVoiceStatus(root);
+      paintStatus(root, 'va', voiceStatus());
+      paintStatus(root, 'fa', fileStatus());
     },
   };
 }

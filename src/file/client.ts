@@ -80,7 +80,7 @@ export async function analyseFile(file: File, opts: AnalyseFileOptions = {}): Pr
         if (m.job !== job || !live()) return;
         if (m.kind === 'progress') progress(m.fraction, 'analysing');
         else if (m.kind === 'result') resolve(m.result);
-        else reject(new TakeError(m.code as TakeErrorCode, m.message));
+        else reject(new TakeError(m.code as TakeErrorCode, m.message, { durationS: m.durationS }));
       };
       // onerror: the Worker failed to load or crashed. Its message is passed on as is.
       w.onerror = (e: ErrorEvent) => {

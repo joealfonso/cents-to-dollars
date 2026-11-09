@@ -3,7 +3,7 @@
 // route only if no newer navigation started meanwhile. Then it sets the title, the nav marker and focuses h1.
 // Screen changes run inside a view transition where the browser supports one (styles in app.css).
 
-export type RouteName = 'overview' | 'tools' | 'voice' | 'methods' | 'about' | 'notfound' | 'legacy';
+export type RouteName = 'overview' | 'tools' | 'voice' | 'file' | 'methods' | 'about' | 'notfound' | 'legacy';
 
 export interface Route {
   /** document.title. Overview is the bare app name. */
@@ -29,6 +29,7 @@ const PATHS: Record<string, RouteName> = {
   '': 'overview',
   tools: 'tools',
   voice: 'voice',
+  file: 'file',
   methods: 'methods',
   about: 'about',
   legacy: 'legacy',

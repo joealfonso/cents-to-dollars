@@ -1,0 +1,234 @@
+/* Recording analysis, #/file (M2-DESIGN.md 2.1 to 2.3, 3, 6, 7). Values come from tokens; per-theme
+   differences are :root[data-theme="loud"] overrides only. Never animated: numbers, figures, the cursor, zoom
+   and pan (7). Animated: the panel body crossfade on a state change, the drag-over overlay, and the
+   indeterminate decode sweep (the mic is off on this route). All of them are instant under reduced motion
+   and data-motion="off" through the duration tokens, and the sweep becomes a static bar. */
+
+[data-route="file"] [hidden] { display: none !important; }
+
+.fa-route {
+  --fa-axis-w: 72px;
+  /* Room for the time cursor's focus ring (width plus offset) on every side of the plot column, so the ring
+     never covers the axis labels, the cursor line text above or the legend below (WCAG 2.4.11). */
+  --fa-ring: calc(var(--focus-w) + var(--focus-offset));
+  --fa-gap: calc(var(--fa-ring) + var(--s-1));
+}
+:root[data-theme="loud"] .fa-route { --fa-axis-w: 84px; }
+@media (max-width: 599px) {
+  .fa-route { --fa-axis-w: 56px; }
+  :root[data-theme="loud"] .fa-route { --fa-axis-w: 64px; }
+}
+
+.fa-content { position: relative; display: grid; gap: var(--gap-panel); }
+.fa-line { margin: 0; max-width: 62ch; color: var(--ink-2); }
+.fa-notice { font-weight: var(--t-body-strong); color: var(--ink); }
+
+/* ---------------------------------------------------------------- file strip (3.2) */
+.fa-info { margin: 0; display: flex; flex-wrap: wrap; }
+.fa-i {
+  display: grid; align-content: start; gap: var(--s-1);
+  padding: var(--row-pad); min-width: 0;
+  border-right: var(--divider-w) solid var(--divider-c);
+}
+.fa-i:last-child { border-right: 0; }
+.fa-i[data-k="name"] { flex: 1 1 16rem; }
+.fa-i[data-k="rate"] { flex: 0 1 16rem; }
+.fa-i-label { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); }
+.fa-i-body { margin: 0; display: grid; gap: var(--s-1); min-width: 0; }
+.fa-i-value { font-weight: var(--t-body-strong); overflow-wrap: anywhere; }
+.fa-name { overflow-wrap: anywhere; }
+.fa-i-note { font: var(--t-body-s); color: var(--muted); }
+a.fa-i-note { color: var(--ink); }
+.fa-marker { margin: 0; padding: 0 var(--s-4) var(--s-2); }
+.fa-linkbtn {
+  min-height: var(--control-h); padding: 0; border: 0; background: none; cursor: pointer;
+  font: var(--t-body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px;
+}
+:root[data-theme="loud"] .fa-linkbtn { text-decoration-thickness: 2px; font-weight: var(--t-body-strong); }
+@media (max-width: 599px) {
+  .fa-info { display: grid; }
+  .fa-i { grid-template-columns: minmax(0, 1fr); border-right: 0; border-bottom: var(--divider-w) solid var(--divider-c); }
+  .fa-i:last-child { border-bottom: 0; }
+}
+
+/* A4 stepper (DESIGN.md 2.8) */
+.fa-a4 { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); max-width: 100%; }
+.fa-step { width: 48px; min-width: 48px; height: 48px; min-height: 48px; padding: 0; font: var(--t-display-3); }
+.fa-a4-input {
+  width: 7ch; min-width: 0; height: 48px; padding: 0 var(--s-2); text-align: center;
+  font: var(--t-display-3); letter-spacing: var(--t-display-3-ls); font-variant-numeric: tabular-nums;
+  color: var(--ink); background: var(--panel); border: var(--border-w) solid var(--ink); border-radius: var(--radius);
+}
+.fa-a4-input[aria-invalid="true"] { border-color: var(--state-error); box-shadow: inset 0 0 0 1px var(--state-error); }
+:root[data-theme="loud"] .fa-a4-input[aria-invalid="true"] { border-color: var(--ink); border-style: dashed; }
+.fa-a4-unit { color: var(--muted); }
+.fa-a4-error { margin: 0; padding: 0 var(--s-4) var(--s-2); color: var(--state-error); font-weight: var(--t-body-strong); }
+.fa-a4-error:empty { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+:root[data-theme="loud"] .fa-a4-error { color: var(--ink); }
+
+/* ---------------------------------------------------------------- layout (3.2) */
+.fa-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--gap-panel); align-items: start; }
+.fa-grid > * { grid-column: 1 / -1; min-width: 0; }
+@media (min-width: 960px) {
+  .fa-route[data-state="done"] .fa-main,
+  .fa-route[data-state="nopitch"] .fa-main { grid-column: 1 / span 8; grid-row: 1; }
+  .fa-route[data-state="done"] .fa-readings,
+  .fa-route[data-state="nopitch"] .fa-readings { grid-column: 9 / span 4; grid-row: 1; position: sticky; top: var(--s-4); }
+}
+@media (max-width: 959px) { .fa-grid { column-gap: 0; } }
+
+.fa-body { padding: var(--s-4); }
+.fa-body > * + * { margin-top: var(--s-3); }
+.fa-body > .fa-cursor-line { margin-top: var(--s-2); }
+.fa-body > .fa-plots { margin-top: calc(var(--fa-ring) + var(--s-1)); }
+@media (max-width: 599px) { .fa-body { padding: var(--s-3); } }
+/* Panel body crossfade on a state change (7). Figures are excluded in file.ts. */
+.fa-enter { animation: fa-fade var(--dur-base) var(--ease-standard) both; }
+@keyframes fa-fade { from { opacity: 0; } }
+
+.fa-drop { padding: var(--s-6) var(--s-4); }
+.fa-drop .panel-title { margin-bottom: var(--s-2); }
+
+/* ---------------------------------------------------------------- messages and errors (3.3) */
+.fa-message { margin: 0; font: var(--t-display-3); letter-spacing: var(--t-display-3-ls); max-width: 46ch; }
+.fa-error { display: grid; gap: var(--s-3); }
+.fa-error-text { margin: 0; max-width: 62ch; color: var(--state-error); font-weight: var(--t-body-strong); }
+:root[data-theme="loud"] .fa-error-text { color: var(--ink); }
+.fa-error .prose + .disclosure, .fa-error-text + .disclosure { margin-top: 0; }
+.fa-error-more { border: var(--border-w) solid var(--ink); }
+.fa-error-raw { margin: 0; padding: var(--row-pad); font: var(--t-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------- progress block (2.3) */
+.progress-text { margin: 0; font-weight: var(--t-body-strong); overflow-wrap: anywhere; }
+.progress-bar {
+  position: relative; overflow: hidden;
+  height: 8px; background: var(--hover); border: 1px solid var(--ink);
+}
+:root[data-theme="loud"] .progress-bar { height: 12px; border-width: 2px; background: var(--panel); }
+/* Determinate: the fill is set per message with no transition, so it never shows a value the worker did not send. */
+.progress-fill { position: absolute; inset: 0; background: var(--state-working); transform-origin: left center; transform: scaleX(0); }
+/* Indeterminate (decoding has no progress events): the working sweep, because the mic is off here (rule 3). */
+.progress-bar[data-mode="indeterminate"] .progress-fill { right: auto; width: 40%; transform: none; animation: fa-sweep var(--dur-sweep) linear infinite; }
+@keyframes fa-sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+/* Static bar under reduced motion, with automation off, and while any mic capture is on. */
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar[data-mode="indeterminate"] .progress-fill { animation: none; width: 100%; opacity: 0.5; }
+}
+html[data-motion="off"] .progress-bar[data-mode="indeterminate"] .progress-fill,
+html[data-live="on"] .progress-bar[data-mode="indeterminate"] .progress-fill { animation: none; width: 100%; opacity: 0.5; }
+.progress-why { margin: 0; max-width: 62ch; font: var(--t-body-s); color: var(--muted); }
+.progress-actions { margin: 0; }
+
+/* ---------------------------------------------------------------- figure stack (2.1) */
+.fa-axis-spacer { display: block; }
+.fa-ov-row, .fa-taxis-row, .fa-plot { display: grid; grid-template-columns: var(--fa-axis-w) minmax(0, 1fr); column-gap: var(--fa-gap); }
+.fa-ov-wrap { position: relative; border: var(--border-w) solid var(--ink); background: var(--surface-plot); cursor: pointer; touch-action: none; }
+.fa-ov-wrap canvas { display: block; width: 100%; height: 100%; }
+.fa-ov-rect {
+  position: absolute; top: 0; bottom: 0; pointer-events: none;
+  border: 2px solid var(--plot-energy); box-shadow: inset 0 0 0 1px var(--surface-plot);
+}
+
+.fa-viewbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-4); }
+.fa-view-text { margin: 0; font: var(--t-body-s); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.fa-view-btns { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.fa-vbtn { padding: 0 var(--s-3); }
+.fa-vbtn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+@media (hover: hover) { .fa-vbtn[aria-disabled="true"]:hover { background: var(--panel); color: var(--ink); } }
+:root[data-theme="loud"] .fa-vbtn { font-size: 14px; }
+
+.fa-cursor-line { margin: 0; min-height: 1lh; font-weight: var(--t-body-strong); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.fa-plots { position: relative; display: grid; gap: var(--s-4); }
+.fa-fig { margin: 0; display: grid; gap: var(--s-2); }
+.fa-fig-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3); padding-left: calc(var(--fa-axis-w) + var(--fa-gap)); }
+.fa-fig-title { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--ink); }
+.fa-fig-cap { font: var(--t-caption); color: var(--ink-2); }
+@media (max-width: 599px) { .fa-fig-head { padding-left: 0; } }
+
+.fa-yaxis { position: relative; margin-top: var(--border-w); } /* lines up with the canvas inside the border */
+.fa-yaxis span {
+  position: absolute; right: 0; left: 0; text-align: right; transform: translateY(-50%);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); color: var(--muted); line-height: 16px;
+}
+.fa-yaxis span[data-align="top"] { transform: none; }
+.fa-yaxis span[data-align="bottom"] { transform: translateY(-100%); }
+:root[data-theme="loud"] .fa-yaxis span { font-size: 12px; line-height: 14px; }
+
+.fa-cwrap { position: relative; border: var(--border-w) solid var(--ink); background: var(--surface-plot); box-sizing: content-box; }
+.fa-cwrap canvas { display: block; width: 100%; height: 100%; }
+#fa-fig-spec { image-rendering: pixelated; }
+.fa-cline {
+  position: absolute; top: 0; bottom: 0; width: 1px; pointer-events: none; transform: translateX(-50%);
+  background: var(--plot-energy); box-shadow: 0 0 0 1px var(--surface-plot);
+}
+:root[data-theme="loud"] .fa-cline { width: 2px; }
+.fa-nopitch { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--s-3); text-align: center; }
+.fa-nopitch p { margin: 0; padding: var(--s-2) var(--s-3); background: var(--panel); color: var(--ink); border: var(--border-w) solid var(--ink); }
+.fa-vib-names { position: absolute; inset: 0; pointer-events: none; }
+/* Row names sit on a plot-coloured chip above the cursor line, so the line never runs through the text. */
+.fa-vib-names { z-index: 1; }
+.fa-vib-names span {
+  position: absolute; left: var(--s-2); padding: 0 var(--s-1); background: var(--surface-plot);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); line-height: 16px; color: var(--plot-energy);
+}
+:root[data-theme="loud"] .fa-vib-names span { font-size: 12px; line-height: 14px; }
+
+/* Ticks are laid out against the canvas content box, inside the plot border, like the marks and the cursor. */
+.fa-taxis { position: relative; height: 20px; margin: 0 var(--border-w); }
+.fa-taxis span {
+  position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.fa-taxis span[data-align="start"] { transform: none; }
+.fa-taxis span[data-align="end"] { transform: translateX(-100%); }
+
+/* The time cursor (2.2): one tab stop over the plot column of every figure. The cursor line itself is drawn
+   per figure (.fa-cline), so it never crosses the captions. */
+.fa-cursor {
+  position: absolute; top: 0; bottom: 0; right: 0; left: calc(var(--fa-axis-w) + var(--fa-gap));
+  z-index: 2; cursor: crosshair; touch-action: pan-y;
+}
+.fa-cursor:focus-visible { outline: var(--focus-w) solid var(--focus); outline-offset: var(--focus-offset); }
+
+.fa-legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6); margin: calc(var(--fa-ring) + var(--s-2)) 0 0; padding: 0 0 0 calc(var(--fa-axis-w) + var(--fa-gap)); list-style: none; font: var(--t-body-s); }
+.fa-legend li { display: inline-flex; align-items: center; gap: var(--s-2); }
+.fa-sw { width: 16px; height: 6px; flex: none; }
+.fa-sw-f0 { background: var(--signal); outline: 1px solid var(--surface-plot); }
+.fa-sw-band { height: 2px; background: var(--plot-band); }
+@media (max-width: 599px) { .fa-legend { padding-left: 0; } }
+.fa-figs-about { border: var(--border-w) solid var(--ink); }
+
+/* ---------------------------------------------------------------- readings, about, details */
+.fa-kv-note { flex-basis: 100%; font: var(--t-body-s); color: var(--muted); }
+.fa-r-details { border-top: var(--border-w) solid var(--ink); }
+.fa-notes { display: grid; gap: var(--s-2); }
+.fa-notes-title { margin: 0; font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--ink); }
+.fa-notes-title:focus { outline: none; }
+.fa-notes-title:focus-visible { outline: var(--focus-w) solid var(--focus); outline-offset: var(--focus-offset); }
+.fa-notes-list { margin: 0; padding-left: var(--s-4); color: var(--ink-2); }
+.fa-notes-list li + li { margin-top: var(--s-1); }
+
+/* ---------------------------------------------------------------- drag over (3.3) */
+.fa-content > * { transition: opacity var(--dur-fast) var(--ease-standard); }
+.fa-content[data-drag="on"] > :not(.fa-drop-overlay) { opacity: 0.3; }
+.fa-drop-overlay {
+  position: absolute; inset: calc(-1 * var(--s-2)); z-index: 5; pointer-events: none;
+  border: calc(var(--border-w) * 2) dashed var(--ink);
+  animation: fa-fade var(--dur-fast) var(--ease-standard) both;
+}
+.fa-drop-overlay p {
+  position: sticky; top: 40vh; margin: var(--s-16) auto; width: fit-content; max-width: calc(100% - 2 * var(--s-4));
+  padding: var(--s-3) var(--s-4); background: var(--panel); border: var(--border-w) solid var(--ink);
+  font: var(--t-display-3); letter-spacing: var(--t-display-3-ls); text-align: center;
+}
+
+/* ---------------------------------------------------------------- forced colours (6) */
+@media (forced-colors: active) {
+  .fa-cline { forced-color-adjust: none; background: CanvasText; box-shadow: 0 0 0 1px Canvas; }
+  .fa-ov-rect { forced-color-adjust: none; border-color: CanvasText; box-shadow: none; }
+  .progress-fill { forced-color-adjust: none; background: CanvasText; }
+  .fa-sw-f0, .fa-sw-band { forced-color-adjust: none; background: CanvasText; }
+  .fa-vib-names span { color: CanvasText; background: Canvas; }
+  .fa-drop-overlay { border-color: CanvasText; }
+}

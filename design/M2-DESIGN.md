@@ -227,6 +227,7 @@ Below the header:
 - Note: "{note}", or "No pitch at this time".
 - Pitch: "{hz} Hz" (1 decimal), or "No pitch".
 - Off by: "{n} cents {flat|sharp} of {note}", or "No pitch".
+- "No pitch" is for an unvoiced frame in a take that has pitch. In the "Done, no pitch found" state (3.3), every reading says "No pitch at this time" instead.
 - Vibrato: "{r} per second, ±{e} cents", with the note "window {a} to {b} s". The window shown is the one whose middle is nearest the cursor. Empty: "No vibrato found in the window {a} to {b} s". Before the first full window: "No window covers this time".
 - Details (collapsed): F0 (2 decimals), deviation "{±c.c} c from {note} ({target} Hz)", level "{rmsDb} dBFS". If built (**CUTTABLE**, spec 4.4): the band ratio for the take.
 
@@ -653,3 +654,5 @@ Also carried from DESIGN.md: OPEN 1 (reduced motion and fades), which applies to
 Revision 3.1 (2026-11-08): Q1 decided, Option B. Option A states (file "Sample rate not supported", exercise "Rate not supported", `fa-rate-error`, `ex-rate-error`) are not built. D21 is moot.
 
 Revision 3.2 (2026-11-08): longest take is 10 minutes (spec Q2, part decided). Assumption 3 updated. D5 still needs her typical take length.
+
+Revision 3.3 (2026-11-09): 3.2 and 3.3 reconciled on the no-pitch wording (found by test-writer). "No pitch" for an unvoiced frame, "No pitch at this time" everywhere when the whole take has no pitch.

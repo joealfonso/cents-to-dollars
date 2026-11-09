@@ -17,6 +17,13 @@ const NOT_BUILT: [title: string, desc: string][] = [
   ['Sessions', 'Saved takes and notes'],
 ];
 
+// More tools (M2-DESIGN.md 1.5): built tools other than Voice analysis, as link rows. Interval recognition and
+// Sung exercises join this list when their routes exist; until then they stay out (and Aural skills stays in
+// Not built yet), so no row links to Not found.
+const MORE_TOOLS: [title: string, desc: string, href: string][] = [
+  ['Open a recording', 'Pitch, cents, vibrato and spectrogram of an audio file, analysed in this browser.', '#/file'],
+];
+
 const FEATURES: [title: string, desc: string][] = [
   ['The note you are on', 'The nearest note, large enough to read from across the room, and how many cents sharp or flat you are. 100 cents is one half step.'],
   ['Your vibrato', 'How many times a second your pitch swings, and how wide the swing is.'],
@@ -93,7 +100,19 @@ const html = `
       <dl class="kv-list">${CHECKS.map(fieldRow).join('')}</dl>
     </details>
 
-    <section class="panel col-5" aria-labelledby="ov-notbuilt-title">
+    <div class="col-5 ov-side">
+    <section class="panel" aria-labelledby="ov-more-title">
+      <div class="strip"><h2 class="strip-title" id="ov-more-title">More tools</h2></div>
+      <ul class="rows" role="list">
+        ${MORE_TOOLS.map(([t, d, href]) => `
+        <li class="row" role="listitem">
+          <a class="row-title link" href="${href}">${t}</a>
+          <span class="row-desc">${d}</span>
+        </li>`).join('')}
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="ov-notbuilt-title">
       <div class="strip"><h2 class="strip-title" id="ov-notbuilt-title">Not built yet</h2></div>
       <ul class="rows" role="list">
         ${NOT_BUILT.map(([t, d]) => `
@@ -104,6 +123,7 @@ const html = `
         </li>`).join('')}
       </ul>
     </section>
+    </div>
   </div>
 </div>`;
 

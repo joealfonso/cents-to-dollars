@@ -23,9 +23,9 @@ import { analyzeVibrato } from '../../dsp/vibrato.ts';
 import { SF_BAND, REF_BAND } from '../../dsp/spectrum.ts';
 import { DEFAULT_YIN } from '../../dsp/yin.ts';
 import { DEFAULT_HOP } from '../../dsp/analyzer.ts';
+import { SPEC_TOP_HZ, readSpecPalette, onSpecPaletteChange, drawSpecColumn, drawSpecBands, drawSpecF0Halo, drawSpecF0Mark } from '../spectrogram.ts';
 
 // ---------------------------------------------------------------- UI constants (from the legacy main.ts)
-const SPEC_TOP_HZ = 4000;
 const VIB_WINDOW_S = 2.5;
 const HISTORY_MAX = 4000;
 /** Level bar range, a display choice: the left end of the bar is this many dBFS. */
@@ -274,31 +274,8 @@ export function voiceRoute(root: HTMLElement): Route {
   let ringX = 0; // next column to write; columns [ringX, W) are the oldest
   const col = rg ? rg.createImageData(1, RING_H) : null;
 
-  type Rgba = [number, number, number, number];
-  function toRgba(c: string): Rgba {
-    if (!rg) return [0, 0, 0, 1];
-    rg.fillStyle = '#000';
-    rg.fillStyle = c;
-    const s = String(rg.fillStyle);
-    if (s[0] === '#') return [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16), 1];
-    const m = s.match(/[\d.]+/g);
-    return m ? [Number(m[0]), Number(m[1]), Number(m[2]), m[3] === undefined ? 1 : Number(m[3])] : [0, 0, 0, 1];
-  }
-  function readPalette() {
-    const cs = getComputedStyle(document.documentElement);
-    const v = (n: string, fb: string) => cs.getPropertyValue(n).trim() || fb;
-    const surface = toRgba(v('--surface-plot', '#FBFAF6'));
-    const energy = toRgba(v('--plot-energy', '#141413'));
-    const ramp = Array.from({ length: 256 }, (_, i): Rgba => {
-      const t = i / 255;
-      return [0, 1, 2].map((k) => Math.round(surface[k] + (energy[k] - surface[k]) * t)).concat(1) as Rgba;
-    });
-    const band = toRgba(v('--plot-band', 'rgba(228,64,27,0.35)'));
-    const sameAsSurface = [0, 1, 2].every((k) => band[k] === surface[k]);
-    return { surface, ramp, f0: toRgba(v('--signal', '#E4401B')), band, bandHalo: sameAsSurface ? toRgba(v('--ink', '#0A0A0A')) : surface };
-  }
-  let pal = readPalette();
-  document.addEventListener('themechange', () => { pal = readPalette(); }); // from the next column (6.9)
+  let pal = readSpecPalette();
+  onSpecPaletteChange(() => { pal = readSpecPalette(); }); // from the next column (6.9)
 
   /** Bitmap = CSS size x devicePixelRatio, so the plot is sharp at any zoom. Skipped while the route is hidden. */
   function sizeCanvas() {
@@ -322,23 +299,13 @@ export function voiceRoute(root: HTMLElement): Route {
   }
 
   function clearCanvas() {
-    pal = readPalette();
+    pal = readSpecPalette();
     if (!rg) return;
     const [r, gg, b] = pal.surface;
     rg.fillStyle = `rgb(${r},${gg},${b})`;
     rg.fillRect(0, 0, RING_W, RING_H);
     ringX = 0;
     paint();
-  }
-
-  const rowOf = (hz: number) => Math.round(RING_H - 1 - (hz / SPEC_TOP_HZ) * (RING_H - 1));
-  function put(d: Uint8ClampedArray, y: number, c: Rgba) {
-    if (y < 0 || y >= RING_H) return;
-    const i = y * 4, a = c[3];
-    d[i] = Math.round(c[0] * a + d[i] * (1 - a));
-    d[i + 1] = Math.round(c[1] * a + d[i + 1] * (1 - a));
-    d[i + 2] = Math.round(c[2] * a + d[i + 2] * (1 - a));
-    d[i + 3] = 255;
   }
 
   /** Writes the queued frames into the ring. Returns true if anything was drawn. */
@@ -349,27 +316,10 @@ export function voiceRoute(root: HTMLElement): Route {
     if (cols.length > RING_W) cols = cols.slice(-RING_W);
     const N = DEFAULT_YIN.bufferSize, d = col.data;
     for (const f of cols) {
-      for (let y = 0; y < RING_H; y++) {
-        let c = pal.surface;
-        if (f.power) {
-          const hz = ((RING_H - 1 - y) / (RING_H - 1)) * SPEC_TOP_HZ;
-          const p = f.power[Math.round((hz * N) / fs)] ?? 0;
-          const db = 10 * Math.log10(p + 1e-12);
-          const v = Math.max(0, Math.min(1, (db + 20) / 80)); // -20..60 dB of raw FFT power, as on the legacy page
-          if (v > 0) c = pal.ramp[Math.round(v * 255)];
-        }
-        const i = y * 4;
-        d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
-      }
-      // Band lines get a 1px halo like the F0 mark so they read on mid-grey energy (1.4.11). In Loud the line
-      // colour is the plot colour, so the halo there is ink.
-      for (const hz of SF_BAND) { const y = rowOf(hz); put(d, y - 1, pal.bandHalo); put(d, y + 1, pal.bandHalo); put(d, y, pal.band); }
-      if (f.voiced && f.f0 > 0) {
-        // F0 mark with a 1px halo in the plot colour, so it reads on mid-grey energy (1.4)
-        const y = rowOf(f.f0);
-        put(d, y - 3, pal.surface); put(d, y + 3, pal.surface);
-        for (let k = -2; k <= 2; k++) put(d, y + k, pal.f0);
-      }
+      drawSpecColumn(d, 0, 4, RING_H, f.power ?? null, N / fs, pal);
+      // Band lines and the F0 mark (with its 1px halo) as on the take figures (src/app/spectrogram.ts).
+      drawSpecBands(d, 0, 4, RING_H, pal);
+      if (f.voiced && f.f0 > 0) { drawSpecF0Halo(d, 0, 4, RING_H, f.f0, pal); drawSpecF0Mark(d, 0, 4, RING_H, f.f0, pal); }
       rg.putImageData(col, ringX, 0);
       ringX = (ringX + 1) % RING_W;
     }

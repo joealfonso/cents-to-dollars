@@ -10,7 +10,8 @@
 //   analysis-failed     the analysis threw for another reason
 //   cancelled           the job was stopped before it finished
 //   too-large           the file is over MAX_FILE_BYTES (checked before reading)
-//   too-long            the take is over MAX_DURATION_S (checked before the big allocations where possible)
+//   too-long            the take is over MAX_DURATION_S (checked before the big allocations where possible);
+//                       `durationS` carries the take's length in seconds when it is known
 
 export type TakeErrorCode =
   | 'not-wav'
@@ -27,9 +28,12 @@ export type TakeErrorCode =
 
 export class TakeError extends Error {
   code: string;
-  constructor(code: TakeErrorCode, message?: string) {
+  /** Length of the take in seconds, when the error is about it ('too-long') and it is known. */
+  durationS?: number;
+  constructor(code: TakeErrorCode, message?: string, extra?: { durationS?: number }) {
     super(message ?? code);
     this.name = 'TakeError';
     this.code = code;
+    if (extra?.durationS !== undefined) this.durationS = extra.durationS;
   }
 }

@@ -25,7 +25,7 @@ export type TakeJob = { job: number } & TakeInput;
 export type TakeWorkerMessage =
   | { job: number; kind: 'progress'; fraction: number }
   | { job: number; kind: 'result'; result: TakeResult }
-  | { job: number; kind: 'error'; code: string; message: string };
+  | { job: number; kind: 'error'; code: string; message: string; durationS?: number };
 
 const post = (m: TakeWorkerMessage, transfer: Transferable[] = []) => self.postMessage(m, { transfer });
 
@@ -35,7 +35,10 @@ function codeOf(err: unknown): string {
   if (err instanceof RangeError && OOM.test(err.message)) return 'out-of-memory';
   return 'analysis-failed';
 }
-const fail = (job: number, err: unknown) => post({ job, kind: 'error', code: codeOf(err), message: String(err) });
+const fail = (job: number, err: unknown) => post({
+  job, kind: 'error', code: codeOf(err), message: String(err),
+  ...(err instanceof TakeError && err.durationS !== undefined ? { durationS: err.durationS } : {}),
+});
 
 function analyse(job: number, mono: Float64Array, sampleRate: number): void {
   try {

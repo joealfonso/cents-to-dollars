@@ -7,6 +7,7 @@ import { createRouter, type Route, type RouteName } from './router.ts';
 import { overviewRoute } from './views/overview.ts';
 import { toolsRoute } from './views/tools.ts';
 import { voiceRoute } from './views/voice.ts';
+import { fileRoute } from './views/file.ts';
 import { methodsRoute } from './views/methods.ts';
 import { aboutRoute } from './views/about.ts';
 import { notFoundRoute } from './views/notfound.ts';
@@ -24,11 +25,20 @@ const routes: Record<RouteName, Route> = {
   overview: overviewRoute(section('overview')),
   tools: toolsRoute(section('tools')),
   voice: voiceRoute(section('voice')),
+  file: fileRoute(section('file')),
   methods: methodsRoute(section('methods')),
   about: aboutRoute(section('about')),
   notfound: notFoundRoute(section('notfound')),
   legacy: legacyRoute(section('legacy')),
 };
+
+// Dropped files (M2-DESIGN.md 1.6): left alone, the browser opens a dropped file in the tab, which leaves the
+// app and stops a running mic session. Every route cancels that default; only #/file (views/file.ts) reads
+// the file. Other routes ignore it with no message.
+const carriesFiles = (e: DragEvent) => !!e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files');
+for (const type of ['dragover', 'drop'] as const) {
+  window.addEventListener(type, (e) => { if (carriesFiles(e)) e.preventDefault(); });
+}
 
 const router = createRouter(routes);
 router.start();

@@ -74,7 +74,7 @@ export function readWavInfo(bytes: ArrayBuffer | Uint8Array): WavInfo {
 export function parseWav(bytes: ArrayBuffer | Uint8Array): ParsedWav {
   const info = readWavInfo(bytes);
   const durationS = info.frames / info.sampleRate;
-  if (durationS > MAX_DURATION_S) throw new TakeError('too-long', `take is ${durationS.toFixed(1)} s, the limit is ${MAX_DURATION_S} s`);
+  if (durationS > MAX_DURATION_S) throw new TakeError('too-long', `take is ${durationS.toFixed(1)} s, the limit is ${MAX_DURATION_S} s`, { durationS });
   const dv = view(bytes);
   const { channels, format, bitsPerSample: bits, dataOffset, frames } = info;
   const bps = bits / 8;

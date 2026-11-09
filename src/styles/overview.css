@@ -66,7 +66,9 @@
 }
 .ov-ref-head .label { color: var(--muted); }
 /* Paper: reference panels step back to rule-coloured borders so the bands above lead. Loud keeps its frames. */
-:root:not([data-theme="loud"]) .ov-ref > .panel { border-color: var(--rule); }
+:root:not([data-theme="loud"]) .ov-ref > .panel,
+:root:not([data-theme="loud"]) .ov-ref .ov-side > .panel { border-color: var(--rule); }
+.ov-side { display: grid; gap: var(--gap-panel); min-width: 0; }
 :root:not([data-theme="loud"]) .ov-ref .strip { border-bottom-color: var(--rule); }
 :root:not([data-theme="loud"]) .ov-ref details.disclosure { --disclosure-rule: var(--rule); }
 :root:not([data-theme="loud"]) .ov-ref .strip { color: var(--muted); }
