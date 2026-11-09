@@ -20,7 +20,7 @@ Every constant named here (`MAX_DURATION_S`, `VIB_WINDOW_S`, `MIN_HOLD_S`, `TONE
 **Assumptions that carry decisions.**
 1. On the singing screens (Sustain, Pitch match) she reads from 1 to 2 m, same as M1. This carries the single-slot layout and the large phase cue. Test: watch one session, as in DESIGN.md section 0.
 2. On Recording analysis and Interval recognition she sits at the desk with mouse or keyboard. This carries the dense figure stack and normal-size text. Test: same session. If she listens to intervals from across the room, the answer buttons need the Loud sizes in both themes.
-3. Her phone takes are short (a phrase or an exercise, not a full rehearsal). This carries the default zoom (section 3.4). Test: ask for her longest take, which also answers Q2.
+3. Her longest realistic take is 10 minutes (owner, 2026-11-08), so the file view must work at that length. Her typical take is still assumed short (a phrase or an exercise). This carries the default zoom (section 3.4). Test: ask for her typical take length (D5).
 
 **Not doing in M2, and why.**
 - No take summary on the file view (spec non-goal). The file view shows measurements over time only.
@@ -651,3 +651,5 @@ Also carried from DESIGN.md: OPEN 1 (reduced motion and fades), which applies to
 6. Criterion numbers and spec section references updated to revision 2. Sections 5.4 to 5.6 are renumbered 5.5 to 5.7.
 
 Revision 3.1 (2026-11-08): Q1 decided, Option B. Option A states (file "Sample rate not supported", exercise "Rate not supported", `fa-rate-error`, `ex-rate-error`) are not built. D21 is moot.
+
+Revision 3.2 (2026-11-08): longest take is 10 minutes (spec Q2, part decided). Assumption 3 updated. D5 still needs her typical take length.
