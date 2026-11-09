@@ -3,6 +3,10 @@
 Local-first practice and study tools. M1 and M1.1 contain only the measurement core and a bare test page.
 For practice and study. Not a diagnostic or medical device.
 
+M2 (planned, not built, branch `m2`): open an audio file and analyse the take, reference tones and interval recognition, and sung exercises (Sustain a note, Pitch match).
+
+- `specs/M2.md`: M2 build spec, milestones M2.1 to M2.3, numbered acceptance criteria, OPEN owner questions in section 10.
+- `design/M2-DESIGN.md`: M2 screens. `design/M2-REVIEW-CARD.md`: pre-build review follow-ups.
 - `MEASUREMENT.md`: exact definition of every measurement, with sources.
 - `VALIDATION.md`: results against the M1 criteria, failures included, and open questions.
 
