@@ -54,6 +54,11 @@ function paint(row: HTMLElement, u: FieldUpdate) {
   action.replaceChildren(a);
 }
 
+/** The last update for a field, if it has been checked. */
+export function getField(name: FieldName): FieldUpdate | undefined {
+  return last.get(name);
+}
+
 /** Re-applies the last known values to rows rendered after the update (for example a view rendered later). */
 export function repaintFields(root: ParentNode = document): void {
   for (const row of root.querySelectorAll<HTMLElement>('[data-field]')) {
@@ -84,6 +89,8 @@ function micPermissionUpdate(state: PermissionState): FieldUpdate {
 }
 
 let started = false;
+/** How long the Permissions API gets before the row says "Not reported by this browser". */
+const PERMISSION_TIMEOUT_MS = 2000;
 
 /** Fills every no-mic field once and keeps the permission row current. Safe to call more than once. */
 export function runPassiveChecks(): void {
@@ -95,27 +102,35 @@ export function runPassiveChecks(): void {
     ? { status: 'ok', value: 'Yes' }
     : { status: 'error', value: 'No. The microphone needs http://127.0.0.1:5173.' });
 
+  // AudioWorklet only exists on secure pages, so on an insecure page its absence says nothing about the browser.
   const worklet = typeof AudioContext !== 'undefined' && 'audioWorklet' in AudioContext.prototype;
-  setField('browser-audio', worklet
-    ? { status: 'ok', value: 'Available' }
-    : { status: 'error', value: 'Not available in this browser' });
+  setField('browser-audio', !secure
+    ? { status: 'error', value: 'Needs a secure page' }
+    : worklet
+      ? { status: 'ok', value: 'Available' }
+      : { status: 'error', value: 'Not available in this browser' });
 
   setField('a4', { status: 'info', value: `${savedA4()} Hz` });
 
-  // Results from the checks live in memory for this visit only. Phase C fills them from checks.ts.
-  const notRun: FieldUpdate = { status: 'idle', value: 'Not run this visit', action: { label: 'Setup checks', href: '#/methods' } };
-  setField('calibration', notRun);
-  setField('latency', notRun);
-  setField('selftest', notRun);
+  // Results from the checks live in memory for this visit only; Methods writes them. A check that already ran
+  // (Methods visited before Overview or Tools) keeps its result.
+  for (const [name, sub] of [['calibration', 'calibration'], ['latency', 'latency'], ['selftest', 'self-test']] as const) {
+    if (!last.has(name)) setField(name, { status: 'idle', value: 'Not run this visit', action: { label: 'Setup checks', href: `#/methods/${sub}` } });
+  }
 
   const notReported: FieldUpdate = { status: 'idle', value: 'Not reported by this browser' };
   setField('mic-permission', { status: 'idle', value: 'Checking…' });
   if (!navigator.permissions?.query) { setField('mic-permission', notReported); return; }
+  // Some browsers never settle the query; fall back so the row never stays at "Checking…".
+  let answered = false;
+  const timer = window.setTimeout(() => { if (!answered) setField('mic-permission', notReported); }, PERMISSION_TIMEOUT_MS);
   navigator.permissions
     .query({ name: 'microphone' as PermissionName })
     .then((status) => {
+      answered = true;
+      window.clearTimeout(timer);
       setField('mic-permission', micPermissionUpdate(status.state));
       status.addEventListener('change', () => setField('mic-permission', micPermissionUpdate(status.state)));
     })
-    .catch(() => setField('mic-permission', notReported));
+    .catch(() => { answered = true; window.clearTimeout(timer); setField('mic-permission', notReported); });
 }

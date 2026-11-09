@@ -375,11 +375,18 @@ async function ensureLive() {
 }
 
 export async function stopLive() {
+  // A start still waiting on the permission prompt would open the mic after we leave: wait for it, then stop.
+  // If the start failed, ensureLive has already reset the UI; never throw from the router leave hook.
+  if (starting) { try { await starting; } catch { return; } }
   if (!live) return;
   const s = live;
   const hadFocus = document.activeElement === $('live-toggle');
   setLiveUi(true, 'Stopping', 'stopping');
-  await s.stop();
+  try { await s.stop(); }
+  catch (e) {
+    console.error('stop failed', e);
+    s.stream.getTracks().forEach((t) => t.stop()); // release the mic even if closing the context failed
+  }
   cancelAnimationFrame(rafId);
   drawColumns();
   renderReadout();

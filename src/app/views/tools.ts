@@ -2,7 +2,7 @@
 // Unbuilt tools are muted "Not built yet" rows with no links.
 
 import type { Route } from '../router.ts';
-import { fieldRow, repaintFields, runPassiveChecks } from '../fields.ts';
+import { fieldRow, getField, repaintFields, runPassiveChecks } from '../fields.ts';
 import { DEFAULT_YIN } from '../../dsp/yin.ts';
 
 interface Tool { no: string; name: string; desc: string; input: string; href?: string }
@@ -19,15 +19,16 @@ function row(t: Tool): string {
   const name = built
     ? `<a class="irow-link" href="${t.href}">${t.name}</a>`
     : t.name;
+  // Voice analysis readiness comes from the secure-page and browser-audio checks (voiceStatus below).
   const status = built
-    ? `<span class="dot dot-ok" aria-hidden="true"></span>Ready`
+    ? `<span class="dot" aria-hidden="true" data-va-dot></span><span data-va-status>Checking…</span>`
     : `<span class="dot" aria-hidden="true"></span><span class="tag-notbuilt">Not built yet</span>`;
   return `
   <div role="row" data-built="${built}"${t.no === '01' ? ' data-selected' : ''}>
-    <span role="cell" class="ino"><span class="ck" aria-hidden="true">No.</span>${t.no}</span>
+    <span role="cell" class="ino">${t.no}</span>
     <span role="cell" class="iname">${name}</span>
     <span role="cell" class="idesc">${t.desc}</span>
-    <span role="cell" class="iinput"><span class="ck" aria-hidden="true">Input</span>${t.input}</span>
+    <span role="cell" class="iinput"><span class="ck">Input</span>${t.input}</span>
     <span role="cell"><span class="istatus">${status}</span></span>
   </div>`;
 }
@@ -58,7 +59,7 @@ const html = `
     </section>
 
     <section class="panel col-5" aria-labelledby="tools-va-title">
-      <div class="strip"><span class="strip-title">Selected: 01</span><span class="strip-meta">Ready</span></div>
+      <div class="strip"><span class="strip-title">Selected: 01</span><span class="strip-meta" data-va-status>Checking…</span></div>
       <div class="pbody">
         <h2 class="panel-title" id="tools-va-title">Voice analysis</h2>
         <p class="prose">Shows the note you are singing, how many cents sharp or flat you are, your vibrato, and a spectrogram of your voice.</p>
@@ -77,6 +78,25 @@ const html = `
   </div>
 </div>`;
 
+/** Ready only when the page is secure and the browser has AudioWorklet. The microphone is asked for later. */
+function voiceStatus(): { ok: boolean; text: string } {
+  const secure = getField('secure');
+  const audio = getField('browser-audio');
+  if (!secure || !audio) return { ok: false, text: 'Checking…' };
+  if (secure.status !== 'ok') return { ok: false, text: 'Needs a secure page' };
+  if (audio.status !== 'ok') return { ok: false, text: 'Not available in this browser' };
+  return { ok: true, text: 'Ready' };
+}
+
+function paintVoiceStatus(root: HTMLElement) {
+  const s = voiceStatus();
+  for (const el of root.querySelectorAll<HTMLElement>('[data-va-status]')) el.textContent = s.text;
+  for (const el of root.querySelectorAll<HTMLElement>('[data-va-dot]')) {
+    el.classList.toggle('dot-ok', s.ok);
+    el.classList.toggle('dot-error', !s.ok && s.text !== 'Checking…');
+  }
+}
+
 export function toolsRoute(root: HTMLElement): Route {
   root.innerHTML = html;
   root.setAttribute('aria-labelledby', 'tools-title');
@@ -86,6 +106,7 @@ export function toolsRoute(root: HTMLElement): Route {
     enter() {
       runPassiveChecks();
       repaintFields(root);
+      paintVoiceStatus(root);
     },
   };
 }

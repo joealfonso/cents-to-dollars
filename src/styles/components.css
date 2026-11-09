@@ -39,7 +39,11 @@ a.link:hover { color: var(--signal-text); }
 .col-7 { grid-column: span 7; }
 .col-5 { grid-column: span 5; }
 .col-12 { grid-column: span 12; }
-@media (max-width: 959px) { .grid-12 > * { grid-column: 1 / -1; } }
+@media (max-width: 959px) {
+  .grid-12 > * { grid-column: 1 / -1; }
+  /* Everything spans the full row here, so the 11 column gaps would only widen the grid past a 320px screen. */
+  .grid-12 { column-gap: 0; }
+}
 
 /* ---------------------------------------------------------------- panel (2.3) */
 .panel {
@@ -130,21 +134,24 @@ a.link:hover { color: var(--signal-text); }
 @media (max-width: 599px) { .row { grid-template-columns: 1fr; } .row .row-status { grid-row: auto; grid-column: 1; } }
 
 /* ---------------------------------------------------------------- index table (2.5, Tools) */
-.itable { display: block; }
+/* The table sizes to its panel, not the viewport: below 600px of panel width the rows stack. */
+.itable { display: block; container-type: inline-size; }
 .itable [role="row"] {
   position: relative;
-  display: grid; grid-template-columns: 48px minmax(120px, 1fr) minmax(180px, 1.6fr) minmax(96px, 0.8fr) minmax(120px, 0.9fr);
+  display: grid;
+  grid-template-columns: 2.5em minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 0.8fr) minmax(max-content, 0.9fr);
   gap: var(--s-4); align-items: center;
   padding: var(--row-pad);
   border-bottom: var(--divider-w) solid var(--divider-c);
 }
+.itable [role="row"] > * { min-width: 0; overflow-wrap: anywhere; }
 .itable [role="row"]:last-child { border-bottom: 0; }
 .itable .ihead { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); padding-top: var(--s-2); padding-bottom: var(--s-2); }
 .itable .ino { font: var(--t-mono); color: var(--muted); }
 .itable .iname { font-weight: var(--t-body-strong); }
 .itable .idesc { font: var(--t-body-s); color: var(--muted); }
-.itable .istatus { display: inline-flex; align-items: center; gap: var(--s-2); }
-.itable .ck { display: none; } /* compact cell labels */
+.itable .istatus { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.itable .ck { display: none; } /* cell labels for the stacked layout */
 /* A row that is a link: the name link stretches over the row. */
 .itable .irow-link { color: inherit; text-decoration: none; }
 .itable .irow-link::after { content: ""; position: absolute; inset: 0; }
@@ -154,9 +161,11 @@ a.link:hover { color: var(--signal-text); }
 .itable [data-selected] { background: var(--hover); box-shadow: inset 3px 0 0 var(--signal); }
 :root[data-theme="loud"] .itable [data-selected] { box-shadow: inset 8px 0 0 var(--signal); }
 .itable [data-built="false"] { color: var(--muted); }
-@media (max-width: 599px) {
+@container (max-width: 599px) {
   .itable .ihead { display: none; }
-  .itable [role="row"] { grid-template-columns: 1fr; gap: var(--s-1); }
+  /* number and name on the first line, the other cells below */
+  .itable [role="row"] { grid-template-columns: auto minmax(0, 1fr); gap: var(--s-1) var(--s-3); align-items: baseline; }
+  .itable [role="row"] > :nth-child(n + 3) { grid-column: 1 / -1; }
   .itable .ck { display: inline; color: var(--muted); }
   .itable .ck::after { content: ": "; }
 }
@@ -198,8 +207,35 @@ details.disclosure > summary::after {
   transform: rotate(45deg); transition: transform var(--dur-base) var(--ease-standard);
 }
 details.disclosure[open] > summary::after { transform: rotate(-135deg); }
-details.disclosure[open] > summary { border-bottom: var(--border-w) solid var(--ink); }
+/* The rule under an open summary fades with the slide instead of snapping. It is drawn by ::before in the
+   border-w gap that margin-bottom opens below the summary, so the closed and open sizes match the old
+   border-bottom exactly. A border (not a background) so forced-colors mode still shows it. Open: the rule
+   fades in fast. Close: it fades out over the slide. Pages tint it with --disclosure-rule. The transitions
+   live in the @supports block below, so browsers that cannot slide the content swap the rule instantly too. */
+details.disclosure > summary { position: relative; }
+details.disclosure > summary::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; pointer-events: none;
+  border-top: var(--border-w) solid var(--disclosure-rule, var(--ink));
+  opacity: 0;
+}
+details.disclosure[open] > summary { margin-bottom: var(--border-w); }
+details.disclosure[open] > summary::before { opacity: 1; }
 :root[data-theme="loud"] details.disclosure > summary { background: var(--ink); color: var(--on-ink); }
+/* Open and close by sliding height and fading, where the browser can animate height to auto. Elsewhere
+   (including Safari without interpolate-size) it opens instantly as before. Reduced motion and
+   data-motion="off" take the durations to 0 through the tokens. */
+@supports selector(::details-content) and (interpolate-size: allow-keywords) {
+  details.disclosure { interpolate-size: allow-keywords; }
+  details.disclosure::details-content {
+    height: 0; overflow: clip; opacity: 0;
+    transition: height var(--dur-enter) var(--ease-enter), opacity var(--dur-base) var(--ease-standard),
+      content-visibility var(--dur-enter) allow-discrete;
+  }
+  details.disclosure[open]::details-content { height: auto; opacity: 1; }
+  details.disclosure > summary { transition: margin-bottom var(--dur-enter) var(--ease-enter); }
+  details.disclosure > summary::before { transition: opacity var(--dur-enter) var(--ease-standard); }
+  details.disclosure[open] > summary::before { transition: opacity var(--dur-base) var(--ease-standard); }
+}
 .summary-meta { color: var(--muted); margin-left: auto; }
 :root[data-theme="loud"] .summary-meta { color: var(--on-ink); }
 

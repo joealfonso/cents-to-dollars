@@ -5,6 +5,8 @@
 import type { Route } from '../router.ts';
 import { fieldRow, repaintFields, runPassiveChecks, type FieldName } from '../fields.ts';
 import { hasChosenTheme, setTheme } from '../theme.ts';
+import { live } from '../live.ts';
+import '../../styles/overview.css';
 
 const CHECKS: FieldName[] = ['mic-permission', 'browser-audio', 'secure', 'a4', 'calibration', 'latency', 'selftest'];
 
@@ -13,6 +15,21 @@ const NOT_BUILT: [title: string, desc: string][] = [
   ['Source separation', 'Isolate the voice from the accompaniment'],
   ['Repertoire register', 'Works, language, key and study status'],
   ['Sessions', 'Saved takes and notes'],
+];
+
+const FEATURES: [title: string, desc: string][] = [
+  ['The note you are on', 'The nearest note, large enough to read from across the room, and how many cents sharp or flat you are. 100 cents is one half step.'],
+  ['Your vibrato', 'How many times a second your pitch swings, and how wide the swing is.'],
+  ['Your ring', 'How much of your sound sits between 2.5 and 3.5 kHz, where the ring of a trained voice often shows up, so you can watch it change as you adjust.'],
+  ['A picture of your sound', 'A scrolling chart of your voice with your pitch marked on it, so you can see what the numbers mean.'],
+];
+
+const STEPS: [title: string, desc: string][] = [
+  ['Start the microphone', 'Press Start singing, then choose Allow when your browser asks.'],
+  ['Sing a steady note', 'The note and the flat or sharp reading follow you as you sing. Hold a note for a couple of seconds to see your vibrato.'],
+  ['Match your tuning', 'If your piano or ensemble tunes above or below A4 = 440 Hz, change the tuning reference. Every note and cent follows it.'],
+  ['Stop when you are done', 'Nothing was recorded, so there is nothing to delete.'],
+  ['New mic or computer?', 'Run the setup checks once. They tell you how accurate and how delayed your setup is.'],
 ];
 
 const html = `
@@ -35,11 +52,42 @@ const html = `
     </div>
     <div class="ph-action">
       <button type="button" class="btn btn-primary" id="ov-start">Start singing</button>
-      <a class="link" href="#/methods">Setup checks</a>
+      <a class="link ov-setup-link" href="#/methods">Setup checks</a>
     </div>
   </header>
 
-  <div class="grid-12">
+  <section class="panel ov-features" aria-labelledby="ov-what-title">
+    <div class="strip"><h2 class="strip-title" id="ov-what-title">What it shows you</h2></div>
+    <ul class="ov-feature-grid" role="list">
+      ${FEATURES.map(([t, d]) => `
+      <li class="ov-feature" role="listitem"><h3 class="ov-feature-title">${t}</h3><p class="ov-feature-desc">${d}</p></li>`).join('')}
+    </ul>
+  </section>
+
+  <div class="grid-12 ov-use">
+    <section class="panel col-7" aria-labelledby="ov-how-title">
+      <div class="strip"><h2 class="strip-title" id="ov-how-title">How to use it</h2></div>
+      <ol class="ov-steps" role="list">
+        ${STEPS.map(([t, d], i) => `
+        <li class="ov-step" role="listitem"><span class="ov-step-no" aria-hidden="true">${i + 1}</span><span class="ov-step-title">${t}</span><span class="ov-step-desc">${d}</span></li>`).join('')}
+      </ol>
+    </section>
+
+    <section class="col-5 ov-good" aria-labelledby="ov-good-title">
+      <h2 class="ov-good-title" id="ov-good-title">Good to know</h2>
+      <dl class="ov-notes">
+        <div class="ov-note"><dt>Private</dt><dd>Your voice is measured in this browser and thrown away. Nothing is saved or uploaded.</dd></div>
+        <div class="ov-note"><dt>Close, not perfect</dt><dd>The live reading can jump an octave for a moment. If a note looks an octave off, trust your ear and check the picture.</dd></div>
+        <div class="ov-note"><dt>For practice and study</dt><dd>Not a diagnostic or medical device.</dd></div>
+      </dl>
+      <p class="ov-more"><a class="link" href="#/about">How it works, and how it is tested <span class="arrow" aria-hidden="true">→</span></a></p>
+    </section>
+  </div>
+
+  <div class="ov-ref-head">
+    <h2 class="label">Setup and roadmap</h2>
+  </div>
+  <div class="grid-12 ov-ref">
     <details class="panel disclosure col-7" id="ov-checks">
       <summary>Technical checks</summary>
       <dl class="kv-list">${CHECKS.map(fieldRow).join('')}</dl>
@@ -47,9 +95,9 @@ const html = `
 
     <section class="panel col-5" aria-labelledby="ov-notbuilt-title">
       <div class="strip"><h2 class="strip-title" id="ov-notbuilt-title">Not built yet</h2></div>
-      <ul class="rows">
+      <ul class="rows" role="list">
         ${NOT_BUILT.map(([t, d]) => `
-        <li class="row" data-built="false">
+        <li class="row" role="listitem" data-built="false">
           <span class="row-title">${t}</span>
           <span class="row-status"><span class="dot" aria-hidden="true"></span><span class="tag-notbuilt">Not built yet</span></span>
           <span class="row-desc">${d}</span>
@@ -78,7 +126,11 @@ export function overviewRoute(root: HTMLElement): Route {
   // A pick in the header switch also counts as the choice.
   document.addEventListener('themechange', () => syncChoice(root));
 
-  root.querySelector('#ov-start')?.addEventListener('click', () => { location.hash = '#/voice'; });
+  // Start the mic inside the click, so the permission prompt is tied to the gesture, then go to Voice analysis.
+  root.querySelector('#ov-start')?.addEventListener('click', () => {
+    void live.start({ owner: 'voice' });
+    location.hash = '#/voice';
+  });
 
   return {
     title: 'Overview',

@@ -32,18 +32,28 @@ export async function startLive(h: TrackerHandlers): Promise<LiveSession> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
   });
-  const ctx = new AudioContext({ latencyHint: 'interactive' });
-  await loadTracker(ctx);
-  const src = ctx.createMediaStreamSource(stream);
-  const node = makeTrackerNode(ctx, h);
-  const mute = ctx.createGain();
-  mute.gain.value = 0; // keep the graph pulling without sending the mic to the speakers
-  src.connect(node).connect(mute).connect(ctx.destination);
-  return {
-    ctx, stream, node,
-    stop: async () => {
-      stream.getTracks().forEach((t) => t.stop());
-      await ctx.close();
-    },
-  };
+  // Anything that fails after getUserMedia must release the mic and the context before rethrowing,
+  // or the browser's mic indicator stays on and every retry leaks another stream.
+  let made: AudioContext | null = null;
+  try {
+    const ctx = new AudioContext({ latencyHint: 'interactive' });
+    made = ctx;
+    await loadTracker(ctx);
+    const src = ctx.createMediaStreamSource(stream);
+    const node = makeTrackerNode(ctx, h);
+    const mute = ctx.createGain();
+    mute.gain.value = 0; // keep the graph pulling without sending the mic to the speakers
+    src.connect(node).connect(mute).connect(ctx.destination);
+    return {
+      ctx, stream, node,
+      stop: async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        await ctx.close();
+      },
+    };
+  } catch (e) {
+    stream.getTracks().forEach((t) => t.stop());
+    if (made) await made.close().catch(() => { /* already closed or never ran */ });
+    throw e;
+  }
 }

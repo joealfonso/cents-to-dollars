@@ -1,6 +1,7 @@
-/* Phase A token layer over tokens.css (DESIGN.md 1.3 to 1.9). Loaded right after tokens.css, same
-   selectors, so these values win. tokens.css is not edited; fold this file into it once nobody else is
-   working on it. Aliases for the legacy test page (#/legacy) stay until Phase C. */
+/* Phase A token layer over tokens.css (DESIGN.md 1.3 to 1.9). Loaded right after tokens.css with the same
+   selectors, so where both set a token, this file wins. This layer adds the new tokens and changes only the
+   values the spec changes; it can be folded into tokens.css later. Aliases for the legacy test page
+   (#/legacy) stay until Phase C. */
 
 :root,
 :root[data-theme="editorial"] {
@@ -156,9 +157,11 @@
   }
 }
 
-/* Reduced motion (1.2): no rotation, no movement, no transition. Overrides the fades in tokens.css.
-   OPEN 1: to allow short fades, set --rm-dur to the fade length (for example 120ms). It is the only line
-   to change. If tokens.css gains a new --dur-* token, add it here too. */
+/* Reduced motion (1.2): no rotation, no movement, no transition.
+   tokens.css also has a reduced-motion block that keeps 100 to 120ms fades. This block loads later with the
+   same specificity, so it wins: under reduced motion every duration is --rm-dur (0ms). Both stay until the
+   owner decides OPEN 1. To allow short fades, set --rm-dur to the fade length (for example 120ms); it is the
+   only line to change. If tokens.css gains a new --dur-* token, add it here too. */
 @media (prefers-reduced-motion: reduce) {
   :root,
   :root[data-theme="editorial"],
@@ -170,6 +173,7 @@
     --dur-slow: var(--rm-dur);
     --dur-sweep: var(--rm-dur);
     --dur-done: var(--rm-dur);
+    --dur-tune: var(--rm-dur);
     --stagger: 0ms;
     --move-enter: 0px;
     --btn-hover-shift: 0px;

@@ -1,12 +1,14 @@
 // App entry (DESIGN.md 7.2). Fonts, theme switch, mic indicator, skip link, routes.
 
 import './fonts.ts';
+import '../styles/links.css';
 import { initTheme } from './theme.ts';
 import { createRouter, type Route, type RouteName } from './router.ts';
 import { overviewRoute } from './views/overview.ts';
 import { toolsRoute } from './views/tools.ts';
 import { voiceRoute } from './views/voice.ts';
 import { methodsRoute } from './views/methods.ts';
+import { aboutRoute } from './views/about.ts';
 import { notFoundRoute } from './views/notfound.ts';
 import { legacyRoute } from './views/legacy.ts';
 
@@ -23,6 +25,7 @@ const routes: Record<RouteName, Route> = {
   tools: toolsRoute(section('tools')),
   voice: voiceRoute(section('voice')),
   methods: methodsRoute(section('methods')),
+  about: aboutRoute(section('about')),
   notfound: notFoundRoute(section('notfound')),
   legacy: legacyRoute(section('legacy')),
 };

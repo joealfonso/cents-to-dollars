@@ -29,7 +29,9 @@ body {
 /* ---------------------------------------------------------------- focus (1.7) */
 a, button, input, summary, [tabindex] { outline: var(--focus-w) solid transparent; outline-offset: var(--focus-offset); }
 :focus-visible { outline: var(--focus-w) solid var(--focus); outline-offset: var(--focus-offset); }
-h1[tabindex="-1"]:focus { outline: none; } /* focused by the router, not by the user */
+/* The router focuses h1 on every route change. Show the ring when the browser treats that focus as keyboard
+   focus (it follows the last input type), and not after a mouse or touch navigation. */
+h1[tabindex="-1"]:focus:not(:focus-visible) { outline: none; }
 
 /* ---------------------------------------------------------------- skip link */
 .skip {
@@ -75,6 +77,12 @@ h1[tabindex="-1"]:focus { outline: none; } /* focused by the router, not by the 
 :root[data-theme="loud"] .nav a[aria-current="page"] { background: var(--ink); color: var(--on-ink); }
 :root[data-theme="loud"] .nav a[aria-current="page"]::before { display: none; }
 :root[data-theme="loud"] .nav .nav-off { padding: 0 var(--s-3); min-height: var(--control-h); }
+/* Loud header budget (DESIGN.md 3.3): 14px Archivo Black labels and 12px item padding wrap the five-item nav
+   to several rows. A 12px nav label, 8px item padding and a tighter column gap keep it on one row at 1280. */
+:root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { font-size: 12px; line-height: 16px; letter-spacing: 0.02em; padding: 0 var(--s-2); }
+:root[data-theme="loud"] .nav ul { gap: 0 var(--s-1); }
+:root[data-theme="loud"] .nav .tag-notbuilt { padding: 0 var(--s-1); }
+:root[data-theme="loud"] .header-inner { column-gap: var(--s-4); }
 
 /* Mic indicator: the text is filled while html[data-live="on"] (header.ts). */
 .mic-indicator {
@@ -102,6 +110,38 @@ html[data-live="on"] .mic-indicator .dot { display: inline-block; }
 .theme-switch label:has(input:checked) { background: var(--ink); color: var(--on-ink); }
 .theme-switch label:has(input:focus-visible) { outline: var(--focus-w) solid var(--focus); outline-offset: var(--focus-offset); z-index: 1; }
 
+/* Medium (600 to 959px): one row does not fit in Loud, so brand, mic and theme switch go on row 1 and the
+   nav on row 2, in both themes. */
+@media (min-width: 600px) and (max-width: 959px) {
+  .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "brand mic theme" "nav nav nav";
+    column-gap: var(--s-4);
+  }
+  .brand { white-space: normal; min-width: 0; }
+  .nav a, .nav .nav-off { min-height: var(--control-h); }
+  :root[data-theme="loud"] .nav { padding-bottom: var(--s-2); }
+  :root[data-theme="loud"] .brand { font-size: 20px; line-height: 24px; }
+  :root[data-theme="loud"] .theme-switch label { font-size: 12px; }
+  :root[data-theme="loud"] .nav ul { gap: 0; }
+  :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { padding: 0 6px; }
+  /* Loud: the nav stays on one row at 600 (two rows at most in the header), and scrolls if it must. */
+  :root[data-theme="loud"] .nav ul { flex-wrap: nowrap; overflow-x: auto; scroll-padding-inline: calc(var(--focus-w) + var(--focus-offset));
+    padding: calc(var(--focus-w) + var(--focus-offset)); margin: calc(-1 * (var(--focus-w) + var(--focus-offset))); }
+  :root[data-theme="loud"] .nav li { flex: none; }
+  :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { white-space: nowrap; }
+}
+
+/* Loud, 960 to 1279px: brand, mic and theme switch on row 1 and the nav on row 2, same as medium, until the
+   five-item nav fits beside them. */
+@media (min-width: 960px) and (max-width: 1279px) {
+  :root[data-theme="loud"] .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "brand mic theme" "nav nav nav";
+  }
+  :root[data-theme="loud"] .nav { padding-bottom: var(--s-2); }
+}
+
 /* Compact: brand and theme switch on row 1, nav on row 2 */
 @media (max-width: 599px) {
   .header-inner {
@@ -110,16 +150,48 @@ html[data-live="on"] .mic-indicator .dot { display: inline-block; }
     column-gap: var(--s-3);
     min-height: 0;
   }
-  .brand { padding: var(--s-3) 0 var(--s-2); }
+  /* The brand wraps instead of running under the theme switch. */
+  .brand { padding: var(--s-3) 0 var(--s-2); white-space: normal; overflow-wrap: normal; word-break: normal; min-width: 0; font-size: 20px; line-height: 24px; }
+  .theme-switch { align-self: center; }
   .theme-switch legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .nav a, .nav .nav-off { min-height: var(--control-h); }
-  .mic-indicator:empty { display: none; }
+  .theme-switch label { padding: 0 var(--s-2); }
+  /* Nav: one row that scrolls sideways inside itself, so it never stacks or widens the page. */
+  .nav { min-width: 0; }
+  .nav ul { flex-wrap: nowrap; gap: 0 var(--s-4); overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--ink) transparent;
+    scroll-padding-inline: calc(var(--focus-w) + var(--focus-offset));
+    padding: calc(var(--focus-w) + var(--focus-offset)); margin: calc(-1 * (var(--focus-w) + var(--focus-offset))); }
+  /* The scrollbar stays visible (thin) so it is clear that more items sit to the right. */
+  .nav li { flex: none; }
+  .nav a, .nav .nav-off { min-height: var(--control-h); white-space: nowrap; }
+  :root[data-theme="loud"] .nav ul { gap: 0 var(--s-1); }
+  :root[data-theme="loud"] .nav a, :root[data-theme="loud"] .nav .nav-off { padding: 0 var(--s-2); min-height: 44px; }
+  /* Loud header budget at 375 (88 to 112): the brand stays on one line and the switch labels get smaller. */
+  :root[data-theme="loud"] .brand { font-size: 16px; line-height: 20px; }
+  :root[data-theme="loud"] .theme-switch label { font-size: 12px; }
+  /* Off: take no space, but keep the role="status" region rendered so "Mic on" is announced when it appears. */
+  html:not([data-live="on"]) .mic-indicator { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   html[data-live="on"] .mic-indicator { padding-bottom: var(--s-2); }
 }
 
 /* ---------------------------------------------------------------- main and footer */
 main { flex: 1 0 auto; outline: none; }
 .route { padding-top: var(--s-6); padding-bottom: var(--s-16); }
+
+/* Screen change (router.ts render): only <main> animates. The old screen fades out fast, the new one fades in
+   and rises by --move-enter. Header and footer swap in place, so the nav never flickers. router.ts skips the
+   transition under prefers-reduced-motion and data-motion="off", so those get an instant swap. */
+main { view-transition-name: route; }
+.app-footer { view-transition-name: footer; }
+/* Root swaps in place. Without its fade, the default plus-lighter blend would add the two snapshots and flash
+   the header bright, so the blend goes back to normal. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+/* The footer glides to its new position while <main> changes height, instead of jumping. */
+::view-transition-group(route), ::view-transition-group(footer) { animation-duration: var(--dur-enter); animation-timing-function: var(--ease-enter); }
+::view-transition-image-pair(route) { overflow: clip; }
+::view-transition-old(route) { animation: route-out var(--dur-base) var(--ease-standard) both; }
+::view-transition-new(route) { animation: route-in var(--dur-enter) var(--ease-enter) both; }
+@keyframes route-out { to { opacity: 0; } }
+@keyframes route-in { from { opacity: 0; transform: translateY(var(--move-enter)); } }
 
 .app-footer { border-top: var(--divider-w) solid var(--divider-c); }
 .app-footer .shell {
@@ -132,3 +204,6 @@ main { flex: 1 0 auto; outline: none; }
   :focus-visible, .theme-switch label:has(input:focus-visible) { outline-color: CanvasText; }
   .theme-switch label:has(input:checked) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 }
+
+/* Automation hook (moved from the legacy inline style): */
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation: none !important; transition-duration: 0ms !important; }

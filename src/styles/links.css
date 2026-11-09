@@ -1,0 +1,85 @@
+/* Link hover: the underline draws (after the Codrops line hover effects).
+   On hover or keyboard focus a line draws in from the left; on leave it retracts to the right.
+   Imported from src/app/main.ts so it loads after components.css and app.css and wins at equal specificity.
+   Durations come from the motion tokens, so reduced motion (theme.css) makes the change instant.
+   Text links keep a resting underline, so they never rely on colour alone (WCAG 1.4.1). */
+
+/* ---------------------------------------------------------------- text links (a.link) */
+a.link {
+  color: var(--ink);
+  text-decoration: none;
+  /* layer 1: the line that draws; layer 2: the resting underline */
+  background-image:
+    linear-gradient(var(--link-draw, var(--signal-text)), var(--link-draw, var(--signal-text))),
+    linear-gradient(var(--link-rest, currentColor), var(--link-rest, currentColor));
+  background-size: 0% var(--link-draw-h, 2px), 100% var(--link-rest-h, 1px);
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+  transition:
+    background-size var(--dur-enter) var(--ease-enter),
+    color var(--dur-fast) var(--ease-standard);
+}
+a.link:hover,
+a.link:focus-visible {
+  color: var(--signal-text);
+  background-size: 100% var(--link-draw-h, 2px), 100% var(--link-rest-h, 1px);
+  background-position: 0 100%, 0 100%;
+}
+
+/* arrows inside a link nudge toward where the link goes */
+a.link .arrow,
+a.btn .arrow { display: inline-block; transition: transform var(--dur-base) var(--ease-enter); }
+a.link:hover .arrow,
+a.link:focus-visible .arrow,
+a.btn:hover .arrow,
+a.btn:focus-visible .arrow { transform: translateX(4px); }
+
+/* Loud: a thick ink rule at rest; on hover a pink marker fills up from it behind the text */
+:root[data-theme="loud"] a.link {
+  --link-rest: var(--ink);
+  --link-rest-h: 3px;
+  --link-draw: var(--signal); /* pink in Loud */
+  --link-draw-h: 100%;
+  font-weight: var(--t-body-strong);
+  padding: 0 2px 2px;
+  background-size: 100% 0%, 100% 3px;
+  background-position: 0 100%, 0 100%;
+  transition: background-size var(--dur-base) var(--ease-enter);
+}
+:root[data-theme="loud"] a.link:hover,
+:root[data-theme="loud"] a.link:focus-visible {
+  color: var(--ink); /* ink on the pink marker; pink text on yellow fails contrast */
+  background-size: 100% 100%, 100% 3px;
+}
+
+/* ---------------------------------------------------------------- header nav */
+/* Paper: an ink line draws under the item. The current page keeps its signal border and square. */
+.nav a { position: relative; }
+.nav a::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
+  background: var(--ink);
+  transform: scaleX(0); transform-origin: right center;
+  transition: transform var(--dur-base) var(--ease-enter);
+}
+.nav a:hover::after,
+.nav a:focus-visible::after { transform: scaleX(1); transform-origin: left center; }
+.nav a[aria-current="page"]::after { display: none; }
+
+/* Loud: the panel colour wipes in from the left behind the item instead of snapping on */
+:root[data-theme="loud"] .nav a::after { display: none; }
+:root[data-theme="loud"] .nav a:not([aria-current="page"]) {
+  background-color: transparent;
+  background-image: linear-gradient(var(--panel), var(--panel));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  background-position: 100% 0;
+  transition: background-size var(--dur-base) var(--ease-enter);
+}
+:root[data-theme="loud"] .nav a:not([aria-current="page"]):hover,
+:root[data-theme="loud"] .nav a:not([aria-current="page"]):focus-visible {
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-position: 0 0;
+}

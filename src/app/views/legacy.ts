@@ -14,13 +14,12 @@ export function legacyRoute(root: HTMLElement): Route {
       if (!mod) {
         root.setAttribute('aria-busy', 'true');
         mod = import('../../testpage/main.ts');
-        mod.catch(() => { mod = null; }); // allow a retry on the next visit
       }
       try {
         await mod;
-        root.querySelector('#legacy-error')?.remove();
       } catch (e) {
-        showError(root, e);
+        console.error('legacy test page failed to load', e);
+        showError(root);
       } finally {
         root.removeAttribute('aria-busy');
       }
@@ -33,12 +32,12 @@ export function legacyRoute(root: HTMLElement): Route {
   };
 }
 
-function showError(root: HTMLElement, e: unknown) {
+function showError(root: HTMLElement) {
   if (root.querySelector('#legacy-error')) return;
   const p = document.createElement('p');
   p.id = 'legacy-error';
   p.className = 'legacy-error';
   p.setAttribute('role', 'alert');
-  p.textContent = `The test page script could not load. Reload the page to try again. (${String(e)})`;
+  p.textContent = 'The test page could not load. Reload the page to try again. The browser console has the details.';
   root.prepend(p);
 }

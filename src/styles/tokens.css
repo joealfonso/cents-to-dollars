@@ -33,7 +33,7 @@
   --dur-base: 220ms;
   --dur-enter: 440ms;
   --dur-slow: 680ms;
-  --dur-wave: 1000ms;
+  --dur-tune: 900ms;
   --dur-sweep: 1400ms;
   --dur-done: 900ms;
   --stagger: 70ms;
@@ -82,7 +82,7 @@
   --dur-base: 160ms;
   --dur-enter: 320ms;
   --dur-slow: 500ms;
-  --dur-wave: 760ms;
+  --dur-tune: 720ms;
   --dur-sweep: 900ms;
   --dur-done: 700ms;
   --stagger: 40ms;
@@ -113,7 +113,7 @@
     --dur-base: 120ms;
     --dur-enter: 120ms;
     --dur-slow: 120ms;
-    --dur-wave: 0ms;
+    --dur-tune: 0ms;
     --dur-done: 120ms;
   }
 }
@@ -125,7 +125,7 @@ html[data-motion="off"][data-theme] {
   --dur-base: 0ms;
   --dur-enter: 0ms;
   --dur-slow: 0ms;
-  --dur-wave: 0ms;
+  --dur-tune: 0ms;
   --dur-sweep: 0ms;
   --dur-done: 0ms;
   --stagger: 0ms;

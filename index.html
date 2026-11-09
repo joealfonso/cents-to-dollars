@@ -3,374 +3,58 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cents to Dollars: live pitch</title>
+<title>Cents to Dollars</title>
+<script>
+  // Apply the saved theme before first paint (DESIGN.md 1.2). Unknown value or storage error: Paper.
+  try { var t = localStorage.getItem('centstodollars.theme'); document.documentElement.dataset.theme = t === 'loud' ? 'loud' : 'editorial'; }
+  catch (e) { document.documentElement.dataset.theme = 'editorial'; }
+</script>
 <link rel="stylesheet" href="/src/styles/tokens.css">
-<style>
-  /* ---------------------------------------------------------------- base */
-  *, *::before, *::after { box-sizing: border-box; }
-  html { overflow-x: clip; -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--font-ui); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
-  @media (max-width: 599px) { .wrap { padding: 0 16px; } }
-  h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
-  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -0.025em; }
-  h2 { font-size: 28px; line-height: 1.15; }
-  h3 { font-size: 22px; line-height: 1.2; }
-  p { margin: 0; }
-  a { color: inherit; text-underline-offset: 3px; }
-  .eyebrow, .label { font: 500 11px/16px var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .num { font-variant-numeric: tabular-nums; }
-  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
-  .skip { position: absolute; left: 16px; top: -100px; z-index: 10; background: var(--ink); color: var(--on-ink); padding: 8px 12px; }
-  .skip:focus { top: 12px; }
-
-  /* ---------------------------------------------------------------- header */
-  .site { border-bottom: 1px solid var(--rule); }
-  .site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; }
-  .brand { font: 400 21px/1 var(--font-display); letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
-  .brand-mark { width: 22px; height: 22px; flex: none; }
-  .mic-pill { display: inline-flex; align-items: center; gap: 8px; font: 500 11px/16px var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-
-  /* ---------------------------------------------------------------- intro */
-  .intro { padding: 56px 0 32px; display: grid; gap: 14px; max-width: 720px; }
-  .lede { font-size: 18px; line-height: 1.55; color: var(--ink-2); max-width: 62ch; }
-  @media (max-width: 599px) { .intro { padding: 32px 0 20px; } .lede { font-size: 16px; } }
-
-  /* ---------------------------------------------------------------- panels */
-  .panel { background: var(--panel); border: 1px solid var(--ink); }
-  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--ink); }
-  .panel-head h2 { font-size: 24px; }
-  .panel-body { padding: 24px; }
-  @media (max-width: 599px) { .panel-head, .panel-body { padding-left: 16px; padding-right: 16px; } }
-  .section-gap { margin-top: 56px; }
-  .section-head { display: grid; gap: 8px; margin-bottom: 20px; max-width: 720px; }
-  .section-head p { color: var(--ink-2); }
-
-  /* ---------------------------------------------------------------- live readout (never animated: motion rule 1) */
-  .live-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: stretch; }
-  @media (max-width: 859px) { .live-grid { grid-template-columns: 1fr; gap: 24px; } }
-  .note-block { display: grid; align-content: start; gap: 10px; container-type: inline-size; }
-  .note { font: 350 clamp(72px, 26cqi, 156px)/0.95 var(--font-display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; min-height: 1em; }
-  .note[data-empty] { font-size: clamp(36px, 9cqi, 52px); line-height: 1.1; color: var(--muted); padding: 0.4em 0 0.3em; }
-  .note[data-stale] { color: var(--muted); }
-  .note .oct { font-size: 0.45em; letter-spacing: 0; margin-left: 0.04em; }
-  .offset { font: 500 22px/1.3 var(--font-ui); min-height: 1.3em; }
-  .offset[data-dir="flat"] .dir, .offset[data-dir="sharp"] .dir { color: var(--signal-text); }
-  .offset[data-dir="stale"] { color: var(--muted); }
-  .offset-hint { color: var(--muted); font-size: 14px; min-height: 1.5em; }
-
-  .meter { position: relative; margin-top: 8px; }
-  .meter-track { position: relative; height: 28px; border: 1px solid var(--ink); background: linear-gradient(90deg, transparent calc(50% - 0.5px), var(--ink) calc(50% - 0.5px), var(--ink) calc(50% + 0.5px), transparent calc(50% + 0.5px)), var(--bg); }
-  .meter-track::before, .meter-track::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
-  .meter-track::before { left: 25%; } .meter-track::after { left: 75%; }
-  .meter-marker { position: absolute; top: -1px; bottom: -1px; width: 10px; margin-left: -5px; background: var(--signal); outline: 1px solid var(--ink); }
-  .meter-marker[hidden] { display: none; }
-  .meter[data-stale] .meter-marker { background: var(--muted); }
-  .meter-scale { display: flex; justify-content: space-between; margin-top: 6px; font: 400 12px/16px var(--font-label); color: var(--muted); }
-  .meter-scale span:nth-child(2) { color: var(--ink); }
-
-  .stats { margin: 0; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--rule); align-content: start; }
-  .stats > div { padding: 14px 0 14px; border-bottom: 1px solid var(--rule); display: grid; gap: 4px; align-content: start; }
-  .stats > div:nth-child(odd) { padding-right: 16px; }
-  .stats > div:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--rule); }
-  .stats dt { font: 500 11px/16px var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .stats dd { margin: 0; font: 400 26px/1.15 var(--font-display); font-variant-numeric: tabular-nums; }
-  .stats dd small { font: 400 13px/1.4 var(--font-ui); color: var(--muted); display: block; margin-top: 2px; }
-  .stats dd[data-empty] { font: 400 14px/1.45 var(--font-ui); color: var(--muted); padding-top: 4px; }
-  @media (max-width: 379px) { .stats { grid-template-columns: 1fr; } .stats > div:nth-child(n) { padding-left: 0; padding-right: 0; border-left: 0; } }
-
-  /* ---------------------------------------------------------------- controls */
-  .controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--rule); }
-  .controls .spacer { flex: 1 1 auto; }
-  button { position: relative; font: 500 14px/1 var(--font-ui); min-height: 44px; padding: 0 18px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-    transition: transform var(--dur-fast) var(--ease-spring), opacity var(--dur-base) var(--ease-standard),
-      outline-color var(--dur-fast) var(--ease-standard), outline-offset var(--dur-fast) var(--ease-standard); }
-  button::before { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: 0; pointer-events: none; transition: opacity var(--dur-fast) var(--ease-standard); }
-  button.primary { background: var(--ink); color: var(--on-ink); }
-  button.primary::before { background: var(--signal-text); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button:active:not(:disabled) { transform: translateY(var(--btn-press-shift)); }
-  button:active:not(:disabled)::before { opacity: 0.12; }
-  button.primary:active:not(:disabled)::before { opacity: 1; }
-  @media (hover: hover) {
-    button:hover:not(:disabled) { transform: translateY(var(--btn-hover-shift)); }
-    button:hover:not(:disabled)::before { opacity: 0.06; }
-    button.primary:hover:not(:disabled)::before { opacity: 1; }
-    button:active:not(:disabled) { transform: translateY(var(--btn-press-shift)); }
-  }
-  button > span { position: relative; } /* keep label above the ::before wash */
-  .btn-icon { width: 14px; height: 14px; position: relative; }
-
-  .field { display: grid; gap: 6px; }
-  .field-label { font: 500 11px/16px var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .input-unit { display: inline-flex; align-items: center; border: 1px solid var(--ink); background: var(--panel); min-height: 44px; }
-  .input-unit input { width: 92px; border: 0; background: transparent; color: var(--ink); font: 400 16px/1 var(--font-label); font-variant-numeric: tabular-nums; padding: 0 10px; min-height: 42px; }
-  .field-hint { font-size: 12px; color: var(--muted); }
-  .field-error { margin: 8px 0 0; font-size: 13px; color: var(--state-error); }
-  .field-error:empty { display: none; }
-  .input-unit span { padding: 0 12px 0 0; color: var(--muted); font: 400 13px/1 var(--font-label); }
-
-  /* Focus ring: transparent at rest so it can transition; visible at the end state. */
-  button, input, summary, .term { outline: 2px solid transparent; outline-offset: 4px; }
-  input, summary, .term { transition: outline-color var(--dur-fast) var(--ease-standard), outline-offset var(--dur-fast) var(--ease-standard); }
-  button:focus-visible, input:focus-visible, summary:focus-visible, .term:focus-visible { outline-color: var(--focus); outline-offset: 2px; }
-  .input-unit:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
-  .input-unit input:focus-visible { outline: none; }
-
-  /* ---------------------------------------------------------------- spectrogram (never animated: motion rule 2) */
-  .plot { margin: 32px 0 0; }
-  .plot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-  .plot-head h3 { font-size: 20px; }
-  .plot-frame { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
-  .plot-axis { display: flex; flex-direction: column; justify-content: space-between; font: 400 11px/1 var(--font-label); color: var(--muted); text-align: right; padding: 0 0 0 0; height: 240px; }
-  .canvas-wrap { position: relative; border: 1px solid var(--ink); background: var(--surface-plot); height: 240px; }
-  canvas { display: block; width: 100%; height: 100%; }
-  .plot-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; text-align: center; color: var(--muted); font: 400 15px/1.5 var(--font-ui); pointer-events: none; }
-  .canvas-wrap[data-drawn] .plot-empty { display: none; }
-  @media (max-width: 599px) { .plot-axis, .canvas-wrap { height: 180px; } }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--ink-2); }
-  .legend li { display: inline-flex; align-items: center; gap: 8px; }
-  .sw { display: inline-block; flex: none; }
-  .sw-f0 { width: 14px; height: 4px; background: var(--signal); outline: 1px solid var(--surface-plot); }
-  .sw-band { width: 14px; height: 0; border-top: 1px dashed var(--signal); }
-  .sw-energy { width: 28px; height: 10px; background: linear-gradient(90deg, var(--surface-plot), var(--plot-energy)); border: 1px solid var(--rule); }
-
-  /* ---------------------------------------------------------------- disclosures */
-  details.more { margin-top: 28px; border-top: 1px solid var(--rule); }
-  details.more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 0 0; font: 500 14px/1.3 var(--font-ui); color: var(--ink); }
-  details.more > summary::-webkit-details-marker { display: none; }
-  details.more > summary::before { content: ""; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform var(--dur-base) var(--ease-standard); margin: 0 2px; }
-  details.more[open] > summary::before { transform: rotate(45deg); }
-  details.more > summary .sum-sub { color: var(--muted); font-weight: 400; }
-  details.more .more-body { padding: 12px 0 4px; display: grid; gap: 12px; color: var(--ink-2); font-size: 14px; }
-  details.more .more-body p { max-width: 70ch; }
-
-  /* ---------------------------------------------------------------- result boxes (cards) */
-  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-  @media (max-width: 959px) { .cards { grid-template-columns: 1fr; } }
-  .card { display: flex; flex-direction: column; }
-  .card .panel-body { display: flex; flex-direction: column; gap: 16px; flex: 1; }
-  .card details.more { margin-top: auto; }
-  .card .panel-head h3 { font-size: 21px; }
-  .card .what { color: var(--ink-2); }
-  .card .needs { font-size: 13px; color: var(--muted); }
-  .card-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
-  .step { font: 500 11px/16px var(--font-label); color: var(--muted); letter-spacing: 0.08em; }
-
-  .readout { position: relative; border: 1px solid var(--rule); background: var(--bg); padding: 14px 16px; min-height: 52px; font-size: 14px; color: var(--ink-2); }
-  .readout .r-summary { color: var(--ink); font-size: 15px; font-weight: 500; }
-  .readout .r-rows { margin: 12px 0 0; display: grid; grid-template-columns: 1fr; }
-  .readout .r-rows dt { color: var(--muted); font-size: 12px; padding-top: 8px; border-top: 1px solid var(--rule); margin-top: 8px; }
-  .readout .r-rows dt:first-child { margin-top: 0; }
-  .readout .r-rows dd { margin: 0; font: 400 13px/1.5 var(--font-label); font-variant-numeric: tabular-nums; color: var(--ink); }
-  .readout .r-rows dd small { display: block; font: 400 12px/1.4 var(--font-ui); color: var(--muted); }
-  .readout[data-state="error"] .r-summary { color: var(--state-error); }
-  .readout.mono { font: 400 12.5px/1.65 var(--font-label); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); background: var(--bg); }
-  .readout .r-raw { margin-top: 10px; }
-  .readout .r-raw summary { cursor: pointer; font-size: 13px; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
-  .readout .r-raw pre { margin: 6px 0 0; font: 400 12px/1.6 var(--font-label); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
-
-  /* ---------------------------------------------------------------- hover/tap explanations */
-  .term-wrap { position: relative; display: inline; }
-  .term { font: inherit; color: inherit; background: none; border: 0; padding: 0; min-height: 0; cursor: help; display: inline; text-decoration: underline dotted; text-decoration-color: var(--muted); text-underline-offset: 3px; text-decoration-thickness: 1px; letter-spacing: inherit; text-transform: inherit; }
-  .term::before { display: none; }
-  .term { padding-block: 6px; margin-block: -6px; } /* bigger hit area, same line box */
-  .term:has(.term-i) { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; margin: 0 -10px; vertical-align: middle; }
-  .tip::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; } /* bridge the gap so the pointer can reach the tip */
-  .term:active:not(:disabled), .term:hover:not(:disabled) { transform: none; }
-  .term-i { display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1px solid currentColor; border-radius: 50%; font: 600 10px/1 var(--font-ui); letter-spacing: 0; text-transform: none; vertical-align: 1px; text-decoration: none; }
-  .term:has(.term-i) { text-decoration: none; }
-  .tip { position: absolute; z-index: 20; left: var(--tip-x, 0px); top: calc(100% + 8px); width: max-content; max-width: min(300px, calc(100vw - 32px)); padding: 12px 14px; background: var(--ink); color: var(--on-ink); font: 400 13px/1.5 var(--font-ui); letter-spacing: 0; text-transform: none; text-align: left; white-space: normal;
-    opacity: 0; visibility: hidden; transform: translateY(-4px); pointer-events: none;
-    transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-enter), visibility 0s linear var(--dur-base); }
-  .tip strong { font-weight: 600; }
-  .term-wrap[data-open] .tip { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-enter), visibility 0s; }
-
-  /* ---------------------------------------------------------------- live indicator (static once on: motion rule 3) */
-  #live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--signal); outline: 1px solid var(--ink); opacity: 0; transform: scale(0.6); transition: opacity var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard); }
-  html[data-live="on"] #live-dot { opacity: 1; transform: scale(1); transition: opacity var(--dur-base) var(--ease-spring), transform var(--dur-base) var(--ease-spring); }
-  html[data-live="on"] .mic-pill { color: var(--ink); }
-
-  /* ---------------------------------------------------------------- readout state bar. Never applies to #live-readout. */
-  .readout[data-state]::before { content: ""; position: absolute; top: -1px; left: -1px; right: -1px; height: var(--state-bar-h); pointer-events: none; }
-  .readout[data-state="working"]::before { background: var(--state-working); opacity: 0.5; }
-  .readout[data-state="done"]::before { background: var(--state-done); opacity: 0; transform-origin: left; animation: done-in var(--dur-base) var(--ease-enter) forwards, done-out var(--dur-base) calc(var(--dur-base) * 5) forwards; }
-  .readout[data-state="error"]::before { background: var(--state-error); opacity: 1; animation: bar-in var(--dur-base) var(--ease-standard) backwards; }
-  .readout[data-state] { overflow: hidden; }
-  @media (prefers-reduced-motion: no-preference) {
-    html:not([data-live="on"]):not([data-motion="off"]) #self-readout[data-state="working"]::before { right: auto; width: 40%; opacity: 1; animation: bar-sweep var(--dur-sweep) linear infinite; }
-    .readout[data-state="done"]::before { opacity: 0; animation: bar-done var(--dur-done) var(--ease-enter) forwards; }
-  }
-  @keyframes bar-sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
-  @keyframes bar-done { 0% { opacity: 1; transform: scaleX(0); } 40% { opacity: 1; transform: scaleX(1); } 100% { opacity: 0; transform: scaleX(1); } }
-  @keyframes done-in { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes done-out { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes bar-in { from { opacity: 0; } to { opacity: 1; } }
-
-  /* Entrance. Not applied to the live panel internals or the canvas. fill-mode backwards leaves no transform after it ends. */
-  @keyframes enter { from { opacity: 0; transform: translateY(var(--move-enter)); } }
-  .site, .intro > *, .enter { animation: enter var(--dur-enter) var(--ease-enter) calc(var(--i, 0) * var(--stagger)) backwards; }
-
-  /* ---------------------------------------------------------------- setup checks (optional, opened from the intro) */
-  .setup-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 8px; }
-  .setup-hint { color: var(--muted); font-size: 14px; max-width: 48ch; }
-  #setup-toggle .chev { transition: transform var(--dur-base) var(--ease-standard); }
-  #setup-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
-  #setup-toggle[aria-expanded="true"] { background: var(--ink); color: var(--on-ink); }
-  #setup-toggle[aria-expanded="true"]::before { background: var(--signal-text); }
-  .setup { margin: 0 0 56px; }
-  .setup[hidden] { display: none; }
-  .setup-foot { display: flex; justify-content: flex-end; margin-top: 20px; }
-  @keyframes setup-out { to { opacity: 0; transform: translateY(calc(var(--move-enter) * -1)); } }
-  .setup[data-closing] { animation: setup-out var(--dur-base) var(--ease-standard) forwards; pointer-events: none; }
-  @media (prefers-reduced-motion: reduce) { #setup-toggle .chev { transition: none; } }
-  /* Motion rule 3: no animation starts while live capture is on (a loopback run may be timing frames). */
-  html[data-live="on"] .setup, html[data-live="on"] .setup .enter { animation: none; }
-  html[data-live="on"] #setup-toggle .chev { transition: none; }
-
-  /* ---------------------------------------------------------------- footer */
-  footer { margin-top: 72px; border-top: 1px solid var(--rule); }
-  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-top: 20px; padding-bottom: 32px; color: var(--muted); font-size: 13px; }
-
-
-  /* ================================================================ motion: state morphs
-     One-shot, transform and opacity only. Never on live digits, the meter marker or the canvas (motion rules 1 and 2).
-     No infinite animation while html[data-live="on"] (rule 3). */
-
-  /* Start/stop toggle: one button, the fill, icon and label morph between states. */
-  .toggle { min-width: 196px; justify-content: flex-start; overflow: hidden; }
-  .toggle::after { content: ""; position: absolute; left: 26px; top: 50%; width: 520px; height: 520px; margin: -260px 0 0 -260px; border-radius: 50%; background: var(--signal-text); opacity: 0; transform: scale(0);
-    transition: opacity var(--dur-enter) var(--ease-enter), transform var(--dur-enter) var(--ease-enter); pointer-events: none; }
-  .toggle[data-state="live"]::after, .toggle[data-state="stopping"]::after { opacity: 1; transform: scale(1); transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-slow) var(--ease-enter); }
-  /* Echoes: two outlines of the button radiate out once when the mic comes on, like a sound wave. */
-  .tg-wrap { position: relative; display: inline-flex; }
-  .tg-wave { position: absolute; inset: 0; border: 1.5px solid var(--signal); opacity: 0; pointer-events: none; }
-  .tg-wrap:has(.toggle[data-state="live"]) .tg-wave { animation: wave var(--dur-wave) var(--ease-enter) both; }
-  .tg-wrap:has(.toggle[data-state="live"]) .tg-wave + .tg-wave { animation-delay: 140ms; }
-  @keyframes wave { 0% { opacity: 0.9; transform: scale(1, 1); } 100% { opacity: 0; transform: scale(1.18, 1.9); } }
-  /* Mic dot sends out one ring when the mic comes on. */
-  #live-dot { position: relative; }
-  #live-dot::after { content: ""; position: absolute; inset: -1px; border-radius: 50%; border: 1px solid var(--signal); opacity: 0; pointer-events: none; }
-  html[data-live="on"] #live-dot::after { animation: ring var(--dur-wave) var(--ease-enter) 80ms both; }
-  @keyframes ring { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(3.4); } }
-  /* Headline: each word rises out of its own line, editorial style. */
-  .intro > h1 { animation: none; }
-  .words .w { display: inline-block; overflow: clip; vertical-align: top; padding-bottom: 0.14em; margin-bottom: -0.14em; }
-  .words .w > span { display: inline-block; animation: word-up var(--dur-slow) var(--ease-enter) calc(120ms + var(--w, 0) * 65ms) backwards; }
-  @keyframes word-up { from { transform: translateY(108%); } }
-  /* Brand mark: the wave draws itself in once. */
-  .brand-mark .wave-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1100ms var(--ease-enter) 250ms forwards; }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
-  .toggle > span { z-index: 1; }
-  .toggle:disabled { opacity: 1; cursor: progress; }
-  .tg-icon { width: 16px; height: 16px; display: grid; }
-  .tg-icon svg { width: 16px; height: 16px; overflow: visible; }
-  .tg-icon svg > * { transform-box: fill-box; transform-origin: center; transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-enter) var(--ease-spring-soft); }
-  .ic-busy, .ic-stop { opacity: 0; transform: scale(0.3) rotate(-90deg); }
-  .toggle[data-state="busy"] .ic-mic, .toggle[data-state="live"] .ic-mic, .toggle[data-state="stopping"] .ic-mic { opacity: 0; transform: scale(0.3) rotate(90deg); }
-  .toggle[data-state="busy"] .ic-busy { opacity: 1; transform: none; }
-  .toggle[data-state="live"] .ic-stop, .toggle[data-state="stopping"] .ic-stop { opacity: 1; transform: none; }
-  .toggle[data-state="stopping"] .ic-stop { transform: scale(0.7); }
-  @media (prefers-reduced-motion: no-preference) {
-    html:not([data-live="on"]) .toggle[data-state="busy"] .ic-busy { animation: spin 900ms linear infinite; }
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .tg-labels { display: grid; text-align: left; }
-  .tg-l { grid-area: 1 / 1; white-space: nowrap; opacity: 0; visibility: hidden; transform: translateY(-70%);
-    transition: opacity var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard), visibility 0s linear var(--dur-base); }
-  .toggle[data-state="idle"] [data-for="idle"], .toggle[data-state="busy"] [data-for="busy"],
-  .toggle[data-state="live"] [data-for="live"], .toggle[data-state="stopping"] [data-for="stopping"] {
-    opacity: 1; visibility: visible; transform: none; transition: opacity var(--dur-base) var(--ease-standard), visibility 0s;
-    animation: label-in var(--dur-enter) var(--ease-enter); }
-  @keyframes label-in { from { opacity: 0; transform: translateY(70%); } }
-
-  /* Live panel: a signal rule draws across the top when the mic comes on, and retracts when it stops. */
-  .live-panel { position: relative; }
-  .live-panel::before { content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 3px; background: var(--signal); transform: scaleX(0); transform-origin: right;
-    transition: transform var(--dur-slow) var(--ease-enter); pointer-events: none; z-index: 1; }
-  html[data-live="on"] .live-panel::before { transform: scaleX(1); transform-origin: left; }
-
-  /* Word swaps (status labels, mic pill): the new word rises in. JS replays it by toggling data-swap. */
-  [data-swap] { display: inline-block; animation: swap-in var(--dur-enter) var(--ease-enter); }
-  [data-swap="b"] { animation-name: swap-in-b; }
-  @keyframes swap-in { from { opacity: 0; transform: translateY(6px); } }
-  @keyframes swap-in-b { from { opacity: 0; transform: translateY(6px); } }
-
-  /* Empty state to first reading: the note and each stat arrive once. Later updates are instant. */
-  .note[data-arrive] { animation: note-in var(--dur-slow) var(--ease-enter); transform-origin: left bottom; }
-  @keyframes note-in { 0% { opacity: 0; transform: translateY(22px) scaleY(0.86); } 55% { opacity: 1; transform: translateY(-4px) scaleY(1.03); } 78% { transform: translateY(1px) scaleY(0.995); } 100% { transform: none; } }
-  .note[data-arrive] .oct { display: inline-block; animation: swap-in var(--dur-enter) var(--ease-enter) 140ms backwards; }
-  .stats dd[data-arrive], .offset[data-arrive] { animation: swap-in var(--dur-enter) var(--ease-enter); }
-  .meter-track { transition: border-color var(--dur-base) var(--ease-standard); }
-
-  /* Canvas overlay leaves instead of vanishing (the canvas itself never animates). */
-  .plot-empty { transition: opacity var(--dur-enter) var(--ease-standard), visibility 0s linear var(--dur-enter); }
-  .canvas-wrap[data-drawn] .plot-empty { display: grid; opacity: 0; visibility: hidden; }
-
-  /* Results: summary then rows rise in, staggered. Discrete results only, never the live dump. */
-  .readout .r-summary, .readout .r-rows > *, .readout .r-raw { animation: enter var(--dur-enter) var(--ease-enter) calc(var(--i, 0) * var(--stagger)) backwards; }
-
-  /* Disclosures open and close with height, where the browser supports it. */
-  @supports selector(::details-content) {
-    details { interpolate-size: allow-keywords; }
-    details::details-content { height: 0; overflow: clip; opacity: 0;
-      transition: height var(--dur-enter) var(--ease-enter), opacity var(--dur-base) var(--ease-standard), content-visibility var(--dur-enter) allow-discrete; }
-    details[open]::details-content { height: auto; opacity: 1; }
-  }
-
-  /* Cards and section heads rise in as they scroll into view, where scroll timelines are supported. */
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .reveal { animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
-      .cards .reveal:nth-child(2) { animation-range: entry 8% entry 68%; }
-      .cards .reveal:nth-child(3) { animation-range: entry 16% entry 76%; }
-    }
-  }
-  @keyframes reveal { from { opacity: 0; transform: translateY(24px); } }
-
-  /* Hover: cards lift their rule, buttons already shift. */
-  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .card { transition: transform var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard); }
-    .card:hover { transform: translateY(-2px); box-shadow: 4px 4px 0 var(--ink); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    button, input, summary, .term { outline-offset: 2px; }
-    button { transition: opacity var(--dur-base) var(--ease-standard); }
-    input, summary, .term { transition: none; }
-    #live-dot, html[data-live="on"] #live-dot { transform: none; }
-    .tip, .term-wrap[data-open] .tip { transform: none; }
-    .tg-icon svg > *, .tg-l, .live-panel::before { transform: none !important; }
-    .toggle::after { transform: scale(1) !important; }
-    .tg-wave, #live-dot::after, .words .w > span, .note[data-arrive] .oct { animation: none !important; }
-    .brand-mark .wave-line { animation: none; stroke-dashoffset: 0; }
-    .tg-l, .note[data-arrive], [data-swap], .readout .r-summary, .readout .r-rows > *, .readout .r-raw { animation: none; }
-    .toggle::after { transform: none; }
-  }
-  @media (forced-colors: active) {
-    button, input, summary, .term { outline: none; }
-    button:focus-visible, input:focus-visible, summary:focus-visible, .term:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-    .meter-marker, #live-dot { border: 1px solid CanvasText; }
-    .tip { border: 1px solid CanvasText; }
-    .input-unit:focus-within { outline-color: CanvasText; }
-  }
-  html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation: none !important; transition-duration: 0ms !important; }
-</style>
+<link rel="stylesheet" href="/src/styles/theme.css">
+<link rel="stylesheet" href="/src/styles/app.css">
+<link rel="stylesheet" href="/src/styles/components.css">
+<link rel="stylesheet" href="/src/styles/voice.css">
+<link rel="stylesheet" href="/src/styles/legacy.css">
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
-
-<header class="site" style="--i:0">
-  <div class="wrap">
-    <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="wave-line" pathLength="1" d="M3 13c2.5 0 3-5 5.5-5S11 15 13.5 15 16.5 9 19 9" fill="none" stroke="var(--signal)" stroke-width="1.6" stroke-linecap="round"/></svg>
-      Cents to Dollars
-    </div>
-    <span class="mic-pill"><span id="live-dot" aria-hidden="true"></span><span id="mic-pill-text">Mic off</span></span>
+<a class="skip" id="skip-link" href="#main">Skip to content</a>
+<div class="page">
+<header class="app-header">
+  <div class="shell header-inner">
+    <a class="brand" href="#/">Cents to Dollars</a>
+    <nav class="nav" aria-label="Main">
+      <ul>
+        <li><a href="#/" data-nav="overview">Overview</a></li>
+        <li><a href="#/tools" data-nav="tools">Tools</a></li>
+        <li><span class="nav-off">Sessions <span class="tag-notbuilt">Not built yet</span></span></li>
+        <li><a href="#/methods" data-nav="methods">Methods</a></li>
+        <li><a href="#/about" data-nav="about">About</a></li>
+      </ul>
+    </nav>
+    <div class="mic-indicator" id="mic-indicator" role="status"><span class="dot dot-live" aria-hidden="true"></span><span class="mic-text"></span></div>
+    <fieldset class="theme-switch" id="theme-switch">
+      <legend>Theme</legend>
+      <span class="seg">
+        <label><input type="radio" name="theme" value="editorial" checked>Paper</label>
+        <label><input type="radio" name="theme" value="loud">Loud</label>
+      </span>
+    </fieldset>
   </div>
 </header>
 
-<main id="main" class="wrap">
+<main id="main" tabindex="-1">
+  <section data-route="overview" hidden></section>
+  <section data-route="tools" hidden></section>
+  <section data-route="voice" hidden></section>
+  <section data-route="methods" hidden></section>
+  <section data-route="about" hidden></section>
+  <section data-route="notfound" hidden></section>
+
+  <!-- Legacy M1 test page (temporary, removed after Phase C). Markup moved unchanged from the old <main>,
+       original IDs kept. Its script (src/testpage/main.ts) loads on the first visit to #/legacy. -->
+  <section data-route="legacy" aria-labelledby="h-intro" hidden>
+  <div class="wrap">
+  <div class="legacy-bar"><span class="mic-pill"><span id="live-dot" aria-hidden="true"></span><span id="mic-pill-text">Mic off</span></span></div>
   <section class="intro" aria-labelledby="h-intro">
     <p class="eyebrow" style="--i:1">Singing practice</p>
     <h1 id="h-intro" class="words" aria-label="See the note you're singing"><span class="w"><span style="--w:0">See</span></span> <span class="w"><span style="--w:1">the</span></span> <span class="w"><span style="--w:2">note</span></span> <span class="w"><span style="--w:3">you're</span></span> <span class="w"><span style="--w:4">singing</span></span></h1>
@@ -439,6 +123,7 @@
   </section>
 
   <section class="panel live-panel" aria-labelledby="h-live">
+    <svg class="tune-line" viewBox="0 0 1000 14" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 7.00 L4 9.83 L8 11.78 L12 12.32 L16 11.31 L20 9.08 L24 6.30 L28 3.78 L32 2.24 L36 2.10 L40 3.38 L44 5.68 L48 8.31 L52 10.51 L56 11.65 L60 11.43 L64 9.93 L68 7.63 L72 5.19 L76 3.32 L80 2.55 L84 3.09 L88 4.73 L92 7.00 L96 9.22 L100 10.75 L104 11.17 L108 10.38 L112 8.63 L116 6.45 L120 4.47 L124 3.26 L128 3.16 L132 4.16 L136 5.96 L140 8.03 L144 9.75 L148 10.65 L152 10.47 L156 9.30 L160 7.49 L164 5.58 L168 4.11 L172 3.51 L176 3.93 L180 5.22 L184 7.00 L188 8.74 L192 9.95 L196 10.28 L200 9.65 L204 8.28 L208 6.57 L212 5.01 L216 4.06 L220 3.98 L224 4.77 L228 6.19 L232 7.81 L236 9.16 L240 9.86 L244 9.73 L248 8.81 L252 7.39 L256 5.88 L260 4.73 L264 4.26 L268 4.59 L272 5.60 L276 7.00 L280 8.37 L284 9.31 L288 9.57 L292 9.08 L296 8.01 L300 6.66 L304 5.44 L308 4.70 L312 4.63 L316 5.25 L320 6.36 L324 7.63 L328 8.70 L332 9.25 L336 9.14 L340 8.42 L344 7.30 L348 6.12 L352 5.22 L356 4.85 L360 5.11 L364 5.90 L368 7.00 L372 8.07 L376 8.82 L380 9.02 L384 8.64 L388 7.79 L392 6.73 L396 5.78 L400 5.19 L404 5.14 L408 5.63 L412 6.50 L416 7.50 L420 8.33 L424 8.76 L428 8.68 L432 8.11 L436 7.24 L440 6.31 L444 5.60 L448 5.31 L452 5.51 L456 6.14 L460 7.00 L464 7.84 L468 8.43 L472 8.58 L476 8.28 L480 7.62 L484 6.79 L488 6.04 L492 5.58 L496 5.54 L500 5.92 L504 6.61 L508 7.39 L512 8.04 L516 8.39 L520 8.32 L524 7.87 L528 7.19 L532 6.46 L536 5.90 L540 5.68 L544 5.83 L548 6.32 L552 7.00 L556 7.66 L560 8.12 L564 8.24 L568 8.01 L572 7.49 L576 6.84 L580 6.25 L584 5.89 L588 5.85 L592 6.15 L596 6.69 L600 7.31 L604 7.82 L608 8.09 L612 8.04 L616 7.69 L620 7.15 L624 6.58 L628 6.14 L632 5.96 L636 6.08 L640 6.47 L644 7.00 L648 7.52 L652 7.88 L656 7.98 L660 7.79 L664 7.38 L668 6.87 L672 6.41 L676 6.13 L680 6.10 L684 6.34 L688 6.76 L692 7.24 L696 7.64 L700 7.85 L704 7.81 L708 7.54 L712 7.12 L716 6.67 L720 6.32 L724 6.18 L728 6.28 L732 6.58 L736 7.00 L740 7.41 L744 7.69 L748 7.77 L752 7.62 L756 7.30 L760 6.90 L764 6.54 L768 6.31 L772 6.29 L776 6.48 L780 6.81 L784 7.19 L788 7.51 L792 7.67 L796 7.64 L800 7.42 L804 7.09 L808 6.74 L812 6.47 L816 6.36 L820 6.44 L824 6.67 L828 7.00 L832 7.32 L836 7.54 L840 7.60 L844 7.49 L848 7.24 L852 6.92 L856 6.64 L860 6.46 L864 6.45 L868 6.59 L872 6.85 L876 7.15 L880 7.40 L884 7.53 L888 7.50 L892 7.33 L896 7.07 L900 6.79 L904 6.58 L908 6.50 L912 6.56 L916 6.74 L920 7.00 L924 7.25 L928 7.42 L932 7.47 L936 7.38 L940 7.18 L944 6.94 L948 6.71 L952 6.58 L956 6.56 L960 6.68 L964 6.88 L968 7.12 L972 7.31 L976 7.41 L980 7.39 L984 7.26 L988 7.06 L992 6.84 L996 6.67 L1000 6.61"/></svg>
     <div class="panel-head enter" style="--i:5">
       <h2 id="h-live">Live pitch</h2>
       <span class="label" id="live-state-label">Not listening</span>
@@ -479,7 +164,6 @@
       </div>
 
       <div class="controls">
-        <span class="tg-wrap"><span class="tg-wave" aria-hidden="true"></span><span class="tg-wave" aria-hidden="true"></span>
         <button id="live-toggle" class="primary toggle" type="button" data-state="idle">
           <span class="tg-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16">
@@ -494,7 +178,7 @@
             <span class="tg-l" data-for="live">Stop microphone</span>
             <span class="tg-l" data-for="stopping">Stopping…</span>
           </span>
-        </button></span>
+        </button>
         <span class="spacer"></span>
         <label class="field">
           <span class="field-label">Tuning reference (A4)</span>
@@ -536,14 +220,17 @@
   </section>
 
   <span id="check-announce" class="visually-hidden" role="status"></span>
+  </div>
+  </section>
 </main>
 
-<footer>
-  <div class="wrap">
+<footer class="app-footer">
+  <div class="shell">
     <span>For practice and study. Not a diagnostic or medical device.</span>
     <span>Audio stays in this browser and is not saved.</span>
   </div>
 </footer>
-<script type="module" src="/src/testpage/main.ts"></script>
+</div>
+<script type="module" src="/src/app/main.ts"></script>
 </body>
 </html>

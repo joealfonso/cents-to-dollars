@@ -1,0 +1,216 @@
+/* Voice analysis, #/voice (DESIGN.md 2.8 to 2.10, 3.3). Values come from tokens. Per-theme differences are
+   only the 1.8 treatments, written as :root[data-theme="loud"] overrides. Never animated: readout digits,
+   cue, chip, meter marker, level bar (1.7). */
+
+/* hidden always wins over the display values below */
+[data-route="voice"] [hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- page header (compact h1, crumb hidden) */
+.va-header { padding: var(--s-4) 0; }
+@media (max-width: 599px) {
+  .va-route { padding-top: 0; }
+  .va-header { padding: var(--s-3) 0; }
+  .va-crumb { display: none; }
+  :root .va-header h1, :root[data-theme="editorial"] .va-header h1 { font-size: 24px; line-height: 28px; }
+  :root[data-theme="loud"] .va-header h1 { font-size: 28px; line-height: 32px; }
+}
+
+/* ---------------------------------------------------------------- layout */
+.va-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-panel); }
+@media (min-width: 960px) {
+  .va-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; }
+  .va-hero { grid-column: 1 / span 5; grid-row: 1; align-self: stretch; }
+  .va-spec { grid-column: 6 / span 7; grid-row: 1; align-self: stretch; display: flex; }
+  .va-readings { grid-column: 1 / span 5; grid-row: 2; }
+  .va-howto { grid-column: 6 / span 7; grid-row: 2; }
+  .va-setup { grid-column: 1 / -1; grid-row: 3; }
+}
+
+/* ---------------------------------------------------------------- hero (2.9) */
+.va-hero { transform: rotate(var(--tilt-a)); display: flex; flex-direction: column; container: va-hero / inline-size; }
+.va-hero-body {
+  container-type: inline-size;
+  display: flex; flex-direction: column; gap: var(--s-2);
+  padding: var(--s-4);
+  flex: 1 0 auto;
+}
+@media (max-width: 599px) { .va-hero-body { padding: var(--s-3); } }
+/* Loud is taller (bigger type, 4px borders), so it packs tighter to keep the toggle in the first viewport */
+:root[data-theme="loud"] .va-hero-body { gap: var(--s-1); }
+@media (max-width: 599px) {
+  :root[data-theme="loud"] .va-hero-body { padding: var(--s-2) var(--s-3); }
+}
+
+/* status chip in .chip-tilt: inert in Paper, pink fill, shadow and tilt in Loud (1.8) */
+.chip-tilt { display: inline-flex; }
+.va-status { display: inline-flex; align-items: center; gap: var(--s-2); white-space: nowrap; }
+:root[data-theme="loud"] .chip-tilt {
+  background: var(--signal); color: var(--ink);
+  border: var(--border-w) solid var(--ink); box-shadow: var(--shadow-chip);
+  transform: rotate(var(--tilt-chip)); padding: 0 var(--s-2);
+}
+:root[data-theme="loud"] .va-hero .strip .chip-tilt .dot { border-color: var(--ink); }
+:root[data-theme="loud"] .chip-tilt .dot-live { background: var(--ink); }
+
+/* note block: the slot keeps the hero line height so states do not move the controls */
+.va-note-slot { min-height: 1em; font: var(--t-hero); display: flex; flex-direction: column; justify-content: center; }
+.va-note-slot > * { font: var(--t-body); }
+.va-note { margin: 0; }
+.va-note .va-glyphs { display: inline-flex; align-items: stretch; font: var(--t-hero); letter-spacing: var(--t-hero-ls); white-space: nowrap; }
+.va-letter { line-height: 1; }
+/* accidental at the top, octave at the bottom, both 0.45em, so naturals and sharps have the same width */
+.va-ao { display: inline-flex; flex-direction: column; justify-content: space-between; font-size: 0.45em; line-height: 1; min-width: 1.1em; padding: 0.08em 0 0.06em 0.04em; }
+.va-acc { min-height: 1em; }
+.va-last {
+  align-self: flex-start; margin-right: var(--s-2);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted);
+}
+.va-note[data-empty] .va-glyphs { font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); }
+.va-note[data-empty] .va-ao { display: none; }
+.va-msg { margin: var(--s-1) 0 0; max-width: 46ch; color: var(--ink-2); }
+.va-error { display: grid; gap: var(--s-2); }
+.va-error-text { margin: 0; max-width: 46ch; color: var(--state-error); font-weight: var(--t-body-strong); }
+:root[data-theme="loud"] .va-error-text { color: var(--ink); }
+.va-error-more { border: var(--border-w) solid var(--ink); }
+.va-error-raw { margin: 0; padding: var(--row-pad); font: var(--t-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* direction cue and cents chip: both at least 24px (2.9, 1.5) */
+.va-cue-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-4); min-height: 36px; }
+.va-hero[data-has="none"] .va-cue-row { visibility: hidden; }
+.va-dir {
+  margin: 0; display: inline-flex; align-items: baseline; gap: var(--s-2); white-space: nowrap;
+  font: var(--t-cue); letter-spacing: var(--t-cue-ls);
+}
+.va-dir .va-arrow, .va-dir .va-ok-dot { align-self: center; }
+.va-dir-word { text-transform: uppercase; }
+.va-dir-unit { text-transform: none; font-size: 0.6em; }
+.va-arrow { width: 1em; height: 1em; flex: none; }
+.va-ok-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--ok); border: 1px solid var(--ok); flex: none; }
+.va-chip {
+  margin: 0; display: inline-flex; align-items: baseline; gap: 0.15em;
+  font: var(--t-chip); letter-spacing: var(--t-chip-ls); text-transform: var(--t-chip-case);
+  border: var(--border-w) solid var(--ink); padding: 0 var(--s-2); background: var(--panel);
+  white-space: nowrap;
+}
+.va-unit { font-size: 0.6em; }
+.va-hero[data-dir="within"] .va-chip { border-color: var(--ok); color: var(--ok); }
+:root[data-theme="loud"] .va-hero[data-dir="within"] .va-chip { background: var(--ok); color: var(--ink); border-color: var(--ink); }
+:root[data-theme="loud"] .va-chip { box-shadow: var(--shadow-chip); }
+
+/* cents meter: -50 to +50 c, ticks at -50, 0, +50, tolerance zone, marker at least 8px wide (2.9) */
+.va-meter { padding: 0 var(--s-1); }
+.va-track { position: relative; height: 24px; border: var(--border-w) solid var(--ink); background: var(--panel); }
+:root[data-theme="loud"] .va-track { height: 32px; }
+.va-tol { position: absolute; top: 0; bottom: 0; background: var(--hover); border-left: 1px solid var(--ok); border-right: 1px solid var(--ok); }
+:root[data-theme="loud"] .va-tol { background: var(--ok); border-color: var(--ink); border-width: 0 2px; }
+.va-tick { position: absolute; bottom: 0; width: 1px; height: 6px; background: var(--ink); transform: translateX(-50%); }
+.va-tick-mid { height: 100%; background: var(--muted); }
+.va-marker {
+  position: absolute; top: calc(-1 * var(--border-w)); bottom: calc(-1 * var(--border-w));
+  width: 8px; transform: translateX(-50%);
+  background: var(--ink); outline: 2px solid var(--panel);
+}
+:root[data-theme="loud"] .va-marker { width: 12px; background: var(--signal); outline: 0; border: 3px solid var(--ink); }
+
+/* stale (held past HOLD_FULL_MS, or stopped): dimmed to --muted, with the "Last:" label */
+.va-hero[data-stale] .va-glyphs,
+.va-hero[data-stale] .va-dir,
+.va-hero[data-stale] .va-chip { color: var(--muted); border-color: var(--muted); }
+.va-hero[data-stale] .va-ok-dot { background: transparent; border-color: var(--muted); }
+.va-hero[data-stale] .va-marker { background: var(--muted); }
+/* The dim is on the letter and octave, not the "Last:" label: small text at 0.55 opacity is under 4.5:1. */
+:root[data-theme="loud"] .va-hero[data-stale] .va-letter,
+:root[data-theme="loud"] .va-hero[data-stale] .va-ao,
+:root[data-theme="loud"] .va-hero[data-stale] .va-dir { color: var(--ink); opacity: 0.55; }
+:root[data-theme="loud"] .va-hero[data-stale] .va-glyphs { color: var(--ink); }
+
+/* Narrow hero (compact, and the 5-column hero on wide screens): the chip sits beside the note and the cue
+   gets its own line, so "WITHIN ±10 CENTS" never wraps and pushes the toggle down. Loud type does not fit
+   cue and chip on one line below about 560px of hero. Same markup and the same rule in both themes. */
+@container va-hero (max-width: 560px) {
+  .va-hero-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s-2); }
+  .va-hero-body > * { grid-column: 1 / -1; }
+  .va-cue-row { display: contents; }
+  .va-hero-body > .va-note-slot { grid-column: 1; grid-row: 1; }
+  .va-chip { grid-column: 2; grid-row: 1; align-self: end; margin-bottom: var(--s-2); }
+  .va-hero[data-has="none"] .va-chip { display: none; }
+  .va-dir { grid-column: 1 / -1; min-height: 1lh; }
+}
+
+/* caption and A4 stepper (2.8) */
+.va-cap-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-4); }
+.va-caption { margin: 0; font: var(--t-body-s); color: var(--muted); }
+.va-a4 { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); max-width: 100%; }
+.va-a4-label { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--muted); }
+.va-step { width: 48px; min-width: 48px; height: 48px; min-height: 48px; padding: 0; font: var(--t-display-3); }
+.va-a4-input {
+  width: 7ch; min-width: 0; flex: 0 1 auto; height: 48px; padding: 0 var(--s-2); text-align: center;
+  font: var(--t-display-3); letter-spacing: var(--t-display-3-ls); font-variant-numeric: tabular-nums;
+  color: var(--ink); background: var(--panel); border: var(--border-w) solid var(--ink); border-radius: var(--radius);
+}
+.va-a4-input[aria-invalid="true"] { border-color: var(--state-error); box-shadow: inset 0 0 0 1px var(--state-error); }
+:root[data-theme="loud"] .va-a4-input[aria-invalid="true"] { border-color: var(--ink); border-style: dashed; }
+.va-a4-unit { color: var(--muted); }
+.va-a4-error { margin: 0; color: var(--state-error); font-weight: var(--t-body-strong); }
+/* A live region (role=status): kept rendered when empty so the message is announced when it appears. */
+.va-a4-error:empty { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+:root[data-theme="loud"] .va-a4-error { color: var(--ink); }
+
+/* gate hint: reserved slot so the hint does not push the toggle */
+.va-hint-slot { min-height: 24px; }
+.va-hint { margin: 0; font: var(--t-hint); }
+
+/* level bar with the gate tick (aria-hidden; the number and gate are in Details) */
+.va-level { position: relative; height: 6px; background: var(--hover); border: 1px solid var(--ink); }
+:root[data-theme="loud"] .va-level { height: 8px; border-width: 2px; background: var(--panel); }
+.va-level-fill { position: absolute; inset: 0; background: var(--ink); transform-origin: left center; transform: scaleX(0); }
+.va-level-gate { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--signal); transform: translateX(-50%); }
+
+/* hero toggle: full width, 56px (2.7) */
+.va-toggle { width: 100%; min-height: 56px; }
+:root[data-theme="loud"] .va-toggle { font: var(--t-cue); }
+.va-space-hint { margin: 0; font: var(--t-body-s); color: var(--muted); text-align: center; }
+
+/* ---------------------------------------------------------------- spectrogram (2.10) */
+.va-spec { min-width: 0; }
+.plot-frame { flex: 1 1 auto; display: flex; min-width: 0; }
+.plot-frame > .panel { flex: 1 1 auto; }
+:root[data-theme="loud"] .plot-frame {
+  background: var(--accent-2); padding: var(--s-4);
+  border: var(--border-w) solid var(--ink); box-shadow: var(--shadow-panel);
+  transform: rotate(var(--tilt-b));
+}
+:root[data-theme="loud"] .plot-frame > .panel { box-shadow: none; }
+.va-spec-panel { display: flex; flex-direction: column; }
+.va-plot { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-2); padding: var(--s-3) var(--s-4) 0 var(--s-2); flex: 1 0 auto; }
+.va-axis {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;
+  font: var(--t-label); letter-spacing: var(--t-label-ls); color: var(--muted); height: 300px;
+}
+.va-canvas-wrap { position: relative; height: 300px; border: var(--border-w) solid var(--ink); background: var(--surface-plot); }
+.va-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+@media (max-width: 599px) { .va-axis, .va-canvas-wrap { height: 200px; } }
+.va-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--s-4); text-align: center; }
+.va-overlay p { margin: 0; max-width: 40ch; padding: var(--s-2) var(--s-3); background: var(--panel); color: var(--ink); border: var(--border-w) solid var(--ink); }
+.va-spec-chip {
+  position: absolute; top: var(--s-2); right: var(--s-2);
+  padding: 0 var(--s-2); background: var(--panel); color: var(--ink); border: var(--border-w) solid var(--ink);
+  font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase;
+}
+.va-legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6); margin: 0; padding: var(--s-3) var(--s-4) 0; list-style: none; font: var(--t-body-s); }
+.va-legend li { display: inline-flex; align-items: center; gap: var(--s-2); }
+.va-sw { width: 16px; height: 6px; flex: none; }
+.va-sw-f0 { background: var(--signal); outline: 1px solid var(--surface-plot); }
+.va-sw-band { height: 2px; background: var(--plot-band); }
+.va-plot-caption { margin: 0; padding: var(--s-2) var(--s-4) var(--s-4); font: var(--t-caption); color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- Readings, Details, Setup */
+.va-kv-note { flex-basis: 100%; font: var(--t-body-s); color: var(--muted); }
+.va-details { border-top: var(--border-w) solid var(--ink); }
+.va-switch { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--control-h); cursor: pointer; }
+.va-switch input { width: 20px; height: 20px; margin: 0; accent-color: var(--ink); cursor: pointer; }
+
+@media (forced-colors: active) {
+  .va-marker, .va-level-fill, .va-ok-dot, .va-tol { forced-color-adjust: none; background: CanvasText; border: 1px solid CanvasText; }
+  .va-tol { background: Canvas; }
+}

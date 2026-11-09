@@ -1,0 +1,73 @@
+/* Overview (#/). Layout and rhythm only. The page reads in three bands, each with its own treatment so they
+   do not blur together: what it shows (big serif, four across), how to use it (numbered steps beside unboxed
+   notes), then setup and roadmap (quieter reference panels under a rule). Spacing is tight inside a band and
+   wide between bands. */
+
+/* ---------------------------------------------------------------- band 1: what it shows you */
+.ov-features { margin-top: var(--s-4); }
+.ov-feature-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0; padding: 0; list-style: none;
+}
+.ov-feature {
+  display: grid; align-content: start; gap: var(--s-3);
+  padding: var(--s-6) var(--s-6) var(--s-8);
+  border-left: var(--divider-w) solid var(--divider-c);
+}
+.ov-feature:first-child { border-left: 0; }
+.ov-feature-title { margin: 0; font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); }
+.ov-feature-desc { margin: 0; color: var(--ink-2); max-width: 36ch; }
+@media (max-width: 959px) {
+  .ov-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-feature:nth-child(odd) { border-left: 0; }
+  .ov-feature:nth-child(n + 3) { border-top: var(--divider-w) solid var(--divider-c); }
+}
+@media (max-width: 599px) {
+  .ov-feature-grid { grid-template-columns: 1fr; }
+  .ov-feature { border-left: 0; padding: var(--s-4) var(--s-4) var(--s-5); }
+  .ov-feature:nth-child(n + 2) { border-top: var(--divider-w) solid var(--divider-c); }
+}
+
+/* ---------------------------------------------------------------- band 2: how to use it, good to know */
+.ov-use { margin-top: var(--s-12); }
+
+.ov-steps { margin: 0; padding: 0; list-style: none; }
+.ov-step {
+  display: grid; grid-template-columns: 2.5ch minmax(0, 1fr); column-gap: var(--s-4); row-gap: var(--s-1);
+  padding: var(--s-4) var(--s-4) var(--s-4) var(--s-5);
+  border-bottom: var(--divider-w) solid var(--divider-c);
+}
+.ov-step:last-child { border-bottom: 0; }
+.ov-step-no {
+  grid-row: 1 / span 2; align-self: start;
+  font: var(--t-display-2); letter-spacing: var(--t-display-2-ls); color: var(--signal-text);
+}
+.ov-step-title { font-weight: var(--t-body-strong); padding-top: 4px; }
+.ov-step-desc { grid-column: 2; font: var(--t-body-s); color: var(--muted); }
+
+/* Unboxed on purpose: plain text on the page background, so it reads as an aside next to the boxed steps. */
+.ov-good { padding-top: var(--s-2); }
+.ov-good-title {
+  margin: 0 0 var(--s-5);
+  font: var(--t-display-2); letter-spacing: var(--t-display-2-ls);
+}
+.ov-notes { margin: 0; display: grid; gap: var(--s-5); }
+.ov-note { display: grid; gap: var(--s-1); padding-left: var(--s-4); border-left: 2px solid var(--ink); }
+.ov-note dt { font: var(--t-label); letter-spacing: var(--t-label-ls); text-transform: uppercase; color: var(--ink); }
+.ov-note dd { margin: 0; color: var(--ink-2); max-width: 52ch; }
+:root[data-theme="loud"] .ov-note { border-left-width: var(--border-w); }
+.ov-more { margin: var(--s-6) 0 0; }
+@media (max-width: 959px) { .ov-good { padding-top: var(--s-6); } }
+
+/* ---------------------------------------------------------------- band 3: setup and roadmap */
+.ov-ref-head {
+  margin-top: var(--s-16); padding-top: var(--s-4); margin-bottom: var(--s-4);
+  border-top: var(--border-w) solid var(--ink);
+}
+.ov-ref-head .label { color: var(--muted); }
+/* Paper: reference panels step back to rule-coloured borders so the bands above lead. Loud keeps its frames. */
+:root:not([data-theme="loud"]) .ov-ref > .panel { border-color: var(--rule); }
+:root:not([data-theme="loud"]) .ov-ref .strip { border-bottom-color: var(--rule); }
+:root:not([data-theme="loud"]) .ov-ref details.disclosure { --disclosure-rule: var(--rule); }
+:root:not([data-theme="loud"]) .ov-ref .strip { color: var(--muted); }
+:root:not([data-theme="loud"]) .ov-ref details.disclosure > summary:hover { background: var(--hover); }
