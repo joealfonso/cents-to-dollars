@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-theme="editorial">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M1 measurement test page</title>
+<link rel="stylesheet" href="/src/styles/tokens.css">
+<style>
+  body { margin: 0; padding: 16px 24px; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 24px 0 8px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+  p.note { color: var(--muted); margin: 4px 0 12px; max-width: 760px; }
+  button { font: inherit; padding: 6px 12px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  label { margin-right: 12px; }
+  input[type=number] { width: 90px; font: inherit; }
+  .readout { font: 13px/1.6 ui-monospace, monospace; white-space: pre; background: var(--panel); border: 1px solid var(--rule); padding: 8px; min-height: 2em; overflow-x: auto; }
+  canvas { display: block; width: 100%; max-width: 960px; height: 300px; border: 1px solid var(--ink); background: #fff; }
+  footer { margin-top: 32px; padding-top: 8px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>M1 measurement core: test page</h1>
+<p class="note">Bare harness for the pitch tracker and spectrogram. No designed UI. All numbers on this page come from real measurement; nothing is shown before a measurement exists.</p>
+
+<h2>Live input</h2>
+<p class="note">Browser echo cancellation, noise suppression and auto gain are requested off, because they change the signal.</p>
+<div>
+  <label>A4 reference (Hz) <input id="a4" type="number" value="440" step="0.1" min="400" max="480"></label>
+  <button id="live-start" type="button">Start microphone</button>
+  <button id="live-stop" type="button" disabled>Stop</button>
+</div>
+<div id="live-readout" class="readout" aria-live="polite">No measurement yet.</div>
+<canvas id="spectrogram" width="960" height="300" aria-label="Spectrogram 0 to 4 kHz with F0 overlay"></canvas>
+
+<h2>Calibration</h2>
+<p class="note">Play a steady reference sine of known frequency into the microphone chain, then measure for 5 seconds. Reports the median measured F0 and the offset in cents.</p>
+<div>
+  <label>Reference sine (Hz) <input id="cal-hz" type="number" value="440" step="0.01"></label>
+  <button id="cal-run" type="button">Measure 5 s</button>
+</div>
+<div id="cal-readout" class="readout">No measurement yet.</div>
+
+<h2>Loopback latency</h2>
+<p class="note">Plays ten 440 Hz bursts through the speakers and listens on the microphone. Reports time from sound leaving the output to the pitch being drawn on screen. Needs speakers on and the microphone able to hear them.</p>
+<button id="loop-run" type="button">Run loopback test</button>
+<div id="loop-readout" class="readout">No measurement yet.</div>
+
+<h2>Self-test (offline, real AudioWorklet)</h2>
+<p class="note">Runs the synthetic fixtures through the same AudioWorklet in an OfflineAudioContext and scores against the known truth.</p>
+<button id="self-run" type="button">Run self-test</button>
+<div id="self-readout" class="readout">Not run.</div>
+
+<footer>For practice and study. Not a diagnostic or medical device.</footer>
+<script type="module" src="/src/testpage/main.ts"></script>
+</body>
+</html>

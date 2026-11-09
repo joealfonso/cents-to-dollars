@@ -1,0 +1,230 @@
+{
+ "notes": {
+  "match": "Praat frame to nearest tracker frame within 3 ms, both voiced (score.py rule); nearest annotation sample within 6 ms and voiced, else frame skipped.",
+  "right": "a tracker or Praat value is right when within 50 c of the annotation",
+  "octave": "octave_up / octave_down = frames of that variant (its own frame grid) more than 600 c above / below the annotation, among octave_frames = frames where both it and the annotation are voiced",
+  "splits": "dev = vocadito 1-20, test = 21-40"
+ },
+ "splits": {
+  "dev": {
+   "tracks": 20,
+   "ts": {
+    "joint": 42772,
+    "within10": 41852,
+    "both_wrong_agree": 55,
+    "praat_right_joint": 42666,
+    "praat_right_within10": 41796,
+    "octave_frames": 44663,
+    "octave_up": 81,
+    "octave_down": 8,
+    "within10_frac": 0.9784906013279716,
+    "within10_where_praat_right": 0.9796090563915061
+   },
+   "tslive": {
+    "joint": 42772,
+    "within10": 41442,
+    "both_wrong_agree": 65,
+    "praat_right_joint": 42666,
+    "praat_right_within10": 41376,
+    "octave_frames": 44663,
+    "octave_up": 49,
+    "octave_down": 488,
+    "within10_frac": 0.9689048910502198,
+    "within10_where_praat_right": 0.9697651525805091
+   },
+   "tsyin": {
+    "joint": 42772,
+    "within10": 41227,
+    "both_wrong_agree": 65,
+    "praat_right_joint": 42666,
+    "praat_right_within10": 41161,
+    "octave_frames": 44663,
+    "octave_up": 648,
+    "octave_down": 59,
+    "within10_frac": 0.9638782380996914,
+    "within10_where_praat_right": 0.9647260113439272
+   },
+   "praat": {
+    "octave_frames": 44898,
+    "octave_up": 18,
+    "octave_down": 34
+   }
+  },
+  "test": {
+   "tracks": 20,
+   "ts": {
+    "joint": 42983,
+    "within10": 41420,
+    "both_wrong_agree": 857,
+    "praat_right_joint": 41299,
+    "praat_right_within10": 40558,
+    "octave_frames": 43255,
+    "octave_up": 17,
+    "octave_down": 883,
+    "within10_frac": 0.9636367866365773,
+    "within10_where_praat_right": 0.9820576769413303
+   },
+   "tslive": {
+    "joint": 42983,
+    "within10": 40439,
+    "both_wrong_agree": 834,
+    "praat_right_joint": 41299,
+    "praat_right_within10": 39600,
+    "octave_frames": 43255,
+    "octave_up": 3,
+    "octave_down": 1837,
+    "within10_frac": 0.9408138101109741,
+    "within10_where_praat_right": 0.9588609893702027
+   },
+   "tsyin": {
+    "joint": 42983,
+    "within10": 40218,
+    "both_wrong_agree": 395,
+    "praat_right_joint": 41299,
+    "praat_right_within10": 39819,
+    "octave_frames": 43255,
+    "octave_up": 568,
+    "octave_down": 477,
+    "within10_frac": 0.9356722425144824,
+    "within10_where_praat_right": 0.9641637812053561
+   },
+   "praat": {
+    "octave_frames": 45637,
+    "octave_up": 5,
+    "octave_down": 1903
+   }
+  },
+  "all": {
+   "tracks": 40,
+   "ts": {
+    "joint": 85755,
+    "within10": 83272,
+    "both_wrong_agree": 912,
+    "praat_right_joint": 83965,
+    "praat_right_within10": 82354,
+    "octave_frames": 87918,
+    "octave_up": 98,
+    "octave_down": 891,
+    "within10_frac": 0.9710454200921229,
+    "within10_where_praat_right": 0.980813434168999
+   },
+   "tslive": {
+    "joint": 85755,
+    "within10": 81881,
+    "both_wrong_agree": 899,
+    "praat_right_joint": 83965,
+    "praat_right_within10": 80976,
+    "octave_frames": 87918,
+    "octave_up": 52,
+    "octave_down": 2325,
+    "within10_frac": 0.9548247915573436,
+    "within10_where_praat_right": 0.9644018340975407
+   },
+   "tsyin": {
+    "joint": 85755,
+    "within10": 81445,
+    "both_wrong_agree": 460,
+    "praat_right_joint": 83965,
+    "praat_right_within10": 80980,
+    "octave_frames": 87918,
+    "octave_up": 1216,
+    "octave_down": 536,
+    "within10_frac": 0.9497405399102093,
+    "within10_where_praat_right": 0.9644494729947002
+   },
+   "praat": {
+    "octave_frames": 90535,
+    "octave_up": 23,
+    "octave_down": 1937
+   }
+  },
+  "test_excl34": {
+   "tracks": 19,
+   "ts": {
+    "joint": 40284,
+    "within10": 39392,
+    "both_wrong_agree": 80,
+    "praat_right_joint": 40001,
+    "praat_right_within10": 39307,
+    "octave_frames": 40509,
+    "octave_up": 17,
+    "octave_down": 92,
+    "within10_frac": 0.9778572137821467,
+    "within10_where_praat_right": 0.9826504337391565
+   },
+   "tslive": {
+    "joint": 40284,
+    "within10": 38445,
+    "both_wrong_agree": 91,
+    "praat_right_joint": 40001,
+    "praat_right_within10": 38349,
+    "octave_frames": 40509,
+    "octave_up": 3,
+    "octave_down": 1080,
+    "within10_frac": 0.9543491212392017,
+    "within10_where_praat_right": 0.9587010324741881
+   },
+   "tsyin": {
+    "joint": 40284,
+    "within10": 38677,
+    "both_wrong_agree": 84,
+    "praat_right_joint": 40001,
+    "praat_right_within10": 38589,
+    "octave_frames": 40509,
+    "octave_up": 552,
+    "octave_down": 134,
+    "within10_frac": 0.9601082315559527,
+    "within10_where_praat_right": 0.9647008824779381
+   },
+   "praat": {
+    "octave_frames": 42527,
+    "octave_up": 5,
+    "octave_down": 282
+   }
+  },
+  "all_excl34": {
+   "tracks": 39,
+   "ts": {
+    "joint": 83056,
+    "within10": 81244,
+    "both_wrong_agree": 135,
+    "praat_right_joint": 82667,
+    "praat_right_within10": 81103,
+    "octave_frames": 85172,
+    "octave_up": 98,
+    "octave_down": 100,
+    "within10_frac": 0.9781833943363514,
+    "within10_where_praat_right": 0.9810807214487038
+   },
+   "tslive": {
+    "joint": 83056,
+    "within10": 79887,
+    "both_wrong_agree": 156,
+    "praat_right_joint": 82667,
+    "praat_right_within10": 79725,
+    "octave_frames": 85172,
+    "octave_up": 52,
+    "octave_down": 1568,
+    "within10_frac": 0.9618450202273165,
+    "within10_where_praat_right": 0.9644114338248636
+   },
+   "tsyin": {
+    "joint": 83056,
+    "within10": 79904,
+    "both_wrong_agree": 149,
+    "praat_right_joint": 82667,
+    "praat_right_within10": 79750,
+    "octave_frames": 85172,
+    "octave_up": 1200,
+    "octave_down": 193,
+    "within10_frac": 0.9620497014062801,
+    "within10_where_praat_right": 0.9647138519602744
+   },
+   "praat": {
+    "octave_frames": 87425,
+    "octave_up": 23,
+    "octave_down": 316
+   }
+  }
+ }
+}

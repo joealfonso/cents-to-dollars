@@ -1,0 +1,47 @@
+/* One tokens file, two themes. A theme changes these values only, never component structure.
+   M1 uses only a handful of them on the bare test page; the themed screens come later. */
+
+:root,
+:root[data-theme="editorial"] {
+  --bg: #F2F0EA;
+  --panel: #FBFAF6;
+  --ink: #141413;
+  --muted: #6B6A64;
+  --rule: #D6D3CA;
+  --signal: #E4401B; /* only: F0, formant band, active nav marker, "Sample data" tag */
+  --ok: #2F6B4F;
+  --accent-2: #2F6B4F;
+  --surface-plot: #FBFAF6;
+  --font-display: "Newsreader", Georgia, serif;
+  --font-ui: "Geist", system-ui, sans-serif;
+  --font-label: "Geist Mono", ui-monospace, monospace;
+  --size-title: 40px;
+  --size-ui: 14px;
+  --size-label: 11px;
+  --border-w: 1px;
+  --radius: 0;
+  --shadow: none;
+  --tilt: 0deg;
+}
+
+:root[data-theme="loud"] {
+  --bg: #FFD60A;
+  --panel: #FFFFFF;
+  --ink: #0A0A0A;
+  --muted: #0A0A0A;
+  --rule: #0A0A0A;
+  --signal: #FF5BA7;
+  --ok: #2EE59D;
+  --accent-2: #5B7CFF;
+  --surface-plot: #5B7CFF;
+  --font-display: "Archivo Black", system-ui, sans-serif;
+  --font-ui: "Archivo", system-ui, sans-serif;
+  --font-label: "Archivo Black", system-ui, sans-serif;
+  --size-title: 56px;
+  --size-ui: 16px;
+  --size-label: 14px;
+  --border-w: 4px;
+  --radius: 0;
+  --shadow: 10px 10px 0 #0A0A0A;
+  --tilt: 1deg;
+}

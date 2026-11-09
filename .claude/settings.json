@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "joseph-alfonso": { "source": { "source": "github", "repo": "joealfonso/AgentsAndSkills" } }
+  },
+  "enabledPlugins": {
+    "dev-team@joseph-alfonso": true,
+    "review-personas@joseph-alfonso": true,
+    "guardrails@joseph-alfonso": true,
+    "writing@joseph-alfonso": true,
+    "web-team@joseph-alfonso": true,
+    "design-review@joseph-alfonso": true
+  }
+}
