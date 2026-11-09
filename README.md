@@ -18,8 +18,8 @@ M2 (planned, not built, branch `m2`): open an audio file and analyse the take, r
     ./validate.sh          # all checks (needs datasets/vocadito, see MEASUREMENT.md section 0)
     ./validate.sh raw      # also her recordings in data/raw/
     npm test               # unit tests (Node)
-    npm run test:browser:install   # once: Chromium for Playwright, into .playwright-browsers/
-    npm run test:browser   # browser tests (Playwright, own Vite server on port 5180)
+    npm run test:browser:install   # only if Chrome is not installed: bundled Chromium, use with PW_CHANNEL=chromium
+    npm run test:browser   # browser tests in installed Chrome (Playwright, own Vite server on port 5180)
     npx vite               # test page at http://127.0.0.1:5173
 
 ## Layout
